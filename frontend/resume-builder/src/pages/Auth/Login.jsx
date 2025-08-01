@@ -24,10 +24,20 @@ const Login = ({setCurrentPage}) => {
           <Input
             value={email}
             onChange={({target}) => setEmail(target.value)}
-            label='Email'
+            label='Email Address'
             type='email'
             placeholder='Enter your email'
           />
+
+          <Input
+            value={email}
+            onChange={({target}) => setEmail(target.value)}
+            label='Email Address'
+            type='email'
+            placeholder='Enter your email'
+          />
+
+          
           {error && <p className='text-red-500 text-xs pb-2.5'>{error}</p>}
 
           <button type='submit' className='btn-primary'>
