@@ -1,12 +1,16 @@
 import React, { useState } from 'react'
 import HERO_IMG from '../assets/hero-img.png'
 import { useNavigate } from 'react-router-dom'
-// import GitHubIcon from '@mui/icons-material/GitHub';
+import { FaGithub } from 'react-icons/fa';
+import Login from '../pages/Auth/Login';
+import SignUp from '../pages/Auth/SignUp';
+import Modal from '../components/Modal';
+
 
 const LandingPage = () => {
   const navigate = useNavigate();
 
-  const [openAuthModal,setOpenAuthModal] = useState(false);
+  const [openAuthModal,setOpenAuthModal] = useState(true);
   const [currentPage,setCurrentPage] = useState("login");
 
   const handleCTA = () => {};
@@ -55,7 +59,7 @@ const LandingPage = () => {
         </div>
 
         <section className='mt-5'>
-          <h2 className='text-2xl font-bold text-center mb-12'>
+          <h2 className='text-2xl font-bold text-center mb-12 mt-10'>
             Features That Make You Shine
           </h2>
           <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>
@@ -91,18 +95,29 @@ const LandingPage = () => {
 
       </div>
       <div className="text-sm bg-gray-50 text-secondary text-center p-5 mt-5">
-        {/* <a 
+        <a 
           href="https://github.com/Shanidhya01" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="flex items-center gap-2"
+          className="flex justify-center items-center gap-2 "
         >
-          <GitHubIcon />
-          <span>Made By Shanidhya</span>
-        </a> */}
-          Made by Shanidhya
-          https://www.github.com/Shanidhya01
+          <FaGithub />
+          <span className='relative'>Made By Shanidhya</span>
+        </a> 
+      </div>
+      <Modal
+        isOpen = {openAuthModal}
+        onClose={() => {
+          setOpenAuthModal(false);
+          setCurrentPage("login");
+        }}
+        hideHeader
+      >
+        <div>
+          {currentPage === "login" && <Login setCurrentPage={setCurrentPage} />}
+          {currentPage === "signup" && <SignUp setCurrentPage={setCurrentPage} />}
         </div>
+      </Modal>
     </div>
   )
 }
