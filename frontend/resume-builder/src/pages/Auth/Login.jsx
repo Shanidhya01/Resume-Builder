@@ -1,6 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom';
 import Input from '../../components/Inputs/Input';
+import { validEmail } from '../../utils/helper';
 
 const Login = ({setCurrentPage}) => {
   const [email, setEmail] = React.useState('');
@@ -10,7 +11,35 @@ const Login = ({setCurrentPage}) => {
   const navigate = useNavigate();
 
   //Handle login
-  const handleLogin = async (e) => {};
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+
+    if(!validEmail(email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+    
+    if(!email || !password) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    if(password.length < 8) {
+      setError('Password must be at least 8 characters long');
+      return;
+    }
+
+    setError('');
+
+    //Login API call
+    try {
+      
+    } catch (error) {
+      
+    }
+
+  };
 
   return (
     <>
@@ -30,11 +59,11 @@ const Login = ({setCurrentPage}) => {
           />
 
           <Input
-            value={email}
-            onChange={({target}) => setEmail(target.value)}
-            label='Email Address'
-            type='email'
-            placeholder='Enter your email'
+            value={password}
+            onChange={({target}) => setPassword(target.value)}
+            label='Password'
+            type='password'
+            placeholder='Enter your password(Min 8 characters)'
           />
 
           
@@ -47,7 +76,7 @@ const Login = ({setCurrentPage}) => {
           <p className='text-[13px] text-slate-800 mt-3'>
             Don't have an account? {" "}
             <button
-              className='font-medium text-primary underline cursor-pointer'
+              className='font-medium text-[#9328E7] underline cursor-pointer'
               onClick={ () => {
                 setCurrentPage('signup');
               }}
