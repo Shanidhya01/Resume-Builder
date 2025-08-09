@@ -1,8 +1,26 @@
 import React from 'react'
+import { useEffect } from 'react';
+import { getLightColorFromImage } from '../../utils/helper';
 
 const ResumeSummaryCard = ({imgUrl, title, lastUpdated, onSelect}) => {
+
+  const [bgColor, setBgColor] = React.useState("#ffffff");
+
+  useEffect(() =>{
+    if(imgUrl){
+      getLightColorFromImage(imgUrl)
+        .then((color) =>{
+          setBgColor(color);
+        })
+        .catch(() => {
+          setBgColor("#ffffff");
+        });
+    }
+  }, [imgUrl])
   return (
-    <div className='h-[300px] flex flex-col items-center justify-between bg-white rounded-lg border border-gray-200 hover:border-purple-300 overflow-hidden cursor-pointer ' 
+    <div 
+      className='h-[300px] flex flex-col items-center justify-between bg-white rounded-lg border border-gray-200 hover:border-purple-300 overflow-hidden cursor-pointer ' 
+      style={{ backgroundColor: bgColor }}
       onClick={onSelect}
     >
       <div className='p-4'>
