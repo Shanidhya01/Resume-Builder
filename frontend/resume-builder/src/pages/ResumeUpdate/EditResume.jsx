@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
   LuArrowLeft,
   LuCircleAlert,
@@ -15,11 +15,16 @@ import  { useReactToPrint } from "react-to-print"
 import axiosInstance from '../../utils/axiosInstance';
 import { API_PATHS } from '../../utils/apiPath';
 import StepProgress from '../../components/StepProgress';
+import ProfileInfoForm from './Forms/ProfileInfoForm';
+import ContactInfoForm from './Forms/ContactInfoForm';
+import WorkExperienceForm from './Forms/WorkExperienceForm';
+import EducationDetailsForm from './Forms/EducationDetailsForm';
+import SkillsInfoForm from './Forms/SkillsInfoForm';
 
 const EditResume = () => {
-
   const { resumeId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const resumeRef = React.useRef(null);
   const resumeDownloadRef = React.useRef(null);
@@ -30,10 +35,10 @@ const EditResume = () => {
 
   const [openPreviewModal, setOpenPreviewModal] = React.useState(false);
 
-  const [currentPage, setCurrentPage] = React.useState("profile-info");
+  const [currentPage, setCurrentPage] = React.useState("skills");
   const [progress, setProgress] = React.useState(0);
   const [resumeData, setResumeData] = React.useState({
-    title: "",
+    title: location.state?.title ?? "",
     thumbnailLink: "",
     profileInfo: {
       profileImg: null,
@@ -113,19 +118,122 @@ const EditResume = () => {
   //Function to navigate to previous section
   const goBack = () => {};
 
-  const renderForm = () => {};
+  const renderForm = () => {
+    switch (currentPage) {
+      case 'profile-info':
+        return (
+          <ProfileInfoForm
+            profileData={resumeData?.profileInfo}
+            updateSection={(key, value) => updateSection('profileInfo', key, value)}
+            onNext={validateAndNext}
+          />
+        )
+      case 'contact-info':
+        return (
+          <ContactInfoForm
+            contactInfo={resumeData?.contactInfo}
+            updateSection={(key, value) => updateSection('contactInfo', key, value)}
+          />
+        )
+
+      case "work-experience":
+        return (
+          <WorkExperienceForm
+            workExperience={resumeData?.workExperience}
+            updateArrayItem={(index, key, value) => {
+              updateArrayItem('workExperience', index, key, value);
+            }}
+            addArrayItem={(newItem) => addArrayItem('workExperience', newItem)}
+            removeArrayItem={(index) => {
+              removeArrayItem('workExperience', index);
+            }}
+          />
+        );
+
+      case "education-info":
+        return (
+          <EducationDetailsForm
+            educationInfo={resumeData?.education}
+            updateArrayItem={(index, key, value) => {
+              updateArrayItem('education', index, key, value);
+            }}
+            addArrayItem={(newItem) => addArrayItem('education', newItem)}
+            removeArrayItem={(index) => {
+              removeArrayItem('education', index);
+            }}
+          />
+        );
+
+      case "skills":
+        return(
+          <SkillsInfoForm
+            skillsInfo={resumeData?.skills}
+            updateArrayItem={(index, key, value) => {
+              updateArrayItem('skills', index, key, value);
+            }}
+            addArrayItem={(newItem) => addArrayItem('skills', newItem)}
+            removeArrayItem={(index) => {
+              removeArrayItem('skills', index);
+            }}
+          />
+        )
+
+      default:
+        return null
+    }
+  };
 
   // update simple rested objects like profileinfo 
-  const updateSection = (section , key ,value) => {};
+  const updateSection = (section , key ,value) => {
+    setResumeData((prev) => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [key]: value,
+      },
+    }));
+  };
 
   // update array items
-  const updateArrayItem = (section, index, key, value) => {};
+  const updateArrayItem = (section, index, key, value) => {
+    setResumeData((prev) => {
+      const updatedArray = [...prev[section]];
+      
+      if(key === null){
+        updatedArray[index] = value;
+      } else {
+        updatedArray[index] = {
+          ...updatedArray[index],
+          [key]: value,
+        };
+      }
+
+      return {
+        ...prev,
+        [section]: updatedArray,
+      };
+    });
+  };
 
   //add item to array
-  const addArrayItem = (section, newItem) => {};
+  const addArrayItem = (section, newItem) => {
+    setResumeData((prev) => ({
+      ...prev,
+      [section]: [...prev[section], newItem],
+    }));
+  };
 
   //Remove item from array
-  const removeArrayItem = (section, index) => {};
+  const removeArrayItem = (section, index) => {
+    setResumeData((prev) => {
+      const updatedArray = [...prev[section]];
+      updatedArray.splice(index, 1);
+      return {
+        ...prev,
+        [section]: updatedArray,
+      };
+    });
+  };
 
   //fetch resume info by id
   const fetchResumeDetailsById = async () => {
@@ -139,17 +247,15 @@ const EditResume = () => {
 
         setResumeData((prevState) => ({
           ...prevState,
-          title: resumeInfo?.title || "",
+          title: resumeInfo?.title ?? prevState.title,
           template: resumeInfo?.template || prevState?.template,
           profileInfo: resumeInfo?.profileInfo || prevState?.profileInfo,
           contactInfo: resumeInfo?.contactInfo || prevState?.contactInfo,
-          workExperience:
-            resumeInfo?.workExperience || prevState?.workExperience,
+          workExperience: resumeInfo?.workExperience || prevState?.workExperience,
           education: resumeInfo?.education || prevState?.education,
           skills: resumeInfo?.skills || prevState?.skills,
           projects: resumeInfo?.projects || prevState?.projects,
-          certifications: 
-            resumeInfo?.certifications || prevState?.certifications,
+          certifications: resumeInfo?.certifications || prevState?.certifications,
           languages: resumeInfo?.languages || prevState?.languages,
           interests: resumeInfo?.interests || prevState?.interests,
           achievements: resumeInfo?.achievements || prevState?.achievements

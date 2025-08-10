@@ -42,7 +42,7 @@ const CreateResumeForm = () => {
       const id = created._id ?? created.id ?? created.resumeId;
 
       if (id) {
-        navigate(`/resume/${id}`);
+        navigate(`/resume/${id}`, { state: { title: trimmed } });
       } else {
         setError(payload.message || "Failed to create resume");
       }
