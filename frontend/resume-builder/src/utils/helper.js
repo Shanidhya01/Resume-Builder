@@ -1,3 +1,5 @@
+import moment from 'moment';
+
 export const validEmail = (email) => {
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
   return regex.test(email);
@@ -54,4 +56,8 @@ export const getLightColorFromImage = (imgUrl) => {
       reject(new Error("Failed to load image"));
     };
   });
+};
+
+export function formatYearMonth(yearMonth){
+  return yearMonth ? moment(yearMonth, "YYYY-MM").format("MMM YYYY") : "";
 }
