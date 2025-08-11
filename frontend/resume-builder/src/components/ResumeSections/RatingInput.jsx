@@ -18,16 +18,16 @@ const RatingInput = ({
     <div className='flex gap-3 cursor-pointer'>
       {[...Array(total)].map((_, index) => {
         const isActive = index < displayValue;
+
         return (
           <div
             key={index}
-            className={`inline-block cursor-pointer p-1 ${isActive ? `bg-[${bgColor}]` : 'bg-gray-200'}`}
+            className='w-4 h-4 rounded transition-all'
             onClick={() => handleClick(index)}
             style={{
-              backgroundColor: isActive ? bgColor : 'transparent',
+              backgroundColor: isActive ? color : bgColor,
             }}
           >
-            <span className={`block w-2 h-2 rounded-full ${isActive ? `bg-[${color}]` : 'bg-gray-400'}`}></span>
           </div>
         );
       })}

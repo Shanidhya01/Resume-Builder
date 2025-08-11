@@ -20,6 +20,10 @@ import ContactInfoForm from './Forms/ContactInfoForm';
 import WorkExperienceForm from './Forms/WorkExperienceForm';
 import EducationDetailsForm from './Forms/EducationDetailsForm';
 import SkillsInfoForm from './Forms/SkillsInfoForm';
+import ProjectsInfoForm from './Forms/ProjectsInfoForm';
+import CertificationsInfoForm from './Forms/CertificationsInfoForm';
+import AdditionalInfoForm from './Forms/AdditionalInfoForm';
+import RenderResume from '../../components/ResumeTempletes/RenderResume';
 
 const EditResume = () => {
   const { resumeId } = useParams();
@@ -35,7 +39,7 @@ const EditResume = () => {
 
   const [openPreviewModal, setOpenPreviewModal] = React.useState(false);
 
-  const [currentPage, setCurrentPage] = React.useState("skills");
+  const [currentPage, setCurrentPage] = React.useState("profile-info");
   const [progress, setProgress] = React.useState(0);
   const [resumeData, setResumeData] = React.useState({
     title: location.state?.title ?? "",
@@ -110,13 +114,174 @@ const EditResume = () => {
   const [isLoading, setLoading] = React.useState(false);
 
   // validate Inputs
-  const validateAndNext = (e) => {};
+  const validateAndNext = (e) => {
+    const error = [];
+    switch (currentPage){
+      case "profile-info":
+        const { fullName, designation, summary } = resumeData.profileInfo;
+        if (!fullName.trim()) error.push("Full Name is required");
+        if (!designation.trim()) error.push("Designation is required");
+        if (!summary.trim()) error.push("Summary is required");
+        break;
+
+      case "contact-info":
+        const { email, phone } = resumeData.contactInfo;
+        if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) 
+          error.push("Email is required");
+        if (!phone.trim()) 
+          error.push("Phone is required");
+        break;
+      
+      case "work-experience":
+        resumeData.workExperience.forEach(({ company, role, startDate, endDate }, index) => {
+          if (!company.trim()) 
+            error.push(`Company is required in experience ${index + 1}`);
+          if (!role.trim()) 
+            error.push(`Role is required in experience ${index + 1}`);
+          if (!startDate) 
+            error.push(`Start Date is required in experience ${index + 1}`);
+          if (!endDate) 
+            error.push(`End Date is required in experience ${index + 1}`);
+        });
+        break;
+
+      case "education-info":
+        resumeData.education.forEach(
+          ({ degree, institution, eduStartDate, eduEndDate }, index) => {
+            if (!degree.trim()) 
+              error.push(`Degree is required in education ${index + 1}`);
+            if (!institution.trim()) 
+              error.push(`Institution is required in education ${index + 1}`);
+            if (!eduStartDate) 
+              error.push(`Start Date is required in education ${index + 1}`);
+            if (!eduEndDate) 
+              error.push(`End Date is required in education ${index + 1}`);
+          }
+        );
+        break;
+
+      case "skills":
+        resumeData.skills.forEach(({ name, progress }, index) => {
+          if (!name.trim()) 
+            error.push(`Skill Name is required in skill ${index + 1}`);
+          if (progress < 1 || progress > 100) 
+            error.push(`Skill Proficiency is required in skill ${index + 1}`);
+        });
+        break;
+
+      case "projects":
+        resumeData.projects.forEach(({ title, description, github, liveDemo }, index) => {
+          if (!title.trim()) 
+          error.push(`Project Title is required in project ${index + 1}`);
+          if (!description.trim()) 
+            error.push(`Project Description is required in project ${index + 1}`);
+          if (!github.trim()) 
+            error.push(`GitHub Link is required in project ${index + 1}`);
+          if (!liveDemo.trim()) 
+            error.push(`Live Demo Link is required in project ${index + 1}`);
+        });
+        break;
+
+      case "certifications":
+        resumeData.certifications.forEach(({ certTitle, issuer, year }, index) => {
+          if (!certTitle.trim()) 
+            error.push(`Certification Title is required in certification ${index + 1}`);
+          if (!issuer.trim()) 
+            error.push(`Certification Issuer is required in certification ${index + 1}`);
+          if (!year) 
+            error.push(`Certification Year is required in certification ${index + 1}`);
+        });
+        break;
+
+      case "additionalInfo":
+        if(
+          resumeData.languages.length === 0 ||
+          !resumeData.languages[0].name.trim()
+        ){
+          error.push(`Language Name is required`);
+        }
+
+        if(
+          resumeData.interests.length === 0 ||
+          !resumeData.interests[0].trim()
+        ){
+          error.push(`Interest is required`);
+        }
+
+        if(
+          resumeData.achievements.length === 0 ||
+          !resumeData.achievements[0].trim()
+        ){
+          error.push(`Achievement is required`);
+        } 
+        break;
+      default:
+        break;
+    }
+
+    if(error.length > 0){
+      setErrorMsg(error.join(", "));
+      return;
+    }
+
+    // Proceed to the next step
+    setErrorMsg("");
+    goToNextStep();
+  };
 
   //Function to navigate to next section
-  const goToNextStep = () => {};
+  const goToNextStep = () => {
+    const pages = [
+      "profile-info",
+      "contact-info",
+      "work-experience",
+      "education-info",
+      "skills",
+      "projects",
+      "certifications",
+      "additionalInfo"
+    ];
+
+    if(currentPage === "additionalInfo") setOpenPreviewModal(true);
+
+    const currentIndex = pages.indexOf(currentPage);
+    if(currentIndex !== -1 && currentIndex < pages.length - 1){
+      const nextIndex = currentIndex + 1;
+      setCurrentPage(pages[nextIndex]);
+
+      // set progress as percentage
+      const percent = Math.round((nextIndex / (pages.length - 1)) * 100);
+      setProgress(percent);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   //Function to navigate to previous section
-  const goBack = () => {};
+  const goBack = () => {
+    const pages = [
+      "profile-info",
+      "contact-info",
+      "work-experience",
+      "education-info",
+      "skills",
+      "projects",
+      "certifications",
+      "additionalInfo"
+    ];
+
+    if(currentPage === "profile-info")  navigate("/dashboard");
+
+    const currentIndex = pages.indexOf(currentPage);
+    if(currentIndex > 0){
+      const prevIndex = currentIndex - 1;
+      setCurrentPage(pages[prevIndex]);
+
+      // update progress
+      const percent = Math.round((prevIndex / (pages.length - 1)) * 100);
+      setProgress(percent);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   const renderForm = () => {
     switch (currentPage) {
@@ -177,6 +342,48 @@ const EditResume = () => {
             }}
           />
         )
+
+      case "projects":
+        return (
+          <ProjectsInfoForm
+            projectsInfo={resumeData?.projects}
+            updateArrayItem={(index, key, value) => {
+              updateArrayItem('projects', index, key, value);
+            }}
+            addArrayItem={(newItem) => addArrayItem('projects', newItem)}
+            removeArrayItem={(index) => {
+              removeArrayItem('projects', index);
+            }}
+          />
+        );
+
+      case "certifications":
+        return (
+          <CertificationsInfoForm
+            certificationsInfo={resumeData?.certifications}
+            updateArrayItem={(index, key, value) => {
+              updateArrayItem('certifications', index, key, value);
+            }}
+            addArrayItem={(newItem) => addArrayItem('certifications', newItem)}
+            removeArrayItem={(index) => {
+              removeArrayItem('certifications', index);
+            }}
+          />
+        );
+
+      case "additionalInfo":
+        return (
+          <AdditionalInfoForm
+            languages={resumeData?.languages}
+            interests={resumeData?.interests}
+            achievements={resumeData?.achievements}
+            updateArrayItem={(section, index, key, value) =>
+              updateArrayItem(section, index, key, value)
+            }
+            addArrayItem={(section, newItem) => addArrayItem(section, newItem)}
+            removeArrayItem={(section, index) => removeArrayItem(section, index)}
+          />
+        );
 
       default:
         return null
@@ -278,7 +485,12 @@ const EditResume = () => {
   const reactToPrintFn = useReactToPrint({ contentRef : resumeDownloadRef});
 
   // function to update basewidth based on resume
-  const updateBaseWidth = () => {};
+  const updateBaseWidth = () => {
+    if(resumeRef.current){
+      const width = resumeRef.current.offsetWidth;
+      setBaseWidth(width);
+    }
+  };
 
   useEffect(() => {
     updateBaseWidth();
@@ -337,7 +549,7 @@ const EditResume = () => {
         </div>
 
         <div className='grid grid-cols-1 md:grid-cols-2 gap-5'>
-          <div className='bg-white rounded-lg border border-purple-100 overflow-hidden'>
+          {/* <div className='bg-white rounded-lg border border-purple-100 overflow-hidden'>
 
             <StepProgress progress={progress} />
 
@@ -386,10 +598,16 @@ const EditResume = () => {
                 </button>
               </div>
             </div>
-          </div>
+          </div> */}
 
           <div ref={resumeRef} className='h-[100vh]'>
             {/* Resume Template */}
+            <RenderResume
+              templateId={resumeData?.template?.theme || ""}
+              resumeData={resumeData}
+              colorPalette={resumeData?.template?.colorPalette || []}
+              containerWidth={baseWidth}
+            />
           </div>
         </div>
       </div>
