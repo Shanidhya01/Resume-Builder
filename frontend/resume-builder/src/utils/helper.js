@@ -1,4 +1,5 @@
 import moment from 'moment';
+import html2canvas from 'html2canvas';
 
 export const validEmail = (email) => {
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
@@ -61,3 +62,45 @@ export const getLightColorFromImage = (imgUrl) => {
 export function formatYearMonth(yearMonth){
   return yearMonth ? moment(yearMonth, "YYYY-MM").format("MMM YYYY") : "";
 }
+
+export const fixTailwindColors = (element) => {
+  const elements = element.querySelectorAll('*');
+
+  elements.forEach((el) => {
+    const style = window.getComputedStyle(el);
+
+    ["color", "background-color", "border-color"].forEach((prop) => {
+      const value = style[prop];
+      if(value.includes("oklch")){
+        el.style[prop] = "#000"
+      }
+    });
+  });
+};
+
+//convert component to image
+export async function captureElementAsImage(element, options = {}) {
+  if (!element) throw new Error("No Element provided");
+
+  const canvas = await html2canvas(element, {
+    backgroundColor: null,     // keep transparent if designing PDF later
+    useCORS: true,             // allow cross-origin images when possible
+    logging: false,            // suppress html2canvas internal logs (removes noise)
+    scale: Math.min(2, window.devicePixelRatio || 1.5), // cap scale for perf
+    ...options
+  });
+
+  return canvas.toDataURL("image/png");
+}
+
+export const dataURLtoFile = (dataURL, filename) => {
+  const arr = dataURL.split(',');
+  const mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while(n--){
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new File([u8arr], filename, {type:mime});
+};

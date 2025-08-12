@@ -3,23 +3,23 @@ import { BASE_URL } from './apiPath';
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
-  timeout: 10000,
+  timeout: Number(import.meta.env.VITE_HTTP_TIMEOUT ?? 30000),
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
   },
 });
 
-// Request interceptor 
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const accessToken = localStorage.getItem('token');
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
-    }
-    return config;
-  },
-  (error) => {
+axiosInstance.interceptors.request.use(cfg => {
+  const raw = localStorage.getItem('token');
+  if (raw) {
+    // Strip accidental quotes / Bearer duplications
+    const token = raw.replace(/^"|"$/g,'').replace(/^Bearer\s+/i,'');
+    cfg.headers.Authorization = `Bearer ${token}`;
+  }
+  return cfg;
+},
+(error) => {
     return Promise.reject(error);
   }
 );

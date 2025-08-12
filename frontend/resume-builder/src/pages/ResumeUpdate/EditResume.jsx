@@ -24,6 +24,13 @@ import ProjectsInfoForm from './Forms/ProjectsInfoForm';
 import CertificationsInfoForm from './Forms/CertificationsInfoForm';
 import AdditionalInfoForm from './Forms/AdditionalInfoForm';
 import RenderResume from '../../components/ResumeTempletes/RenderResume';
+import { captureElementAsImage, dataURLtoFile, fixTailwindColors } from '../../utils/helper';
+import { toast } from 'react-hot-toast'; // or wherever your toast util lives
+
+// Fallback if toast not available (prevents "toast is not defined")
+const safeToast = (payload) => {
+  try { toast?.(payload); } catch {}
+};
 
 const EditResume = () => {
   const { resumeId } = useParams();
@@ -111,7 +118,7 @@ const EditResume = () => {
     achievements: [""]
   });
   const [errorMsg, setErrorMsg] = React.useState("");
-  const [isLoading, setLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
 
   // validate Inputs
   const validateAndNext = (e) => {
@@ -230,7 +237,7 @@ const EditResume = () => {
   };
 
   //Function to navigate to next section
-  const goToNextStep = () => {
+  const goToNextStep = async () => {
     const pages = [
       "profile-info",
       "contact-info",
@@ -242,14 +249,16 @@ const EditResume = () => {
       "additionalInfo"
     ];
 
-    if(currentPage === "additionalInfo") setOpenPreviewModal(true);
+    if (currentPage === "additionalInfo") {
+      // final step: save then redirect
+      await uploadResumeImages({ redirect: true });
+      return;
+    }
 
     const currentIndex = pages.indexOf(currentPage);
     if(currentIndex !== -1 && currentIndex < pages.length - 1){
       const nextIndex = currentIndex + 1;
       setCurrentPage(pages[nextIndex]);
-
-      // set progress as percentage
       const percent = Math.round((nextIndex / (pages.length - 1)) * 100);
       setProgress(percent);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -474,9 +483,60 @@ const EditResume = () => {
   };
 
   //upload thumbnail and resume profile image
-  const uploadResumeImages = async () => {};
+  const uploadResumeImages = async ({ redirect = false } = {}) => {
+    if (!resumeId) {
+      safeToast({ title: 'Missing resume id', variant: 'destructive' });
+      return;
+    }
+    try {
+      setIsLoading(true);
+      const el = resumeRef.current;
+      if (!el) throw new Error('Resume preview element not found');
+      await new Promise(r => requestAnimationFrame(r));
+      fixTailwindColors(el);
+      const dataUrl = await captureElementAsImage(el);
+      const file = dataURLtoFile(dataUrl, `resume-${resumeId}.png`);
+      const formData = new FormData();
+      formData.append('preview', file);
+      const endpoint = API_PATHS.RESUME.UPLOAD_IMAGES(resumeId);
+      await axiosInstance.put(endpoint, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 30000
+      });
+      safeToast({ title: 'Saved', description: 'Resume updated successfully.' });
+      if (redirect) navigate('/dashboard');
+    } catch (err) {
+      console.error('Error uploading resume images:', err);
+      const msg = err?.response?.status === 404
+        ? 'Upload endpoint not found (404). Verify server route.'
+        : err?.message || 'Upload failed.';
+      safeToast({ title: 'Upload failed', description: msg, variant: 'destructive' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const updateResumeDetails = async ({thumbnailLink, profilePreviewUrl}) => {};
+  const updateResumeDetails = async ({thumbnailLink, profilePreviewUrl}) => {
+    try {
+      setIsLoading(true);
+
+      const response = await axiosInstance.put(
+        API_PATHS.RESUME.UPDATE(resumeId),
+        {
+          ...resumeData,
+          thumbnailLink: thumbnailLink || "",
+          profileInfo: {
+            ...resumeData.profileInfo,
+            profilePreviewUrl: profilePreviewUrl || "",
+          }
+        }
+      );
+    } catch (error) {
+      console.error("Error updating resume details:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // delete resume
   const handleDeleteResume = async () => {};
@@ -492,19 +552,16 @@ const EditResume = () => {
     }
   };
 
+  const fetchedRef = React.useRef(false);
   useEffect(() => {
     updateBaseWidth();
     window.addEventListener("resize", updateBaseWidth);
-
-    if(resumeId){
+    if (resumeId && !fetchedRef.current) {
+      fetchedRef.current = true;
       fetchResumeDetailsById();
     }
-
-    return () => {
-      window.removeEventListener("resize", updateBaseWidth);
-    }
-    
-  }, []);
+    return () => window.removeEventListener("resize", updateBaseWidth);
+  }, [resumeId]);
 
   return (
     <DashboardLayout>
@@ -573,7 +630,7 @@ const EditResume = () => {
 
                 <button
                   className='btn-small-light'
-                  onClick={uploadResumeImages}
+                  onClick={() => uploadResumeImages({ redirect: true })}
                   disabled={isLoading}
                 >
                   <LuUpload className='text-[16px]' />
