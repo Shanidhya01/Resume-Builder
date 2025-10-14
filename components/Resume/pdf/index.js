@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
 });
 
 const Resume = ({ data }) => {
-    const resumeData = data || {};
+    const resumeData = useSelector(state => state.resume) || data;
 
     const formatDate = (dateStr) => {
         if (!dateStr) return '';
@@ -338,18 +338,31 @@ const Resume = ({ data }) => {
     return (
         <Document>
             <Page size="A4" style={styles.page}>
-                {/* Header */}
+                {/* Enhanced Header */}
                 <View style={styles.header}>
                     <View style={styles.headerBackground} />
                     <Text style={styles.name}>{resumeData.contact?.name || 'Your Name'}</Text>
                     <Text style={styles.title}>{resumeData.contact?.title || 'Your Job Title'}</Text>
+                    
                     <View style={styles.contactContainer}>
-                        {resumeData.contact?.email && <Text style={styles.contactItem}>📧 {resumeData.contact.email}</Text>}
-                        {resumeData.contact?.phone && <Text style={styles.contactItem}>📱 {resumeData.contact.phone}</Text>}
-                        {resumeData.contact?.address && <Text style={styles.contactItem}>📍 {resumeData.contact.address}</Text>}
-                        {resumeData.contact?.linkedin && <Text style={styles.contactItem}>💼 {resumeData.contact.linkedin}</Text>}
-                        {resumeData.contact?.github && <Text style={styles.contactItem}>🔗 {resumeData.contact.github}</Text>}
-                        {resumeData.contact?.portfolio && <Text style={styles.contactItem}>🌐 {resumeData.contact.portfolio}</Text>}
+                        {resumeData.contact?.email && (
+                            <Text style={styles.contactItem}>📧 {resumeData.contact.email}</Text>
+                        )}
+                        {resumeData.contact?.phone && (
+                            <Text style={styles.contactItem}>📱 {resumeData.contact.phone}</Text>
+                        )}
+                        {resumeData.contact?.address && (
+                            <Text style={styles.contactItem}>📍 {resumeData.contact.address}</Text>
+                        )}
+                        {resumeData.contact?.linkedin && (
+                            <Text style={styles.contactItem}>💼 {resumeData.contact.linkedin}</Text>
+                        )}
+                        {resumeData.contact?.github && (
+                            <Text style={styles.contactItem}>🔗 {resumeData.contact.github}</Text>
+                        )}
+                        {resumeData.contact?.portfolio && (
+                            <Text style={styles.contactItem}>🌐 {resumeData.contact.portfolio}</Text>
+                        )}
                     </View>
                 </View>
 
@@ -362,7 +375,7 @@ const Resume = ({ data }) => {
                             </Section>
                         )}
 
-                        {/* Experience */}
+                        {/* Professional Experience */}
                         {resumeData.experience?.length > 0 && (
                             <Section title="Professional Experience" style={styles.section}>
                                 {resumeData.experience.map((exp, index) => (
@@ -371,7 +384,9 @@ const Resume = ({ data }) => {
                                         <Text style={styles.company}>{exp.company || 'Company Name'}</Text>
                                         <View style={styles.dateLocationContainer}>
                                             <Text style={styles.location}>{exp.location || 'Location'}</Text>
-                                            <Text style={styles.dateRange}>{formatDate(exp.start)} - {formatDate(exp.end)}</Text>
+                                            <Text style={styles.dateRange}>
+                                                {formatDate(exp.start)} - {formatDate(exp.end)}
+                                            </Text>
                                         </View>
                                         {exp.description && renderBulletPoints(exp.description)}
                                     </View>
@@ -385,7 +400,9 @@ const Resume = ({ data }) => {
                                 {resumeData.projects.map((project, index) => (
                                     <View key={index} style={{ marginBottom: 15 }}>
                                         <Text style={styles.projectTitle}>{project.title || 'Project Title'}</Text>
-                                        {project.url && <Text style={styles.projectUrl}>{project.url}</Text>}
+                                        {project.url && (
+                                            <Text style={styles.projectUrl}>{project.url}</Text>
+                                        )}
                                         {project.description && renderBulletPoints(project.description)}
                                     </View>
                                 ))}
@@ -399,7 +416,9 @@ const Resume = ({ data }) => {
                             <Section title="Technical Skills" style={styles.section}>
                                 <View style={styles.skillsContainer}>
                                     {resumeData.skills.skills.split(',').map((skill, index) => (
-                                        <Text key={index} style={styles.skillItem}>{skill.trim()}</Text>
+                                        <Text key={index} style={styles.skillItem}>
+                                            {skill.trim()}
+                                        </Text>
                                     ))}
                                 </View>
                             </Section>
@@ -452,6 +471,5 @@ const Resume = ({ data }) => {
         </Document>
     );
 };
-
 
 export default Resume;
