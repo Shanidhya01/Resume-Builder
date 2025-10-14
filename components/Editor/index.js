@@ -8,14 +8,8 @@ import { useDispatch } from 'react-redux';
 import { saveResume } from '@/store/slices/resumeSlice';
 import { useEffect } from 'react';
 
-const safeSection = t => {
-    const key = String(t || 'contact').toLowerCase();
-    return ResumeFields[key] || ResumeFields.contact;
-};
-
 const Editor = ({ tab }) => {
-    const section = safeSection(tab);
-    const { multiple = false, fields = [] } = section;
+    const { multiple } = ResumeFields[tab];
     const dispatch = useDispatch();
 
     const save = e => {

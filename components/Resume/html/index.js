@@ -2,8 +2,10 @@
 
 import styles from '../Styles';
 import { useSelector } from 'react-redux';
-import { useEffect, useState } from 'react';
-import Renderer from './Renderer';
+import Section from './Section';
+import ListItem from './ListItem';
+import formatDate from '@/utils/formatDate';
+import { Link, Text, View } from './Renderer';
 
 const Header = ({ data }) => {
     const contactLinks = [
@@ -175,55 +177,4 @@ const Preview = () => {
     );
 };
 
-const HtmlResume = () => {
-    const resumeData = useSelector(state => state.resume);
-    const [isClient, setIsClient] = useState(false);
-
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
-
-    if (!isClient) {
-        return (
-            <div className="flex items-center justify-center h-full min-h-[600px] bg-gradient-to-br from-slate-50 to-white rounded-2xl border border-slate-200/50 shadow-lg backdrop-blur-sm">
-                <div className="text-center space-y-4">
-                    <div className="relative">
-                        <div className="animate-spin w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
-                        <div className="absolute inset-0 w-10 h-10 border-4 border-blue-200 rounded-full mx-auto animate-pulse"></div>
-                    </div>
-                    <div className="space-y-2">
-                        <p className="text-slate-700 font-semibold">Loading resume...</p>
-                        <p className="text-sm text-slate-500">Please wait a moment</p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <div className="relative w-full">
-            {/* Enhanced container with glass morphism */}
-            <div className="relative bg-white/95 backdrop-blur-sm rounded-2xl border border-white/60 shadow-2xl overflow-hidden">
-                {/* Subtle gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-purple-50/20 pointer-events-none"></div>
-
-                {/* Content wrapper */}
-                <div className="relative z-10 p-8">
-                    <Renderer data={resumeData} />
-                </div>
-
-                {/* Quality indicators */}
-                <div className="absolute top-4 right-4 flex gap-2">
-                    <div className="px-3 py-1 bg-green-500 text-white text-xs font-bold rounded-full shadow-lg">
-                        ATS Ready
-                    </div>
-                    <div className="px-3 py-1 bg-blue-500 text-white text-xs font-bold rounded-full shadow-lg">
-                        HTML Format
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-export default HtmlResume;
+export default Preview;
