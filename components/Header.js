@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { FaGithub, FaFileAlt, FaDownload } from 'react-icons/fa';
 import { HiMenuAlt3, HiX, HiSparkles } from 'react-icons/hi';
@@ -8,6 +9,7 @@ import { IoIosRocket } from 'react-icons/io';
 const Header = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const pathname = usePathname();
 
     useEffect(() => {
         const handleScroll = () => {
@@ -51,19 +53,30 @@ const Header = () => {
 
                     {/* Desktop Navigation */}
                     <nav className="hidden md:flex items-center space-x-1">
-                        {navLinks.map((link, index) => (
-                            <Link
-                                key={index}
-                                href={link.href}
-                                className="group relative px-4 py-2 text-slate-300 font-medium transition-all duration-300 hover:text-white rounded-xl hover:bg-white/5"
-                            >
-                                <span className="flex items-center gap-2">
-                                    {link.icon && <link.icon className="w-4 h-4" />}
-                                    {link.label}
-                                </span>
-                                <span className="absolute bottom-0 left-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-purple-400 transition-all duration-300 group-hover:w-full group-hover:left-0 rounded-full"></span>
-                            </Link>
-                        ))}
+                        {navLinks.map((link, index) => {
+                            const isActive = pathname === link.href;
+                            return (
+                                <Link
+                                    key={index}
+                                    href={link.href}
+                                    className={`group relative px-4 py-2 font-medium transition-all duration-300 rounded-xl hover:bg-white/5 ${
+                                        isActive 
+                                            ? 'text-white bg-white/10' 
+                                            : 'text-slate-300 hover:text-white'
+                                    }`}
+                                >
+                                    <span className="flex items-center gap-2">
+                                        {link.icon && <link.icon className="w-4 h-4" />}
+                                        {link.label}
+                                    </span>
+                                    <span className={`absolute bottom-0 h-0.5 bg-gradient-to-r from-blue-400 to-purple-400 transition-all duration-300 rounded-full ${
+                                        isActive 
+                                            ? 'w-full left-0' 
+                                            : 'w-0 left-1/2 group-hover:w-full group-hover:left-0'
+                                    }`}></span>
+                                </Link>
+                            );
+                        })}
                     </nav>
 
                     {/* Desktop CTA Buttons */}
@@ -109,17 +122,27 @@ const Header = () => {
                 }`}>
                     <div className="px-6 py-4 bg-slate-800/50 backdrop-blur-lg border-t border-white/10">
                         <nav className="flex flex-col space-y-2">
-                            {navLinks.map((link, index) => (
-                                <Link
-                                    key={index}
-                                    href={link.href}
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                    className="group flex items-center gap-3 px-4 py-3 text-slate-300 font-medium transition-all duration-300 hover:text-white hover:bg-white/5 rounded-xl"
-                                >
-                                    {link.icon && <link.icon className="w-5 h-5" />}
-                                    <span>{link.label}</span>
-                                </Link>
-                            ))}
+                            {navLinks.map((link, index) => {
+                                const isActive = pathname === link.href;
+                                return (
+                                    <Link
+                                        key={index}
+                                        href={link.href}
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className={`group flex items-center gap-3 px-4 py-3 font-medium transition-all duration-300 rounded-xl ${
+                                            isActive 
+                                                ? 'text-white bg-white/10 border border-blue-500/30' 
+                                                : 'text-slate-300 hover:text-white hover:bg-white/5'
+                                        }`}
+                                    >
+                                        {link.icon && <link.icon className="w-5 h-5" />}
+                                        <span>{link.label}</span>
+                                        {isActive && (
+                                            <div className="ml-auto w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                                        )}
+                                    </Link>
+                                );
+                            })}
                             
                             <div className="pt-4 border-t border-white/10 space-y-2">
                                 <a
