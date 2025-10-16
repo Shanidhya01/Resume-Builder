@@ -22,6 +22,7 @@ module.exports = {
                 'bounce': 'bounce 3s ease-in-out infinite',
                 'blob': 'blob 7s infinite',
                 'float': 'float 6s ease-in-out infinite',
+                'shake': 'shake 0.5s ease-in-out infinite',
             },
             keyframes: {
                 fadeInUp: {
@@ -74,6 +75,20 @@ module.exports = {
                     '50%': {
                         transform: 'translateY(-20px)',
                         opacity: '0.6',
+                    },
+                },
+                shake: {
+                    '0%, 100%': {
+                        transform: 'translateY(0)',
+                    },
+                    '25%': {
+                        transform: 'translateY(-2px)',
+                    },
+                    '50%': {
+                        transform: 'translateY(0)',
+                    },
+                    '75%': {
+                        transform: 'translateY(-1px)',
                     },
                 },
             },
