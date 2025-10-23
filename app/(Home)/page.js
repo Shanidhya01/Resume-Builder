@@ -52,7 +52,7 @@ const page = () => {
                             <span className="text-white drop-shadow-2xl">
                                 Made <span className="relative">
                                     Simple
-                                    <div className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full"></div>
+
                                 </span>
                             </span>
                         </h1>
