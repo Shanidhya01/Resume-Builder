@@ -22,7 +22,7 @@ const Header = () => {
     const navLinks = [
         { href: '/', label: 'Home', icon: null },
         { href: '/editor', label: 'Editor', icon: FaFileAlt },
-        { href: '/templates', label: 'Templates', icon: null },
+        // { href: '/templates', label: 'Templates', icon: null },
         { href: '/about', label: 'About', icon: null },
     ];
 

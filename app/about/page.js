@@ -29,7 +29,7 @@ const AboutPage = () => {
     // Admin/Creator Information
     const adminInfo = {
         name: "Shanidhya Kumar",
-        role: "Full-Stack Developer & Creator",
+        role: "Full-Stack Developer",
         bio: "3rd year B.E. in Computer Science & Engineering (IoT & Cyber Security) based in Bangalore, India. Passionate full-stack developer and AI/ML enthusiast with strong DSA foundations in C++. Building modern web applications with React, Next.js, TypeScript, Node.js, and MongoDB. Actively shipping projects and exploring AI assistants and real-time applications.",
         avatar: "https://avatars.githubusercontent.com/u/152613465?v=4",
         socials: {
