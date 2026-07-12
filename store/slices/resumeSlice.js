@@ -29,24 +29,24 @@ const resumeSlice = createSlice({
         },
 
         addNewIndex: (state, action) => {
-            const { tab, name, value } = action.payload;
+            const { tab } = action.payload;
             state[tab].push({});
-            // state[tab].push({ [name]: [value] });
             state.saved = false;
         },
 
         deleteIndex: (state, action) => {
             const { index, tab } = action.payload;
-            console.log('deleting', index, 'from', tab);
+            if (!Array.isArray(state[tab]) || index < 0 || index >= state[tab].length) return;
             state[tab].splice(index, 1);
             state.saved = false;
         },
 
-        // for move index
         moveIndex: (state, action) => {
             const { index, tab, dir } = action.payload;
-
             const newIndex = dir === 'up' ? index - 1 : index + 1;
+
+            if (!Array.isArray(state[tab])) return;
+            if (newIndex < 0 || newIndex >= state[tab].length || index < 0 || index >= state[tab].length) return;
 
             const temp = state[tab][index];
             state[tab][index] = state[tab][newIndex];

@@ -1,7 +1,6 @@
 export default {
     contact: {
         name: 'Contact',
-        name: 'Contact',
         fields: [
             { name: 'name', label: 'Full Name', placeholder: 'John Doe', required: true },
             { name: 'title', label: 'Your Job Title', placeholder: 'Software Developer' },

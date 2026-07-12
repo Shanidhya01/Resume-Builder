@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { FaGithub, FaFileAlt, FaDownload } from 'react-icons/fa';
+import { FaGithub, FaFileAlt } from 'react-icons/fa';
 import { HiMenuAlt3, HiX, HiSparkles } from 'react-icons/hi';
 import { IoIosRocket } from 'react-icons/io';
 
@@ -22,7 +22,7 @@ const Header = () => {
     const navLinks = [
         { href: '/', label: 'Home', icon: null },
         { href: '/editor', label: 'Editor', icon: FaFileAlt },
-        // { href: '/templates', label: 'Templates', icon: null },
+        { href: '/templates', label: 'Templates', icon: null },
         { href: '/about', label: 'About', icon: null },
     ];
 
@@ -107,6 +107,8 @@ const Header = () => {
                     {/* Mobile Menu Button */}
                     <button
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+                        aria-expanded={isMobileMenuOpen}
                         className="md:hidden p-2 text-slate-300 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-300"
                     >
                         {isMobileMenuOpen ? (

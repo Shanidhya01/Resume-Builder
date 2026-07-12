@@ -100,6 +100,7 @@ const MultiEditor = ({ tab }) => {
                             <div className="flex items-center gap-2">
                                 {/* Move Up */}
                                 <button
+                                    type="button"
                                     disabled={i == 0}
                                     className="p-2 rounded-lg hover:bg-purple-100 text-gray-600 hover:text-purple-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent transition-all duration-200"
                                     onClick={_ => {
@@ -107,19 +108,22 @@ const MultiEditor = ({ tab }) => {
                                         dispatch(moveIndex({ tab, index: i, dir: 'up' }));
                                     }}
                                     title="Move up"
+                                    aria-label="Move item up"
                                 >
                                     <FaArrowUp className="text-sm" />
                                 </button>
 
                                 {/* Move Down */}
                                 <button
+                                    type="button"
                                     disabled={i == resumeData.length - 1}
                                     className="p-2 rounded-lg hover:bg-purple-100 text-gray-600 hover:text-purple-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent transition-all duration-200"
                                     onClick={_ => {
                                         _.stopPropagation();
-                                        dispatch(moveIndex({ tab, index: i }));
+                                        dispatch(moveIndex({ tab, index: i, dir: 'down' }));
                                     }}
                                     title="Move down"
+                                    aria-label="Move item down"
                                 >
                                     <FaArrowDown className="text-sm" />
                                 </button>
@@ -134,6 +138,7 @@ const MultiEditor = ({ tab }) => {
                                             setSelectedCard(null);
                                         }}
                                         title="Collapse"
+                                        aria-label="Collapse item"
                                     >
                                         <TbArrowsMinimize className="text-sm" />
                                     </button>
@@ -141,6 +146,7 @@ const MultiEditor = ({ tab }) => {
                                         type="button" 
                                         className="p-2 rounded-lg hover:bg-purple-100 text-purple-600 transition-all duration-200"
                                         title="Edit"
+                                        aria-label="Edit item"
                                     >
                                         <FaPencil className="text-sm" />
                                     </button>
@@ -155,6 +161,7 @@ const MultiEditor = ({ tab }) => {
                                         deleteCard(i);
                                     }}
                                     title="Delete"
+                                    aria-label="Delete item"
                                 >
                                     <FaTrash className="text-sm" />
                                 </button>

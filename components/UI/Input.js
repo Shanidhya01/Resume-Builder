@@ -11,42 +11,7 @@ const Input = ({ label, name, type, placeholder, options, span, value, ...props 
     const inputRef = useRef(null);
 
     const InputEl = () => {
-        // if (type === 'textarea' && props.multipoints) {
-        //     return (
-        //         <div
-        //             contentEditable={true}
-        //             role="textbox"
-        //             className={twMerge(inputClassName, 'min-h-56 whitespace-pre-wrap text-sm md:min-h-40 md:text-sm')}
-        //             {...props}
-        //             // onInput={e => {
-        //             //     const text = e.target.innerText;
-        //             //     console.log(text);
-        //             //     props.onChange({ target: { name, value: text } });
-
-        //             // }}
-
-        //             // onKeyDown={e => {console.log('key down')}}
-        //         >
-        //             <ul className="space-y-2 list-disc">
-        //                 {value?.split('\n')?.map((line, index) => (
-        //                     <li
-        //                         key={index}
-        //                         className={
-        //                             "relative ml-[10px] leading-[1.35em] before:absolute before:left-[-10px] before:content-['•']"
-        //                         }
-        //                     >
-        //                         {line}
-        //                     </li>
-        //                 ))}
-        //             </ul>
-        //         </div>
-        //     );
-        // }
-
         if (type === 'textarea' && props.multipoints) {
-            // <ul className='space-y-1.5 list-disc pl-5'></ul>
-            // <li className="relative ml-[10px] leading-[1.35em] before:absolute before:left-[-10px] before:content-['•']"></li>;
-
             const html = `
                 <ul class="space-y-1.5 list-disc pl-4 md:pl-5">
                     ${value
@@ -128,7 +93,6 @@ const Input = ({ label, name, type, placeholder, options, span, value, ...props 
                 type={type ?? 'text'}
                 name={name}
                 id={name}
-                // className={inputClassName}
                 className={inputClassName}
                 placeholder={placeholder || `Enter ${label}`}
                 defaultValue={type === 'file' ? undefined : props.defaultValue}

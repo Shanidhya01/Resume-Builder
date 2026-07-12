@@ -1,8 +1,14 @@
 import Editor from '@/components/Editor';
 import Preview from '@/components/Resume/Preview';
 import Tabs from '@/components/Tabs';
+import ResumeFields from '@/config/ResumeFields';
 
-const page = ({ searchParams: { tab = 'contact' } }) => {
+const DEFAULT_TAB = 'contact';
+
+const page = ({ searchParams }) => {
+    const requestedTab = searchParams?.tab;
+    const tab = requestedTab && ResumeFields[requestedTab] ? requestedTab : DEFAULT_TAB;
+
     return (
         <div className="mx-auto mt-10 flex max-w-screen-xl 2xl:max-w-screen-2xl flex-col-reverse gap-8 px-4 pb-10 md:flex-row md:mt-12 2xl:mt-16 2xl:gap-12">
             

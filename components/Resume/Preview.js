@@ -63,11 +63,24 @@ const Preview = () => {
                     <div className="absolute top-0 left-0 w-20 h-20 border-t-4 border-l-4 border-[#6F42C1]/20 rounded-tl-2xl"></div>
                     <div className="absolute bottom-0 right-0 w-20 h-20 border-b-4 border-r-4 border-[#6F42C1]/20 rounded-br-2xl"></div>
                     
-                    {instance.loading ? (
+                    {instance.error ? (
+                        <div className="flex flex-col items-center gap-2 py-10 text-center text-sm text-red-600">
+                            <p className="font-semibold">Couldn't generate the PDF preview.</p>
+                            <p className="text-red-500">Please check your resume fields and try again.</p>
+                        </div>
+                    ) : instance.loading ? (
                         <Loader />
                     ) : (
                         <div className="relative">
-                            <Document loading={<Loader />} file={instance.url}>
+                            <Document
+                                loading={<Loader />}
+                                file={instance.url}
+                                error={
+                                    <p className="py-10 text-center text-sm text-red-600">
+                                        Couldn't render the PDF preview.
+                                    </p>
+                                }
+                            >
                                 <Page
                                     pageNumber={1}
                                     renderTextLayer={false}
@@ -82,7 +95,7 @@ const Preview = () => {
                 </div>
 
                 {/* Action Buttons with enhanced styling */}
-                {!instance.loading && (
+                {!instance.loading && !instance.error && (
                     <div className="relative">
                         {/* Gradient separator */}
                         <div className="h-px bg-gradient-to-r from-transparent via-[#6F42C1]/40 to-transparent"></div>

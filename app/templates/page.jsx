@@ -151,7 +151,9 @@ export default function TemplatesPage() {
               className="relative bg-slate-900/90 border border-white/10 rounded-2xl shadow-2xl backdrop-blur-xl w-[90%] md:w-[70%] lg:w-[50%] p-6"
             >
               <button
+                type="button"
                 onClick={() => setSelectedTemplate(null)}
+                aria-label="Close template preview"
                 className="absolute top-4 right-4 text-slate-400 hover:text-white transition"
               >
                 <X size={24} />

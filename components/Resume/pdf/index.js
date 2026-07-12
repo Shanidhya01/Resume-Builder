@@ -86,9 +86,6 @@ const Projects = ({ data }) => (
             <View key={i}>
                 <View style={styles.title_wrapper}>
                     <Text style={styles.title}>{project.title}</Text>
-                    {/* <Text style={styles.date}>
-                        ({project.start} - {project.end})
-                    </Text> */}
                 </View>
 
                 <View style={styles.subTitle_wrapper}>
