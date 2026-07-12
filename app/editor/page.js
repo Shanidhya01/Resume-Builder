@@ -1,13 +1,16 @@
 import Editor from '@/components/Editor';
-import Preview from '@/components/Resume/Preview';
+import Preview from '@/components/Resume/PreviewClient';
 import Tabs from '@/components/Tabs';
 import TemplateSwitcher from '@/components/Resume/TemplateSwitcher';
 import ResumeFields from '@/config/ResumeFields';
 
 const DEFAULT_TAB = 'contact';
 
-const page = ({ searchParams }) => {
-    const requestedTab = searchParams?.tab;
+export const dynamic = 'force-dynamic';
+
+const page = async ({ searchParams }) => {
+    const resolvedSearchParams = await searchParams;
+    const requestedTab = resolvedSearchParams?.tab;
     const tab = requestedTab && ResumeFields[requestedTab] ? requestedTab : DEFAULT_TAB;
 
     return (

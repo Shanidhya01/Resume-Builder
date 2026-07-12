@@ -10,7 +10,7 @@ import { getResume } from '@/lib/resumes';
 import { loadResume } from '@/store/slices/resumeSlice';
 import useAutoSave from '@/hooks/useAutoSave';
 import Editor from '@/components/Editor';
-import Preview from '@/components/Resume/Preview';
+import Preview from '@/components/Resume/PreviewClient';
 import Tabs from '@/components/Tabs';
 import TemplateSwitcher from '@/components/Resume/TemplateSwitcher';
 import ResumeFields from '@/config/ResumeFields';
