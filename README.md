@@ -242,6 +242,49 @@ The original `/editor` route (no resume id) still works as a local/anonymous scr
 
 `components/AIAssistant/AIAssistantPanel.js` is a feature-switcher panel (lazy-loaded via `next/dynamic({ ssr: false })`, matching the existing `VersionHistoryDrawer` pattern) added as a new card in `app/editor/[resumeId]/page.js`. It pulls context from Redux, calls the routes via `hooks/useAI.js`, and offers Accept/Regenerate/Copy actions per result. AI state (loading/error/last response per feature, plus a capped 20-entry history) lives in `store/slices/aiSlice.js`, registered in `store/index.js` alongside the existing `resume` reducer.
 
+## Phase 5: ATS Optimization Platform
+
+### `lib/ats/` engine
+
+Deterministic, dependency-free JS modules — no AI calls, no React — that score and analyze a resume object synchronously:
+
+- `textUtils.js` — shared text helpers (`resumeToText`, `getBullets`, `splitSkills`, syllable/sentence counting).
+- `keywords.js` — `extractKeywords`, `analyzeKeywords` (matched/missing vs. a job description, overused, duplicate, unused skills, suggested industry keywords).
+- `readability.js` — Flesch Reading Ease approximation.
+- `grammar.js` — heuristic grammar/spelling/tone checks (repetition, punctuation, first-person pronouns, capitalization).
+- `quality.js` — `analyzeBullets` (weak verbs, passive voice, length, missing numbers/impact) and `analyzeSections` (Excellent/Good/Needs Improvement/Missing per section, with reasons).
+- `score.js` — `computeAtsScore` combines the above into a weighted overall score (0-100) plus 10 section scores (header, summary, experience, projects, education, skills, certificates, formatting, keyword match, readability).
+- `recruiter.js` — simulates a recruiter's first-pass skim (reading time, first impression, visual hierarchy score, missing recruiter-facing info).
+- `recommendations.js` — turns analysis output into a flat, deduplicated, priority-sorted (critical/high/medium/low) suggestion list with stable ids.
+- `comparison.js` — diffs two resume snapshots + their analyses (added/removed skills & keywords, section score deltas).
+- `analysis.js` — the single entry point, `runAtsAnalysis(resume, jobDescription)`, composing every module above into one result object (`overall`, `grade`, `sectionScores`, `sectionStatus`, `readability`, `keywordAnalysis`, `bulletAnalysis`, `grammar`, `recruiter`, `completion`, `insights`, `recommendations`, `recommendationsByPriority`, `wordCount`, `analyzedAt`).
+
+Job-description-specific recommendations that require reasoning beyond keyword matching (suggested skills/projects/certifications/resume changes) reuse the existing `lib/ai/` OpenRouter pipeline via the `jdInsights` feature (`app/api/ai/jd-insights/route.js`), following the same prompt-builder/validator pattern as every other AI feature — no new AI provider was introduced.
+
+### State: `store/slices/atsSlice.js`
+
+Holds the cached `analysis` result (keyed by a content hash of the current resume so it's only recomputed when the resume actually changes — see `hooks/useAtsAnalysis.js`), the job-description analyzer state (`jobDescription`, `jdAnalysis`, `jdInsights`), per-suggestion Accept/Reject/Complete status (`suggestionStatus`), a saved comparison baseline (`previousSnapshot`), and lightweight analytics counters (`history`, `totalAiGenerations`, `totalResumeEdits`). Registered in `store/index.js` alongside `resume`/`ai`; only the lightweight fields persist to `localStorage` (analysis/loading state recomputes fresh on load).
+
+### Dashboard pages
+
+All pages below share `components/Ats/DashboardNav.js` for sub-navigation and pull data from `useAtsAnalysis()` (cached, resume-hash-gated) rather than recomputing analysis themselves:
+
+- `/dashboard` — resume list (Overview), now with the dashboard sub-nav.
+- `/dashboard/analytics` — full Resume Quality Dashboard: ATS score ring, grade, completion %, readability, grammar score, keyword coverage, recruiter impression, word count, last-analyzed timestamp, resume strength meter, section score bars + radar chart, section intelligence, missing sections, weak/strong bullets, insights, recruiter preview summary, job description analyzer, keyword intelligence, resume comparison, ATS score history / completion trend charts, and AI usage statistics.
+- `/dashboard/job-match` — dedicated Job Description Analyzer UI using the existing `jobMatch` and `jdInsights` OpenRouter-backed routes (match %, matched/missing keywords, recommended skills/projects/certifications/changes).
+- `/dashboard/keywords` — Keyword Dashboard (top resume keywords with a distribution chart, matched/missing keywords against the last analyzed job description, overused/duplicate keywords, unused skills, suggested industry keywords).
+- `/dashboard/recruiter` — Recruiter Preview page (reading time, visual hierarchy score, first impression, important sections, missing recruiter info, recruiter/industry/ATS tips).
+- `/dashboard/comparison` — Resume Comparison page (current vs. a saved baseline snapshot: added/removed skills & keywords, ATS score difference, improvement %, per-section score deltas).
+- `/improvements` — Improvement Center: recommendations grouped into Critical/High/Medium/Low with per-suggestion Accept/Reject/Mark Complete, counts shown per priority filter, status persisted in Redux.
+
+### Charts
+
+`components/Ats/charts/*` use [Recharts](https://recharts.org/) (`AtsHistoryChart`, `CompletionTrendChart`, `SectionRadarChart`, `KeywordDistributionChart`) and are lazy-loaded per page via `next/dynamic({ ssr: false })` with a skeleton fallback (`components/Ats/Skeleton.js`), since chart rendering only makes sense client-side and shouldn't block the initial page load.
+
+### Performance
+
+`useAtsAnalysis` hashes the resume object and only re-runs `runAtsAnalysis` when the content actually changes, caching the result in Redux so every dashboard page reads the same cached analysis instead of recomputing it. Expensive list-rendering subcomponents (section score bars, section intelligence list, suggestion rows) are wrapped in `React.memo`.
+
 ## Deployment
 
 The app is a standard Next.js project and deploys cleanly to [Vercel](https://vercel.com/) (recommended) or any Node.js host that supports `next build` / `next start`. Set the `NEXT_PUBLIC_FIREBASE_*` environment variables in your hosting provider's dashboard for Phase 3 auth/cloud features to work in production; the Google Analytics ID is currently hardcoded in `app/layout.js`.

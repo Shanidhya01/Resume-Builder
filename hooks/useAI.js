@@ -15,6 +15,7 @@ const FEATURE_ROUTES = {
     coverLetter: '/api/ai/cover-letter',
     ats: '/api/ai/ats',
     jobMatch: '/api/ai/job-match',
+    jdInsights: '/api/ai/jd-insights',
 };
 
 const CACHE_TTL_MS = 2000;

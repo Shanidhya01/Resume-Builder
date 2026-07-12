@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { FaGithub, FaFileAlt, FaUserCircle } from 'react-icons/fa';
+import { FaGithub, FaFileAlt, FaUserCircle, FaChartBar, FaTasks } from 'react-icons/fa';
 import { HiMenuAlt3, HiX, HiSparkles } from 'react-icons/hi';
 import { IoIosRocket } from 'react-icons/io';
 import { useAuth } from '@/context/AuthContext';
@@ -32,6 +32,8 @@ const Header = () => {
         ? [
               { href: '/dashboard', label: 'Dashboard', icon: null },
               { href: '/editor', label: 'Editor', icon: FaFileAlt },
+              { href: '/dashboard/analytics', label: 'Analytics', icon: FaChartBar },
+              { href: '/improvements', label: 'Improvements', icon: FaTasks },
               { href: '/templates', label: 'Templates', icon: null },
               { href: '/account', label: 'Account', icon: FaUserCircle },
           ]

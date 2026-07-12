@@ -1,0 +1,25 @@
+'use client';
+
+const colorFor = value => {
+    if (value >= 80) return 'from-green-500 to-emerald-400';
+    if (value >= 60) return 'from-blue-500 to-purple-400';
+    if (value >= 40) return 'from-yellow-500 to-orange-400';
+    return 'from-red-600 to-red-400';
+};
+
+const ProgressBar = ({ label, value = 0 }) => (
+    <div>
+        <div className="mb-1 flex items-center justify-between text-xs text-slate-300">
+            <span className="capitalize">{label}</span>
+            <span className="font-semibold text-white">{Math.round(value)}</span>
+        </div>
+        <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
+            <div
+                className={`h-full rounded-full bg-gradient-to-r ${colorFor(value)} transition-all duration-500`}
+                style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
+            />
+        </div>
+    </div>
+);
+
+export default ProgressBar;

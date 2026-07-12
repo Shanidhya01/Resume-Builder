@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import resumeSlice from './slices/resumeSlice';
 import aiSlice from './slices/aiSlice';
+import atsSlice from './slices/atsSlice';
 import { DEFAULT_TEMPLATE_ID, isValidTemplateId } from '@/config/templates';
 
 const STORAGE_KEY = 'reduxState';
@@ -17,6 +18,22 @@ const defaultResumeShape = {
     languages: [],
     selectedTemplate: DEFAULT_TEMPLATE_ID,
     saved: false,
+};
+
+const defaultAtsShape = {
+    analysis: null,
+    analyzedResumeHash: null,
+    lastAnalyzedAt: null,
+    jobDescription: '',
+    jdAnalysis: null,
+    jdInsights: null,
+    jdLoading: false,
+    jdError: null,
+    suggestionStatus: {},
+    previousSnapshot: null,
+    history: [],
+    totalAiGenerations: 0,
+    totalResumeEdits: 0,
 };
 
 const isPlainObject = value => typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -55,7 +72,19 @@ const loadState = () => {
 
         // Sanitizing (rather than discarding) on a version bump lets older
         // payloads pick up new fields' defaults without losing existing resume data.
-        return { resume: sanitizeResumeState(parsed.resume) };
+        const preloaded = { resume: sanitizeResumeState(parsed.resume) };
+        // Merge onto the slice's own defaults (not replace) — only the lightweight,
+        // user-authored bits are persisted; analysis/loading state is recomputed fresh.
+        const atsRaw = isPlainObject(parsed.ats) ? parsed.ats : {};
+        preloaded.ats = {
+            ...defaultAtsShape,
+            suggestionStatus: isPlainObject(atsRaw.suggestionStatus) ? atsRaw.suggestionStatus : {},
+            history: Array.isArray(atsRaw.history) ? atsRaw.history : [],
+            totalAiGenerations: typeof atsRaw.totalAiGenerations === 'number' ? atsRaw.totalAiGenerations : 0,
+            totalResumeEdits: typeof atsRaw.totalResumeEdits === 'number' ? atsRaw.totalResumeEdits : 0,
+            previousSnapshot: isPlainObject(atsRaw.previousSnapshot) ? atsRaw.previousSnapshot : null,
+        };
+        return preloaded;
     } catch (err) {
         console.warn('Resume Builder: could not read saved resume, starting fresh.', err);
         return undefined;
@@ -68,6 +97,7 @@ const store = configureStore({
     reducer: {
         resume: resumeSlice,
         ai: aiSlice,
+        ats: atsSlice,
     },
 });
 
@@ -85,7 +115,18 @@ const saveState = debounce(() => {
     if (typeof window === 'undefined') return;
 
     try {
-        const payload = { version: STORAGE_VERSION, resume: store.getState().resume };
+        const atsState = store.getState().ats;
+        const payload = {
+            version: STORAGE_VERSION,
+            resume: store.getState().resume,
+            ats: {
+                suggestionStatus: atsState.suggestionStatus,
+                history: atsState.history,
+                totalAiGenerations: atsState.totalAiGenerations,
+                totalResumeEdits: atsState.totalResumeEdits,
+                previousSnapshot: atsState.previousSnapshot,
+            },
+        };
         window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     } catch (err) {
         console.warn('Resume Builder: could not save resume to local storage.', err);

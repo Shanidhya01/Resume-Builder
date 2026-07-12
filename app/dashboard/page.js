@@ -11,6 +11,7 @@ import { SkeletonGrid } from '@/components/UI/Skeleton';
 import EmptyState from '@/components/UI/EmptyState';
 import ErrorMessage from '@/components/UI/ErrorMessage';
 import ConfirmModal from '@/components/UI/ConfirmModal';
+import DashboardNav from '@/components/Ats/DashboardNav';
 import { DEFAULT_TEMPLATE_ID } from '@/config/templates';
 
 const DashboardContent = () => {
@@ -96,6 +97,8 @@ const DashboardContent = () => {
                     <FaPlus /> {creating ? 'Creating...' : 'Create New Resume'}
                 </button>
             </div>
+
+            <DashboardNav />
 
             {error && <ErrorMessage message={error} onRetry={fetchResumes} />}
 
