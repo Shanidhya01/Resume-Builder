@@ -15,39 +15,85 @@ HireReady lets you fill out a structured resume form and see a live, print-ready
 
 ## Features
 
-- **Live editor with instant PDF preview** — edit contact info, summary, education, experience, projects, skills, certificates, and languages, with the PDF preview panel updating on save.
-- **Auto-save** — resume data is persisted to `localStorage` (debounced) and restored on your next visit, with schema validation so corrupted or stale data never crashes the app.
-- **PDF export** — download your resume as a PDF, generated client-side with `@react-pdf/renderer`.
-- **Templates gallery** (`/templates`) — browse a set of template previews. Selecting one currently links back to the editor; template switching does not yet change the generated PDF layout (tracked in the [roadmap](#roadmap)).
+- **Six resume templates** — ATS, Modern, Creative, Minimal, Executive, and Two Column. Each has a genuinely different layout (single column, sidebar, two-column), typography, spacing, and section order/arrangement — not just a recolor.
+- **Live editor with instant PDF preview** — edit contact info, summary, education, experience, projects, skills, certificates, and languages, with the PDF preview panel updating on save or template change.
+- **In-editor template switching** — swap templates from inside `/editor` with no page reload; the preview and download both update immediately.
+- **Templates gallery** (`/templates`) — browse all templates with ATS-friendliness scores and recommended roles, open a full-size preview modal (zoom, next/previous, keyboard navigation), and select one to jump straight into the editor with it applied.
+- **Auto-save** — resume data *and* the selected template are persisted to `localStorage` (debounced) and restored on your next visit, with schema validation so corrupted or stale data never crashes the app.
+- **PDF export** — download your resume as a PDF, generated client-side with `@react-pdf/renderer`, matching whichever template is currently selected.
 - **Resilient routing** — invalid editor tab query params fall back to a sensible default instead of crashing; unknown routes show a proper 404 page; unexpected errors are caught by React error boundaries instead of a blank screen.
-- **Responsive, accessible UI** — built with Tailwind CSS, with `aria-label`s on icon-only controls and keyboard-reachable interactive elements.
+- **Responsive, accessible UI** — built with Tailwind CSS, with `aria-label`s, keyboard navigation, and focus management on icon-only controls and modals.
 
-> Not yet implemented: HTML export, multiple selectable resume templates, and user accounts/cloud sync. See the [Roadmap](#roadmap).
+> Not yet implemented: HTML export and user accounts/cloud sync. See the [Roadmap](#roadmap).
 
 ## Architecture
 
 ```
-┌──────────────┐      ┌──────────────────┐      ┌────────────────────┐
-│  Editor UI   │ ───► │  Redux store      │ ───► │  localStorage       │
-│ (Tabs/Input) │ ◄─── │ (resumeSlice)     │ ◄─── │ (debounced persist) │
-└──────────────┘      └──────────────────┘      └────────────────────┘
+┌──────────────┐      ┌───────────────────────┐      ┌────────────────────┐
+│  Editor UI   │ ───► │  Redux store           │ ───► │  localStorage       │
+│ (Tabs/Input, │ ◄─── │ (resumeSlice: content  │ ◄─── │ (debounced persist, │
+│ TemplateSwitcher) │  │  + selectedTemplate)   │      │  schema-validated)  │
+└──────────────┘      └───────────────────────┘      └────────────────────┘
+        │                         │
+        │                         ▼
+        │              config/templates.js (metadata: name, ATS score,
+        │              recommended roles, colors, thumbnail — no JSX)
+        │                         │
+        ▼                         ▼
+┌───────────────────────────────────────────────────┐
+│ components/Resume/templates/registry.js             │
+│  → code-split `import()` per template id            │
+└───────────────────────────────────────────────────┘
+        │
+        ▼
+┌────────────────────────────┐
+│ Template component          │  components/Resume/templates/<Name>/index.js
+│ (layout + section order)    │  + styles.js (typography/spacing/color)
+│ built from shared renderers │  components/Resume/templates/shared/*
+└────────────────────────────┘
         │
         ▼
 ┌────────────────────┐
-│ PDF Document tree   │  components/Resume/pdf/*
-│ (@react-pdf/renderer)│
-└────────────────────┘
-        │
-        ▼
-┌────────────────────┐
-│ Live PDF Preview     │  components/Resume/Preview.js (react-pdf viewer)
+│ Live PDF Preview     │  components/Resume/Preview.js (usePDF + react-pdf viewer)
 │ + Download button    │
 └────────────────────┘
 ```
 
-- **State**: a single Redux slice (`store/slices/resumeSlice.js`) holds the entire resume document. Every field edit dispatches an action; the store is subscribed to persist to `localStorage` on change.
-- **Rendering**: the same resume state drives a `@react-pdf/renderer` document tree (`components/Resume/pdf/`), which is rendered to a blob URL and displayed with `react-pdf`'s `<Document>`/`<Page>` viewer.
+- **State**: a single Redux slice (`store/slices/resumeSlice.js`) holds the resume content *and* the `selectedTemplate` id. Every field edit or template switch dispatches an action; the store is subscribed to persist both to `localStorage` on change (see [Template Architecture](#template-architecture)).
+- **Rendering**: `components/Resume/Preview.js` resolves the selected template's PDF component via `templates/registry.js` (a plain code-split `import()`, not `next/dynamic`/`React.lazy`, since react-pdf's custom reconciler doesn't support Suspense), builds the document element, and feeds it to `usePDF`.
 - **Routing**: Next.js App Router (`app/`) with route groups for the home page, and dedicated routes for `/editor`, `/templates`, and `/about`.
+
+## Template Architecture
+
+Templates live in `components/Resume/templates/`, one folder per template:
+
+```
+components/Resume/templates/
+  shared/            Rendering logic reused by every template
+    Header.js          Name/title/contact-links block
+    SectionHeading.js   Titled section wrapper (title + underline + spacing)
+    ListItem.js          Bulleted list row
+    Sections.js         Summary/Education/Experience/Projects/Skills/
+                         Certificates/Languages content renderers
+  ATS/
+    index.js           <Document>/<Page> layout + section order
+    styles.js           StyleSheet.create({...}) — typography, spacing, color
+  Modern/  Creative/  Minimal/  Executive/  TwoColumn/
+    ...                (same index.js + styles.js shape)
+  registry.js          id → code-split import() loader, with caching
+```
+
+**Separation of concerns**: a template's `index.js` only decides *layout* — which sections appear, in what order, and how they're arranged (single column vs. sidebar vs. two-column). It never re-implements *how* an experience entry or bullet list renders — that logic lives once in `shared/Sections.js` and is parameterized entirely by the `styles` object each template passes in. This is what keeps six visually distinct templates from duplicating rendering code.
+
+### Adding a new template
+
+1. Create `components/Resume/templates/YourTemplate/styles.js` — a `StyleSheet.create({...})` implementing the same style keys used by the existing templates (`page`, `header`, `headerName`, `sectionTitle`, `entryTitle`, `listRow`, etc. — copy an existing `styles.js` as a starting point).
+2. Create `components/Resume/templates/YourTemplate/index.js` — import the shared section components from `../shared/Sections` and `../shared/Header`, and compose your layout (see `TwoColumn/index.js` for a multi-column example, or `Creative/index.js` for a sidebar example).
+3. Register it in `components/Resume/templates/registry.js`'s `loaders` map.
+4. Add its metadata (id, name, description, thumbnail, ATS score, recommended roles, colors, layout type) to `config/templates.js`.
+5. Add a thumbnail image to `public/templates/`.
+
+No other file needs to change — the templates page, editor switcher, and PDF preview all read from `config/templates.js` and `registry.js`.
 
 ## Tech Stack
 
@@ -93,30 +139,33 @@ app/                    Next.js App Router routes
   (Home)/                 Landing page
   about/                   About page (fetches GitHub contributors)
   editor/                  Resume editor route (?tab=<section>)
-  templates/               Template gallery
+  templates/               Template gallery (cards + preview modal)
   error.js, not-found.js  Error boundary & 404 page
 components/
   Editor/                 Editor shell, single-field & repeatable-field editors
   Resume/
-    pdf/                    react-pdf document tree used for preview & export
-    Preview.js              Live PDF preview panel + download/preview actions
+    templates/              All 6 template layouts + shared renderers (see above)
+    Preview.js               Live PDF preview panel + download/preview actions
+    TemplateSwitcher.js       In-editor template picker
+    TemplatePreviewModal.js   Full-size preview with zoom/next/prev
   UI/                     Reusable form inputs
   Header.js, Tabs.js      Navigation
 config/
   ResumeFields.js         Declarative field schema per resume section
+  templates.js            Template metadata registry (name, ATS score, colors, etc.)
 store/
-  index.js                Redux store + localStorage persistence
-  slices/resumeSlice.js   Resume state reducers
+  index.js                Redux store + localStorage persistence (content + template)
+  slices/resumeSlice.js   Resume state reducers, incl. setTemplate
 utils/
   formatDate.js           Date formatting helper used in the PDF
 ```
 
 ## Roadmap
 
-- [ ] Wire up the templates gallery so selecting a template actually changes the generated resume layout.
-- [ ] Add automated tests (unit tests for reducers/utils, component tests for the editor).
+- [ ] Add automated tests (unit tests for reducers/utils, component/visual tests per template).
 - [ ] Add a TypeScript migration path for stronger type safety.
 - [ ] Add CI (lint + build) via GitHub Actions.
+- [ ] Per-template color customization (using each template's `primaryColor`/`secondaryColor` as user-editable accents).
 - [ ] Optional account/cloud sync for cross-device resume storage.
 
 ## Deployment

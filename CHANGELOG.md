@@ -4,6 +4,26 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased] — Phase 2: Multi-Template Resume Builder
+
+### Added
+- Six real resume templates — ATS, Modern, Creative, Minimal, Executive, Two Column — each with distinct layout, typography, spacing, header style, and section arrangement (`components/Resume/templates/{ATS,Modern,Creative,Minimal,Executive,TwoColumn}/`).
+- Shared PDF rendering primitives (`components/Resume/templates/shared/`: `Header`, `SectionHeading`, `ListItem`, `Sections.js`) so every template reuses one implementation of "how a section renders" and only supplies its own layout + `styles.js`.
+- `components/Resume/templates/registry.js` — code-split `import()` loader per template id, with in-memory caching, so unselected templates are never bundled into the initial preview load.
+- `config/templates.js` — metadata registry (id, name, description, thumbnail, ATS score, recommended roles, primary/secondary color, layout type) driving the templates page, editor switcher, and preview modal.
+- `selectedTemplate` field + `setTemplate` reducer in `resumeSlice`, persisted to `localStorage` alongside resume content and restored automatically on load.
+- `components/Resume/TemplateSwitcher.js` — in-editor template picker (radiogroup, keyboard/focus accessible) that updates the preview instantly, no reload.
+- `components/Resume/TemplatePreviewModal.js` — full-size template preview with zoom in/out, next/previous template cycling, Escape-to-close, and focus management (focus moves into the dialog on open, returns to the trigger on close).
+- Redesigned `/templates` page: cards with thumbnail, name, description, ATS score badge, recommended roles, "Preview" and "Use Template" actions, and a "Selected" badge for the active template.
+
+### Changed
+- `components/Resume/Preview.js` rewritten to resolve the selected template asynchronously, memoize the built PDF document, and refresh the preview/download on template change as well as on save.
+- `store/index.js` localStorage schema bumped (additively — existing saved resumes are preserved, not discarded) to persist `selectedTemplate` alongside resume content.
+- `app/editor/page.js` now includes a "Template" panel above the section tabs.
+
+### Removed
+- `components/Resume/pdf/` and `components/Resume/Styles.js` — superseded by the per-template `components/Resume/templates/*` structure; all logic was migrated, nothing was dropped.
+
 ## [Unreleased] — Phase 1: Production Readiness
 
 ### Added

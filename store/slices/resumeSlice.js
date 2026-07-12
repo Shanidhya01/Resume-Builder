@@ -1,4 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { DEFAULT_TEMPLATE_ID, isValidTemplateId } from '@/config/templates';
 
 const defaultResume = {
     contact: {},
@@ -10,6 +11,7 @@ const defaultResume = {
     certificates: [],
     languages: [],
 
+    selectedTemplate: DEFAULT_TEMPLATE_ID,
     saved: false,
 };
 
@@ -57,8 +59,15 @@ const resumeSlice = createSlice({
         saveResume: state => {
             state.saved = true;
         },
+
+        setTemplate: (state, action) => {
+            const templateId = action.payload;
+            if (!isValidTemplateId(templateId)) return;
+            state.selectedTemplate = templateId;
+            state.saved = false;
+        },
     },
 });
 
-export const { updateResumeValue, addNewIndex, deleteIndex, saveResume, moveIndex } = resumeSlice.actions;
+export const { updateResumeValue, addNewIndex, deleteIndex, saveResume, moveIndex, setTemplate } = resumeSlice.actions;
 export default resumeSlice.reducer;

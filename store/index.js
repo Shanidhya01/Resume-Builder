@@ -1,8 +1,9 @@
 import { configureStore } from '@reduxjs/toolkit';
 import resumeSlice from './slices/resumeSlice';
+import { DEFAULT_TEMPLATE_ID, isValidTemplateId } from '@/config/templates';
 
 const STORAGE_KEY = 'reduxState';
-const STORAGE_VERSION = 1;
+const STORAGE_VERSION = 2;
 
 const defaultResumeShape = {
     contact: {},
@@ -13,6 +14,7 @@ const defaultResumeShape = {
     skills: {},
     certificates: [],
     languages: [],
+    selectedTemplate: DEFAULT_TEMPLATE_ID,
     saved: false,
 };
 
@@ -29,9 +31,11 @@ const sanitizeResumeState = raw => {
         const expectedIsArray = Array.isArray(defaultResumeShape[key]);
         if (expectedIsArray && Array.isArray(value)) {
             sanitized[key] = value;
-        } else if (!expectedIsArray && key !== 'saved' && isPlainObject(value)) {
-            sanitized[key] = value;
         } else if (key === 'saved' && typeof value === 'boolean') {
+            sanitized[key] = value;
+        } else if (key === 'selectedTemplate' && isValidTemplateId(value)) {
+            sanitized[key] = value;
+        } else if (!expectedIsArray && key !== 'saved' && key !== 'selectedTemplate' && isPlainObject(value)) {
             sanitized[key] = value;
         }
     }
@@ -46,10 +50,10 @@ const loadState = () => {
         if (!serialized) return undefined;
 
         const parsed = JSON.parse(serialized);
-        if (!isPlainObject(parsed) || parsed.version !== STORAGE_VERSION) {
-            return { resume: defaultResumeShape };
-        }
+        if (!isPlainObject(parsed)) return { resume: defaultResumeShape };
 
+        // Sanitizing (rather than discarding) on a version bump lets older
+        // payloads pick up new fields' defaults without losing existing resume data.
         return { resume: sanitizeResumeState(parsed.resume) };
     } catch (err) {
         console.warn('Resume Builder: could not read saved resume, starting fresh.', err);
