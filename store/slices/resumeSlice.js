@@ -66,8 +66,18 @@ const resumeSlice = createSlice({
             state.selectedTemplate = templateId;
             state.saved = false;
         },
+
+        loadResume: (state, action) => {
+            const data = action.payload || {};
+            return {
+                ...defaultResume,
+                ...data,
+                selectedTemplate: isValidTemplateId(data.selectedTemplate) ? data.selectedTemplate : DEFAULT_TEMPLATE_ID,
+                saved: true,
+            };
+        },
     },
 });
 
-export const { updateResumeValue, addNewIndex, deleteIndex, saveResume, moveIndex, setTemplate } = resumeSlice.actions;
+export const { updateResumeValue, addNewIndex, deleteIndex, saveResume, moveIndex, setTemplate, loadResume } = resumeSlice.actions;
 export default resumeSlice.reducer;

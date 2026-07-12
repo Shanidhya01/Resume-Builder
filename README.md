@@ -168,9 +168,57 @@ utils/
 - [ ] Per-template color customization (using each template's `primaryColor`/`secondaryColor` as user-editable accents).
 - [ ] Optional account/cloud sync for cross-device resume storage.
 
+## Phase 3: Cloud & Auth
+
+HireReady now supports Firebase Authentication + Firestore for multi-resume, cross-device storage, layered on top of the existing Redux/localStorage editor.
+
+### Firebase project setup
+
+1. Create a project at [Firebase Console](https://console.firebase.google.com).
+2. Enable **Authentication > Sign-in method > Email/Password** and **Google**. For Google sign-in, set a support email in the provider config; no extra redirect URI setup is needed for `localhost` or a Vercel deployment domain added under Authentication > Settings > Authorized domains.
+3. Create a **Firestore Database** (production mode).
+4. Add a Web App (Project Settings > General > Your apps) and copy the SDK config values.
+5. Deploy the security rules in `firestore.rules`: `firebase deploy --only firestore:rules` (requires the Firebase CLI and `firebase init` to link the project), or paste the file's contents into Firestore's Rules tab in the console.
+6. In Firestore, add a composite index if prompted when querying `resumes` by `ownerId` (Firestore will emit a console link the first time the query is run if one is needed).
+
+Runs entirely on the free Spark plan — Firebase Storage is intentionally not used, since file uploads require the paid Blaze plan. Profile pictures are set via a URL field on the Account page instead of a file upload.
+
+### Environment variables
+
+Copy `.env.example` to `.env.local` and fill in the values from step 4 above:
+
+```
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+```
+
+`.env.local` is git-ignored. The Firebase client SDK does not validate these at build time, so `npm run build` succeeds even with placeholder values — only actual network calls (sign up, log in, Firestore reads/writes) require a real project.
+
+### Firestore schema
+
+- `resumes/{resumeId}` — `{ ownerId, name, selectedTemplate, contact, summary, education, experience, projects, skills, certificates, languages, isDefault, createdAt, updatedAt }`. Documents live in a top-level collection (not nested under `users`) so ownership queries are a simple `where('ownerId', '==', uid)`.
+- `resumes/{resumeId}/versions/{versionId}` — a snapshot of the resume content fields plus `savedAt`, written on autosave at most once every 2 minutes of active editing (the live document is updated on every autosave regardless).
+
+### Security rules
+
+See `firestore.rules` at the repo root: a resume is only readable/writable by the user whose `uid` matches its `ownerId`; the `versions` subcollection inherits the same check via a `get()` on the parent document. The Firestore service layer (`lib/resumes.js`) also checks ownership client-side before mutating, as defense in depth.
+
+### Local dev
+
+1. `npm install`
+2. Set up `.env.local` as above (placeholders are fine for `npm run build`; a real Firebase project is required to actually sign up/log in).
+3. `npm run dev`
+4. Visit `/register` to create an account, then `/dashboard` to manage resumes.
+
+The original `/editor` route (no resume id) still works as a local/anonymous scratch editor backed by `localStorage`, unchanged from Phase 1/2. The primary authenticated flow is `/dashboard` → pick or create a resume → `/editor/[resumeId]`, which persists to Firestore via a debounced autosave hook (`hooks/useAutoSave.js`) instead of localStorage.
+
 ## Deployment
 
-The app is a standard Next.js project and deploys cleanly to [Vercel](https://vercel.com/) (recommended) or any Node.js host that supports `next build` / `next start`. No environment variables are required for the core app; the Google Analytics ID is currently hardcoded in `app/layout.js`.
+The app is a standard Next.js project and deploys cleanly to [Vercel](https://vercel.com/) (recommended) or any Node.js host that supports `next build` / `next start`. Set the `NEXT_PUBLIC_FIREBASE_*` environment variables in your hosting provider's dashboard for Phase 3 auth/cloud features to work in production; the Google Analytics ID is currently hardcoded in `app/layout.js`.
 
 ## Contributing
 

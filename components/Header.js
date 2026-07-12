@@ -1,15 +1,18 @@
 'use client'
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { FaGithub, FaFileAlt } from 'react-icons/fa';
+import { FaGithub, FaFileAlt, FaUserCircle } from 'react-icons/fa';
 import { HiMenuAlt3, HiX, HiSparkles } from 'react-icons/hi';
 import { IoIosRocket } from 'react-icons/io';
+import { useAuth } from '@/context/AuthContext';
 
 const Header = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const pathname = usePathname();
+    const router = useRouter();
+    const { user, loading, logOut } = useAuth();
 
     useEffect(() => {
         const handleScroll = () => {
@@ -19,12 +22,24 @@ const Header = () => {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    const navLinks = [
-        { href: '/', label: 'Home', icon: null },
-        { href: '/editor', label: 'Editor', icon: FaFileAlt },
-        { href: '/templates', label: 'Templates', icon: null },
-        { href: '/about', label: 'About', icon: null },
-    ];
+    const handleLogout = async () => {
+        await logOut();
+        setIsMobileMenuOpen(false);
+        router.push('/');
+    };
+
+    const navLinks = user
+        ? [
+              { href: '/dashboard', label: 'Dashboard', icon: null },
+              { href: '/editor', label: 'Editor', icon: FaFileAlt },
+              { href: '/templates', label: 'Templates', icon: null },
+              { href: '/account', label: 'Account', icon: FaUserCircle },
+          ]
+        : [
+              { href: '/', label: 'Home', icon: null },
+              { href: '/templates', label: 'Templates', icon: null },
+              { href: '/about', label: 'About', icon: null },
+          ];
 
     return (
         <>
@@ -90,18 +105,35 @@ const Header = () => {
                             <FaGithub className="w-4 h-4 transition-transform group-hover:rotate-12" />
                             <span className="hidden lg:inline">GitHub</span>
                         </a>
-                        
-                        <Link
-                            href="/editor"
-                            className="group relative flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold rounded-xl shadow-lg shadow-purple-500/40 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/60 hover:scale-110 overflow-hidden animate-gradient-x bg-[length:200%_auto]"
-                        >
-                            <span className="absolute inset-0 w-0 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 transition-all duration-500 ease-out group-hover:w-full"></span>
-                            <div className="relative flex items-center gap-2">
-                                <span className="absolute -left-1 w-6 h-6 bg-white rounded-full blur-md opacity-0 group-hover:opacity-60 transition-all duration-300"></span>
-                                <IoIosRocket className="relative w-5 h-5 group-hover:animate-shake" />
-                            </div>
-                            <span className="relative">Get Started</span>
-                        </Link>
+
+                        {!loading && user ? (
+                            <button
+                                onClick={handleLogout}
+                                className="group relative flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold rounded-xl shadow-lg shadow-purple-500/40 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/60 hover:scale-110 overflow-hidden"
+                            >
+                                <span className="relative">Logout</span>
+                            </button>
+                        ) : (
+                            <>
+                                <Link
+                                    href="/login"
+                                    className="px-4 py-2 text-slate-300 font-medium transition-all duration-300 hover:text-white"
+                                >
+                                    Login
+                                </Link>
+                                <Link
+                                    href="/register"
+                                    className="group relative flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold rounded-xl shadow-lg shadow-purple-500/40 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/60 hover:scale-110 overflow-hidden animate-gradient-x bg-[length:200%_auto]"
+                                >
+                                    <span className="absolute inset-0 w-0 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 transition-all duration-500 ease-out group-hover:w-full"></span>
+                                    <div className="relative flex items-center gap-2">
+                                        <span className="absolute -left-1 w-6 h-6 bg-white rounded-full blur-md opacity-0 group-hover:opacity-60 transition-all duration-300"></span>
+                                        <IoIosRocket className="relative w-5 h-5 group-hover:animate-shake" />
+                                    </div>
+                                    <span className="relative">Get Started</span>
+                                </Link>
+                            </>
+                        )}
                     </div>
 
                     {/* Mobile Menu Button */}
@@ -160,14 +192,32 @@ const Header = () => {
                                     <span>View Source</span>
                                 </a>
                                 
-                                <Link
-                                    href="/editor"
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                    className="flex items-center justify-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold rounded-xl shadow-lg shadow-purple-500/40 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:shadow-purple-500/60"
-                                >
-                                    <IoIosRocket className="w-5 h-5" />
-                                    <span>Get Started</span>
-                                </Link>
+                                {!loading && user ? (
+                                    <button
+                                        onClick={handleLogout}
+                                        className="flex items-center justify-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold rounded-xl shadow-lg shadow-purple-500/40 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:shadow-purple-500/60"
+                                    >
+                                        <span>Logout</span>
+                                    </button>
+                                ) : (
+                                    <>
+                                        <Link
+                                            href="/login"
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                            className="flex items-center justify-center gap-3 px-4 py-3 text-slate-300 font-medium rounded-xl border border-purple-500/20"
+                                        >
+                                            <span>Login</span>
+                                        </Link>
+                                        <Link
+                                            href="/register"
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                            className="flex items-center justify-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold rounded-xl shadow-lg shadow-purple-500/40 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:shadow-purple-500/60"
+                                        >
+                                            <IoIosRocket className="w-5 h-5" />
+                                            <span>Get Started</span>
+                                        </Link>
+                                    </>
+                                )}
                             </div>
                         </nav>
                     </div>

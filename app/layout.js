@@ -2,6 +2,7 @@ import Header from '@/components/Header';
 
 import './globals.scss';
 import ReduxProvider from '@/store/ReduxProvider';
+import { AuthProvider } from '@/context/AuthContext';
 import {GoogleAnalytics} from '@next/third-parties/google'
 
 export const metadata = {
@@ -25,10 +26,12 @@ export default function RootLayout({ children }) {
     return (
         <html lang="en">
             <body>
-                <ReduxProvider>
-                    <Header />
-                    <div className="mx-auto  min-h-[calc(100vh-3rem)]">{children}</div>
-                </ReduxProvider>
+                <AuthProvider>
+                    <ReduxProvider>
+                        <Header />
+                        <div className="mx-auto  min-h-[calc(100vh-3rem)]">{children}</div>
+                    </ReduxProvider>
+                </AuthProvider>
                 <GoogleAnalytics gaId='G-WPXWXJ9MC2' />
             </body>
         </html>
