@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import resumeSlice from './slices/resumeSlice';
+import aiSlice from './slices/aiSlice';
 import { DEFAULT_TEMPLATE_ID, isValidTemplateId } from '@/config/templates';
 
 const STORAGE_KEY = 'reduxState';
@@ -66,6 +67,7 @@ const store = configureStore({
     preloadedState: loadState(),
     reducer: {
         resume: resumeSlice,
+        ai: aiSlice,
     },
 });
 

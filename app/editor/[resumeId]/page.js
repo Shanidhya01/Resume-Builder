@@ -17,6 +17,7 @@ import ResumeFields from '@/config/ResumeFields';
 import ErrorMessage from '@/components/UI/ErrorMessage';
 
 const VersionHistoryDrawer = dynamic(() => import('@/components/Editor/VersionHistoryDrawer'), { ssr: false });
+const AIAssistantPanel = dynamic(() => import('@/components/AIAssistant/AIAssistantPanel'), { ssr: false });
 
 const DEFAULT_TAB = 'contact';
 
@@ -130,6 +131,11 @@ const EditorContent = () => {
 
                 <div className="rounded-xl border border-[#6F42C1] shadow-md p-4 md:p-6 transition-shadow duration-300 hover:shadow-lg flex-grow bg-transparent">
                     <Editor tab={tab} />
+                </div>
+
+                <div className="rounded-xl border border-[#6F42C1] shadow-md p-4 md:p-6 transition-shadow duration-300 hover:shadow-lg bg-transparent">
+                    <h2 className="mb-3 text-sm font-semibold text-gray-300 md:text-base">AI Assistant</h2>
+                    <AIAssistantPanel />
                 </div>
             </div>
 

@@ -216,6 +216,32 @@ See `firestore.rules` at the repo root: a resume is only readable/writable by th
 
 The original `/editor` route (no resume id) still works as a local/anonymous scratch editor backed by `localStorage`, unchanged from Phase 1/2. The primary authenticated flow is `/dashboard` → pick or create a resume → `/editor/[resumeId]`, which persists to Firestore via a debounced autosave hook (`hooks/useAutoSave.js`) instead of localStorage.
 
+## Phase 4: AI Resume Assistant
+
+### OpenRouter setup
+
+1. Get a free API key at [openrouter.ai](https://openrouter.ai).
+2. Add to `.env.local`: `OPENROUTER_API_KEY=<your-key>`. This variable is server-only (no `NEXT_PUBLIC_` prefix) and is only read inside `app/api/ai/*` route handlers — it never reaches the browser bundle.
+3. Optionally set `OPENROUTER_MODEL` (defaults to `openai/gpt-oss-20b:free`). Changing this value swaps the model used for every AI feature with no code changes.
+
+### `lib/ai/` architecture
+
+- `openrouter.js` — low-level client that calls the OpenRouter chat-completions endpoint with a 30s timeout (AbortController) and exponential-backoff retries (max 2) on 429/5xx.
+- `prompts.js` — one prompt-builder per feature (`buildSummaryPrompt`, `buildExperiencePrompt`, etc.), each returning `{ system, user }` messages. System prompts require the model to use only user-provided information and respond with strict JSON matching a documented shape.
+- `parser.js` — `parseAIResponse(rawText)` strips markdown code fences and recovers JSON from a response defensively, throwing `AIParseError` if unrecoverable.
+- `validator.js` — one `validate*Response` function per feature checking the parsed JSON's shape/types, throwing `AIValidationError` on mismatch.
+- `index.js` — `generateAIResponse({ feature, input })`, the single entry point every API route uses: looks up the prompt builder, calls OpenRouter, parses, validates, and returns structured data.
+- `rateLimit.js` — in-memory sliding-window limiter (20 requests/minute per IP) shared by all AI routes.
+- `request.js` — shared route handler (`handleAIRoute`) doing rate limiting, JSON body parsing, deep string sanitization (trim + 8000-char cap), and consistent error responses.
+
+### API routes
+
+`app/api/ai/{summary,experience,projects,skills,rewrite,grammar,review,cover-letter,ats,job-match}/route.js` — each a POST handler returning the validated AI JSON on success, or `{ error }` with 400 (bad input), 429 (rate limited), or 502/504 (upstream failure) on failure. These routes are intentionally unauthenticated: they only proxy prompts to OpenRouter and never touch Firestore or user data.
+
+### UI
+
+`components/AIAssistant/AIAssistantPanel.js` is a feature-switcher panel (lazy-loaded via `next/dynamic({ ssr: false })`, matching the existing `VersionHistoryDrawer` pattern) added as a new card in `app/editor/[resumeId]/page.js`. It pulls context from Redux, calls the routes via `hooks/useAI.js`, and offers Accept/Regenerate/Copy actions per result. AI state (loading/error/last response per feature, plus a capped 20-entry history) lives in `store/slices/aiSlice.js`, registered in `store/index.js` alongside the existing `resume` reducer.
+
 ## Deployment
 
 The app is a standard Next.js project and deploys cleanly to [Vercel](https://vercel.com/) (recommended) or any Node.js host that supports `next build` / `next start`. Set the `NEXT_PUBLIC_FIREBASE_*` environment variables in your hosting provider's dashboard for Phase 3 auth/cloud features to work in production; the Google Analytics ID is currently hardcoded in `app/layout.js`.
