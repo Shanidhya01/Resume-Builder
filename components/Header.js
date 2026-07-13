@@ -28,6 +28,10 @@ const Header = () => {
         router.push('/');
     };
 
+    // Public resume pages are a standalone, shareable surface with no
+    // internal navigation, dashboard/editor links, or other site chrome.
+    if (pathname?.startsWith('/r/')) return null;
+
     const navLinks = user
         ? [
               { href: '/dashboard', label: 'Dashboard', icon: null },

@@ -3,13 +3,48 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /resumes/{resumeId} {
+      // Owner: full read (get + list), update, delete.
       allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.ownerId;
       allow create: if request.auth != null && request.auth.uid == request.resource.data.ownerId;
+
+      // Public sharing (Phase 6): a published resume can be fetched by its
+      // exact document id, but never listed/queried — so the only way to
+      // reach one is through its slug mapping in /publicSlugs, not by
+      // enumerating this collection.
+      allow get: if resource.data.isPublic == true;
+
+      // Public sharing (Phase 6): anonymous visitors may bump analytics
+      // counters on a published resume, but only those fields — content,
+      // ownerId, isPublic, slug and customSlug remain owner-only.
+      allow update: if resource.data.isPublic == true &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['viewCount', 'downloadCount', 'shareCount', 'lastViewed', 'updatedPublicAt']);
 
       match /versions/{versionId} {
         allow read, write: if request.auth != null &&
           request.auth.uid == get(/databases/$(database)/documents/resumes/$(resumeId)).data.ownerId;
       }
+
+      // Unique-visitor tracking (Phase 6): one marker doc per hashed
+      // visitor id. Owner reads them (via a count() query) for analytics;
+      // anonymous visitors may only write their own marker, and only while
+      // the parent resume is published.
+      match /visitors/{visitorId} {
+        allow read: if request.auth != null &&
+          request.auth.uid == get(/databases/$(database)/documents/resumes/$(resumeId)).data.ownerId;
+        allow write: if get(/databases/$(database)/documents/resumes/$(resumeId)).data.isPublic == true;
+      }
+    }
+
+    // Phase 6: slug -> resumeId lookup. Public `get` only (no `list`), so
+    // slugs can never be enumerated — only resolved one at a time by
+    // someone who already has the exact link. `create` requires the caller
+    // to be the resume's owner, and Firestore's create semantics (fails if
+    // the doc already exists) make slug claiming first-come-first-served.
+    match /publicSlugs/{slug} {
+      allow get: if true;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.ownerId;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.ownerId;
     }
   }
 }

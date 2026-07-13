@@ -80,6 +80,10 @@ const DashboardContent = () => {
         }
     };
 
+    const handleShareUpdate = useCallback((id, patch) => {
+        setResumes(prev => prev.map(r => (r.id === id ? { ...r, ...patch } : r)));
+    }, []);
+
     const recentResumes = useMemo(() => resumes.slice(0, 3), [resumes]);
 
     return (
@@ -121,9 +125,11 @@ const DashboardContent = () => {
                                     <ResumeCard
                                         key={resume.id}
                                         resume={resume}
+                                        uid={user.uid}
                                         onDuplicate={handleDuplicate}
                                         onRename={handleRename}
                                         onDelete={setPendingDeleteId}
+                                        onShareUpdate={handleShareUpdate}
                                     />
                                 ))}
                             </div>
@@ -136,9 +142,11 @@ const DashboardContent = () => {
                             <ResumeCard
                                 key={resume.id}
                                 resume={resume}
+                                uid={user.uid}
                                 onDuplicate={handleDuplicate}
                                 onRename={handleRename}
                                 onDelete={setPendingDeleteId}
+                                onShareUpdate={handleShareUpdate}
                             />
                         ))}
                     </div>

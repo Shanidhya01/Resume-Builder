@@ -4,6 +4,7 @@ import { memo, useState } from 'react';
 import Link from 'next/link';
 import { FaEdit, FaCopy, FaTrash, FaPen } from 'react-icons/fa';
 import { getTemplateById } from '@/config/templates';
+import SharePanel from '@/components/Share/SharePanel';
 
 const formatRelativeTime = timestamp => {
     if (!timestamp?.toMillis) return 'Unknown';
@@ -17,7 +18,7 @@ const formatRelativeTime = timestamp => {
     return `${diffDay}d ago`;
 };
 
-const ResumeCard = ({ resume, onDuplicate, onDelete, onRename }) => {
+const ResumeCard = ({ resume, uid, onDuplicate, onDelete, onRename, onShareUpdate }) => {
     const [isRenaming, setIsRenaming] = useState(false);
     const [name, setName] = useState(resume.name);
     const template = getTemplateById(resume.selectedTemplate);
@@ -53,9 +54,13 @@ const ResumeCard = ({ resume, onDuplicate, onDelete, onRename }) => {
                 <h3 className="mb-1 truncate text-base font-semibold text-white">{resume.name}</h3>
             )}
 
-            <div className="mb-4 flex items-center justify-between text-xs text-slate-400">
+            <div className="mb-3 flex items-center justify-between text-xs text-slate-400">
                 <span className="rounded-full bg-purple-500/10 px-2 py-1 text-purple-300">{template.name}</span>
                 <span>{formatRelativeTime(resume.updatedAt)}</span>
+            </div>
+
+            <div className="mb-4">
+                <SharePanel resume={resume} uid={uid} onUpdate={onShareUpdate} />
             </div>
 
             <div className="flex items-center gap-2">

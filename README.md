@@ -23,8 +23,9 @@ HireReady lets you fill out a structured resume form and see a live, print-ready
 - **PDF export** — download your resume as a PDF, generated client-side with `@react-pdf/renderer`, matching whichever template is currently selected.
 - **Resilient routing** — invalid editor tab query params fall back to a sensible default instead of crashing; unknown routes show a proper 404 page; unexpected errors are caught by React error boundaries instead of a blank screen.
 - **Responsive, accessible UI** — built with Tailwind CSS, with `aria-label`s, keyboard navigation, and focus management on icon-only controls and modals.
+- **Public resume sharing** — publish a resume to a beautiful, SEO-optimized public URL (`/r/<slug>`), with a custom-or-random slug, QR code, one-click social sharing, and view/download/share analytics. See [Phase 6](#phase-6-public-resume-sharing).
 
-> Not yet implemented: HTML export and user accounts/cloud sync. See the [Roadmap](#roadmap).
+> Not yet implemented: HTML export. See the [Roadmap](#roadmap).
 
 ## Architecture
 
@@ -285,9 +286,78 @@ All pages below share `components/Ats/DashboardNav.js` for sub-navigation and pu
 
 `useAtsAnalysis` hashes the resume object and only re-runs `runAtsAnalysis` when the content actually changes, caching the result in Redux so every dashboard page reads the same cached analysis instead of recomputing it. Expensive list-rendering subcomponents (section score bars, section intelligence list, suggestion rows) are wrapped in `React.memo`.
 
+## Phase 6: Public Resume Sharing
+
+Users can publish a resume to a public, recruiter-friendly URL (`/r/<slug>`) without exposing any editing controls, backed entirely by Firestore — no Firebase Storage, no server-persisted PDFs or QR images.
+
+### Firestore schema additions
+
+Sharing metadata is stored directly on the existing `resumes/{id}` document (no new top-level fields elsewhere in the app's schema were touched):
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `isPublic` | boolean | Whether the resume is currently shareable. Flipping this to `false` makes the link inaccessible immediately (checked on every read). |
+| `slug` | string \| null | The currently active public slug (random or custom). |
+| `customSlug` | string \| null | Set only when the active slug was chosen by the user; `null` when it's an auto-generated random slug. Lets the UI distinguish "your custom URL" from a random one. |
+| `viewCount`, `downloadCount`, `shareCount` | number | Atomic counters (`increment()`), bumped by the public API routes below. |
+| `lastViewed` | Timestamp | Set on every view. |
+| `createdPublicAt` | Timestamp | Set the first time a resume is published; preserved across unpublish/republish. |
+| `updatedPublicAt` | Timestamp | Bumped on every sharing-related change (publish, unpublish, slug change, analytics event). |
+
+A second top-level collection, `publicSlugs/{slug} -> { resumeId, ownerId, createdAt }`, maps a slug to its resume. Slugs are **not** looked up by querying `resumes` — this mapping collection, readable only by exact document id (never listed), is what makes slugs unguessable-by-enumeration (see Security, below). A `resumes/{id}/visitors/{hashedVisitorId}` subcollection holds one marker document per unique daily visitor (hashed IP, never stored raw) so unique-visitor counts can be computed with a `getCountFromServer()` aggregation query without ballooning the parent document.
+
+### Slug generation & validation (`lib/publicResumes.js`)
+
+- **Random slugs**: 8 characters from a 62-character alphabet (`randomSlug()`), generated with `globalThis.crypto.getRandomValues` — the Web Crypto API is available natively in both the browser and modern Node, so no extra dependency (e.g. `nanoid`) was needed. ~47.6 bits of entropy per slug.
+- **Custom slugs**: `validateCustomSlug()` enforces lowercase letters, numbers, and single hyphens (`^[a-z0-9]+(-[a-z0-9]+)*$`), 3-40 characters, and rejects a reserved-word list (`RESERVED_SLUGS`) so a custom slug can never shadow an existing app route like `/dashboard` or `/api`.
+- **Collision handling**: `setCustomSlug()` checks availability before committing and **silently falls back to a fresh random slug** if the desired one is taken (rather than failing the request) — the caller gets back `{ slug, isCustom, requested }` so the UI can toast the outcome either way.
+- **Publish/unpublish/regenerate**: `publishResume`, `unpublishResume`, and `regenerateSlug` all use a Firestore `writeBatch` to keep the `publicSlugs` mapping and the `resumes` document's sharing fields consistent in one atomic write.
+
+### Public sharing architecture
+
+```
+Dashboard card (SharePanel) ─┐
+                              ├─► lib/publicResumes.js ─► Firestore (resumes + publicSlugs, client SDK, owner-authenticated)
+ShareDialog (owner + visitor)┘
+
+Visitor's browser ─► /r/[slug] (Server Component)
+                        │  resolvePublicResumeBySlug(slug) — React cache()-deduped Firestore read
+                        ├─► PublicResumeView (pure HTML/Tailwind resume layout, print-ready)
+                        ├─► PublicResumeActions (client island: Download PDF, Print, Share)
+                        └─► ViewTracker (client island) ─► POST /api/public/view ─┐
+                                                            POST /api/public/download │─► lib/publicResumes.js write helpers
+                                                            POST /api/public/share ───┘   (rate-limited, IP-hashed)
+```
+
+- **No Firebase Storage anywhere.** QR codes are generated client-side into an in-memory `data:` URL via the `qrcode` package (`components/Share/QRCodeBlock.js`, lazy-loaded with `next/dynamic`) and never uploaded. PDFs are generated on-demand in the visitor's browser by reusing the exact same template components as the authenticated editor (`components/Resume/templates/registry.js` + `@react-pdf/renderer`'s `pdf().toBlob()`) — the same PDF engine, zero duplication, and no server-side file storage.
+- **Public page rendering** (`components/Resume/PublicResumeView.js`) is a brand-new, template-agnostic HTML layout (not one of the six PDF templates, which are react-pdf-only components that can't render to the DOM) — responsive, print-friendly via Tailwind `print:` variants, and built from the same resume fields as the editor (contact, summary, experience, projects, education, skills, certificates, languages). The resume data model has no "achievements" field (see `config/ResumeFields.js`), so that section from the original spec is intentionally omitted rather than inventing a new field across the editor, Redux slice, and all six PDF templates.
+- The global `Header` (rendered by the root layout on every route) is suppressed on `/r/*` via a single pathname check, so the public page has zero dashboard/editor navigation — a clean, standalone surface.
+
+### Analytics (`lib/publicResumes.js` + `/api/public/*`)
+
+`viewCount`/`downloadCount`/`shareCount` are incremented atomically via Firestore's `increment()`; `lastViewed` and unique-visitor markers are written alongside. Reads are owner-only (`getPublicAnalytics`) and surfaced in the dashboard through `components/Share/AnalyticsPanel.js` (Views, Unique Visitors, Downloads, Shares, Last Viewed). All writes happen server-side through `app/api/public/{view,download,share}/route.js`, reusing the same in-memory sliding-window rate limiter already used by the AI routes (`lib/ai/rateLimit.js`), keyed per IP per endpoint.
+
+### Security
+
+- **No enumeration**: slugs are resolved via `publicSlugs/{slug}` — Firestore security rules grant `get` (single document, exact id) but never `list` on that collection, and the same applies to `resumes` for anonymous readers. There is no query path that can list public resumes or slugs.
+- **Instant privacy**: `resolvePublicResumeBySlug` re-checks `isPublic` on every request (no caching of that decision across requests), and the Firestore rule mirrors it (`allow get: if resource.data.isPublic == true`) — disabling sharing revokes access on the very next read.
+- **Field-scoped public writes**: anonymous visitors can only ever update `viewCount`, `downloadCount`, `shareCount`, `lastViewed`, `updatedPublicAt` on a published resume (enforced via `diff().affectedKeys().hasOnly([...])` in `firestore.rules`) — content, ownership, `isPublic`, and slug fields stay owner-only.
+- **Ownership**: every mutation in `lib/publicResumes.js` (publish, unpublish, regenerate, custom slug) re-fetches the resume and asserts `ownerId === uid` before writing, on top of the Firestore rules doing the same server-side.
+- **Rate limiting**: all three `/api/public/*` routes are rate-limited per IP (reusing `lib/ai/rateLimit.js`), and unique-visitor hashing (`sha256(salt:resumeId:ip:day)`) means raw IP addresses are never persisted.
+- **No editing surface**: the public page is built from `PublicResumeView` (a read-only presentational component) and two small client islands (`PublicResumeActions`, `ViewTracker`) — there is no code path on `/r/[slug]` that can mutate resume content.
+- **404s**: an invalid or private slug renders `app/r/[slug]/not-found.js` with a `noindex` meta tag. *Known limitation*: because this route is the app's first true async Server Component with data-dependent `notFound()`, and the root `app/loading.js` provides an automatic streaming fallback, the raw HTTP status for that response is `200` rather than `404` (the visible content and SEO `noindex` tag are correct either way) — see Remaining Work.
+
+### SEO (`app/r/[slug]/page.js`)
+
+`generateMetadata` builds a dynamic title/description from the resume's contact/summary fields, a canonical URL and Open Graph/Twitter Card metadata (using `NEXT_PUBLIC_SITE_URL`), and the page body embeds JSON-LD `Person` structured data (name, job title, `sameAs` social links). The resume fetch is wrapped in React's `cache()` so `generateMetadata` and the page component share a single Firestore read per request instead of two.
+
+### Environment variable
+
+`NEXT_PUBLIC_SITE_URL` (see `.env.example`) — the public base URL used to build absolute share links and SEO metadata; defaults to `http://localhost:3000` if unset.
+
 ## Deployment
 
-The app is a standard Next.js project and deploys cleanly to [Vercel](https://vercel.com/) (recommended) or any Node.js host that supports `next build` / `next start`. Set the `NEXT_PUBLIC_FIREBASE_*` environment variables in your hosting provider's dashboard for Phase 3 auth/cloud features to work in production; the Google Analytics ID is currently hardcoded in `app/layout.js`.
+The app is a standard Next.js project and deploys cleanly to [Vercel](https://vercel.com/) (recommended) or any Node.js host that supports `next build` / `next start`. Set the `NEXT_PUBLIC_FIREBASE_*` and `NEXT_PUBLIC_SITE_URL` environment variables in your hosting provider's dashboard (the latter should be your production domain, e.g. `https://your-app.vercel.app`, so share links and SEO metadata resolve correctly). Deploy the updated `firestore.rules` (Firebase Console > Firestore > Rules, or `firebase deploy --only firestore:rules`) before shipping Phase 6 — public sharing depends on it. The Google Analytics ID is currently hardcoded in `app/layout.js`.
 
 ## Contributing
 
