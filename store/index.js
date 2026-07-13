@@ -1,7 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import resumeSlice from './slices/resumeSlice';
 import aiSlice from './slices/aiSlice';
-import atsSlice from './slices/atsSlice';
+import atsSlice, { incrementResumeEdits } from './slices/atsSlice';
 import { DEFAULT_TEMPLATE_ID, isValidTemplateId } from '@/config/templates';
 
 const STORAGE_KEY = 'reduxState';
@@ -91,6 +91,24 @@ const loadState = () => {
     }
 };
 
+// Feeds atsSlice.totalResumeEdits (Analytics dashboard) without the resume slice
+// needing to know about ats — only actions that actually mutate resume content count.
+const RESUME_EDIT_ACTIONS = new Set([
+    'resume/updateResumeValue',
+    'resume/addNewIndex',
+    'resume/deleteIndex',
+    'resume/moveIndex',
+    'resume/setTemplate',
+]);
+
+const trackResumeEdits = storeApi => next => action => {
+    const result = next(action);
+    if (RESUME_EDIT_ACTIONS.has(action.type)) {
+        storeApi.dispatch(incrementResumeEdits());
+    }
+    return result;
+};
+
 const store = configureStore({
     devTools: process.env.NODE_ENV !== 'production',
     preloadedState: loadState(),
@@ -99,6 +117,7 @@ const store = configureStore({
         ai: aiSlice,
         ats: atsSlice,
     },
+    middleware: getDefaultMiddleware => getDefaultMiddleware().concat(trackResumeEdits),
 });
 
 function debounce(func, timeout = 2500) {

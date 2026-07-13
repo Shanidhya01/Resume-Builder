@@ -263,7 +263,7 @@ Job-description-specific recommendations that require reasoning beyond keyword m
 
 ### State: `store/slices/atsSlice.js`
 
-Holds the cached `analysis` result (keyed by a content hash of the current resume so it's only recomputed when the resume actually changes — see `hooks/useAtsAnalysis.js`), the job-description analyzer state (`jobDescription`, `jdAnalysis`, `jdInsights`), per-suggestion Accept/Reject/Complete status (`suggestionStatus`), a saved comparison baseline (`previousSnapshot`), and lightweight analytics counters (`history`, `totalAiGenerations`, `totalResumeEdits`). Registered in `store/index.js` alongside `resume`/`ai`; only the lightweight fields persist to `localStorage` (analysis/loading state recomputes fresh on load).
+Holds the cached `analysis` result (keyed by a content hash of the current resume so it's only recomputed when the resume actually changes — see `hooks/useAtsAnalysis.js`), the job-description analyzer state (`jobDescription`, `jdAnalysis`, `jdInsights`), per-suggestion Accept/Reject/Complete status (`suggestionStatus`), a saved comparison baseline (`previousSnapshot`), and lightweight analytics counters (`history`, `totalAiGenerations`, `totalResumeEdits`). Registered in `store/index.js` alongside `resume`/`ai`; only the lightweight fields persist to `localStorage` (analysis/loading state recomputes fresh on load). `totalResumeEdits` is incremented by a small Redux middleware (`trackResumeEdits` in `store/index.js`) that watches for content-mutating `resume/*` actions, so `resumeSlice` itself stays unaware of ATS analytics.
 
 ### Dashboard pages
 
