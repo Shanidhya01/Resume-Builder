@@ -5,6 +5,9 @@ import { usePathname } from 'next/navigation';
 
 const TABS = [
     { href: '/dashboard', label: 'Overview' },
+    { href: '/dashboard/import', label: 'Import' },
+    { href: '/dashboard/export', label: 'Export & Backup' },
+    { href: '/dashboard/history', label: 'History' },
     { href: '/dashboard/analytics', label: 'Analytics' },
     { href: '/dashboard/job-match', label: 'Job Match' },
     { href: '/dashboard/keywords', label: 'Keywords' },

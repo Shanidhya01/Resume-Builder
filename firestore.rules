@@ -46,5 +46,13 @@ service cloud.firestore {
       allow create: if request.auth != null && request.auth.uid == request.resource.data.ownerId;
       allow delete: if request.auth != null && request.auth.uid == resource.data.ownerId;
     }
+
+    // Phase 7: import history log. One doc per import attempt, strictly
+    // owner-scoped. Entries are immutable once written (no update) — the
+    // owner can only read and delete them.
+    match /importHistory/{entryId} {
+      allow read, delete: if request.auth != null && request.auth.uid == resource.data.ownerId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.ownerId;
+    }
   }
 }

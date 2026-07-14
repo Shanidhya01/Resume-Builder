@@ -24,8 +24,8 @@ HireReady lets you fill out a structured resume form and see a live, print-ready
 - **Resilient routing** — invalid editor tab query params fall back to a sensible default instead of crashing; unknown routes show a proper 404 page; unexpected errors are caught by React error boundaries instead of a blank screen.
 - **Responsive, accessible UI** — built with Tailwind CSS, with `aria-label`s, keyboard navigation, and focus management on icon-only controls and modals.
 - **Public resume sharing** — publish a resume to a beautiful, SEO-optimized public URL (`/r/<slug>`), with a custom-or-random slug, QR code, one-click social sharing, and view/download/share analytics. See [Phase 6](#phase-6-public-resume-sharing).
-
-> Not yet implemented: HTML export. See the [Roadmap](#roadmap).
+- **Resume import** — upload an existing PDF, DOCX, or JSON resume; the server extracts the text in memory (never stored) and AI converts it into structured, editable resume data with a confidence score, missing-field report, duplicate detection, and automatic cleanup. See [Phase 7](#phase-7-resume-import--export).
+- **Multi-format export** — download any resume as PDF, DOCX, HTML, Markdown, or JSON, all generated on demand in the browser. Full-account versioned JSON backups can be downloaded and restored (as new resumes, replace, or merge). See [Phase 7](#phase-7-resume-import--export).
 
 ## Architecture
 
@@ -355,9 +355,69 @@ Visitor's browser ─► /r/[slug] (Server Component)
 
 `NEXT_PUBLIC_SITE_URL` (see `.env.example`) — the public base URL used to build absolute share links and SEO metadata; defaults to `http://localhost:3000` if unset.
 
+## Phase 7: Resume Import & Export
+
+A complete import/export system: bring existing resumes into the builder with AI parsing, and take any resume out in five formats — plus full backup & restore. No file is ever stored: uploads are processed in request memory on the server and discarded; exports are generated in the browser and downloaded directly.
+
+### Import (`/dashboard/import`)
+
+**Supported formats**: PDF, DOCX, and JSON (single-resume exports, full HireReady backups, and [jsonresume.org](https://jsonresume.org)-style files).
+
+Flow:
+
+1. **Upload** — drag & drop or browse (`react-dropzone`), with a real upload progress bar, client-side size/type pre-checks, and clear error messages.
+2. **Extract** (`POST /api/import/extract`) — the server validates the upload (size cap, MIME type, magic bytes) and extracts plain text with `pdfjs-dist` (legacy build, lazy-loaded) or `mammoth`, entirely in memory. Extracted text is sanitized (control/bidi/zero-width characters stripped, length-capped). JSON files never hit this route — they are parsed in the browser.
+3. **AI parse** (`POST /api/import/parse`) — the existing OpenRouter integration (`lib/ai/`) converts the text into the app's exact resume schema via a `resumeImport` prompt/validator pair, returning the parsed resume plus a **confidence score**, **missing fields**, and **suggestions**. Results are memoized server-side by text hash (10-minute TTL).
+4. **AI cleanup** (`POST /api/import/cleanup`, runs automatically) — fixes grammar, normalizes dates to `YYYY-MM`, normalizes bullet points, detects skills demonstrated but not listed, and recommends ATS improvements — without changing facts. Can be re-run manually; failures never block the import.
+5. **Review** — original extracted text side-by-side with the fully editable parsed resume (every section, add/remove entries), plus the confidence/missing-fields/suggestions panels.
+6. **Duplicate detection** — on save, the import is compared against your existing resumes (name/email match, per-entry experience/project/education similarity via token overlap, skill-list overlap). If a likely duplicate is found you choose **Merge** (union of entries + skills; existing content wins conflicts), **Replace** (a version snapshot is saved first so it's undoable), or **Keep Both**.
+
+Key modules: `lib/import/validation.js` (shared client/server validation + sanitization), `lib/import/extract.js` (server-only text extraction), `lib/import/normalize.js` (coerces any parsed/imported shape into the app schema), `lib/importExport/duplicates.js` (detection + merging), `components/ImportExport/*` (dropzone, review editor, duplicate resolver).
+
+### Export (`/dashboard/export`)
+
+Pick any resume and export it as:
+
+| Format | How it's generated |
+| --- | --- |
+| **PDF** | The existing `@react-pdf/renderer` template engine — identical output to the editor preview, lazy-loaded |
+| **DOCX** | The `docx` package (headings, tab-aligned dates, bullet lists), lazy-loaded |
+| **HTML** | Self-contained, print-friendly document with all values HTML-escaped |
+| **Markdown** | Clean single-document markdown |
+| **JSON** | Portable single-resume backup (re-importable) |
+
+All files are generated in the browser on demand (`lib/importExport/exporters/`) and downloaded via an object URL — nothing is uploaded or stored.
+
+### Backup & Restore (`/dashboard/export`)
+
+- **Backup** — one click downloads a versioned JSON file (`format: "hireready-backup"`, `version: 1`, export timestamp) containing every resume's content and template choice, with Firestore metadata/sharing state stripped.
+- **Restore** — upload a backup and choose: **restore as new resumes**, **replace** the selected resume, or **merge** into it. Replace/merge save a version snapshot first, so both are reversible from the editor's Version History.
+
+### Import History (`/dashboard/history`)
+
+Every import attempt (including failures and backup restores) is logged to a new owner-scoped `importHistory` Firestore collection: file name, date, source format, status, parse success, confidence, and a link to the created resume. Entries can be deleted; history writes are best-effort and never block an import.
+
+### Security
+
+- **Never stored** — uploads live only in the request's memory; no Firebase Storage, no disk, no bucket.
+- **Magic-byte validation** — the declared MIME type is not trusted; PDF (`%PDF-`) and DOCX (`PK` zip) headers are verified server-side, so renamed/corrupted files are rejected with specific errors (413/415/422).
+- **5 MB upload cap**, enforced client-side, via `Content-Length`, and on the actual bytes.
+- **Text sanitization** — control characters, bidi overrides, and zero-width characters (prompt-injection/spoofing vectors) are stripped before the text reaches the AI or the browser; the import prompt also instructs the model to treat file content strictly as data.
+- **Rate limiting** — extract/parse/cleanup routes have per-IP sliding-window limits (10/6/6 per minute), reusing `lib/ai/rateLimit.js`.
+- **Firestore rules** — `importHistory` documents are readable/deletable only by their owner and immutable once created.
+
+### Firestore schema addition
+
+```
+importHistory/{entryId}
+  ownerId, fileName, source ('pdf'|'docx'|'json'|'backup'),
+  status ('success'|'failed'), parseSuccess, confidence,
+  resumeId, resumeName, error, importedAt
+```
+
 ## Deployment
 
-The app is a standard Next.js project and deploys cleanly to [Vercel](https://vercel.com/) (recommended) or any Node.js host that supports `next build` / `next start`. Set the `NEXT_PUBLIC_FIREBASE_*` and `NEXT_PUBLIC_SITE_URL` environment variables in your hosting provider's dashboard (the latter should be your production domain, e.g. `https://your-app.vercel.app`, so share links and SEO metadata resolve correctly). Deploy the updated `firestore.rules` (Firebase Console > Firestore > Rules, or `firebase deploy --only firestore:rules`) before shipping Phase 6 — public sharing depends on it. The Google Analytics ID is currently hardcoded in `app/layout.js`.
+The app is a standard Next.js project and deploys cleanly to [Vercel](https://vercel.com/) (recommended) or any Node.js host that supports `next build` / `next start`. Set the `NEXT_PUBLIC_FIREBASE_*` and `NEXT_PUBLIC_SITE_URL` environment variables in your hosting provider's dashboard (the latter should be your production domain, e.g. `https://your-app.vercel.app`, so share links and SEO metadata resolve correctly). Deploy the updated `firestore.rules` (Firebase Console > Firestore > Rules, or `firebase deploy --only firestore:rules`) before shipping Phase 6/7 — public sharing and import history depend on it. Phase 7 also requires `OPENROUTER_API_KEY` (already needed since Phase 4) for AI resume parsing. The Google Analytics ID is currently hardcoded in `app/layout.js`.
 
 ## Contributing
 
