@@ -57,30 +57,42 @@ const EditorContent = () => {
     const requestedTab = searchParams?.get('tab');
     const tab = requestedTab && ResumeFields[requestedTab] ? requestedTab : DEFAULT_TAB;
 
-    const loadFromFirestore = useCallback(async () => {
-        setLoading(true);
-        setError('');
-        try {
-            const data = await getResume(resumeId);
-            if (!data) {
-                setError('Resume not found.');
-                return;
-            }
-            if (data.ownerId !== user.uid) {
-                setError('You do not have access to this resume.');
-                return;
-            }
-            dispatch(loadResume(data));
-        } catch (err) {
-            setError('Could not load this resume.');
-        } finally {
-            setLoading(false);
-        }
-    }, [resumeId, user.uid, dispatch]);
+    // Data loads in the effect via promise callbacks (no sync setState in the
+    // effect body); bumping reloadKey re-runs it for retry / post-restore refresh.
+    const [reloadKey, setReloadKey] = useState(0);
 
     useEffect(() => {
-        loadFromFirestore();
-    }, [loadFromFirestore]);
+        let cancelled = false;
+        getResume(resumeId)
+            .then(data => {
+                if (cancelled) return;
+                if (!data) {
+                    setError('Resume not found.');
+                    return;
+                }
+                if (data.ownerId !== user.uid) {
+                    setError('You do not have access to this resume.');
+                    return;
+                }
+                dispatch(loadResume(data));
+                setError('');
+            })
+            .catch(() => {
+                if (!cancelled) setError('Could not load this resume.');
+            })
+            .finally(() => {
+                if (!cancelled) setLoading(false);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [resumeId, user.uid, dispatch, reloadKey]);
+
+    const loadFromFirestore = useCallback(() => {
+        setLoading(true);
+        setError('');
+        setReloadKey(k => k + 1);
+    }, []);
 
     const { status: saveStatus, retry } = useAutoSave(resumeId, resume, user.uid);
 

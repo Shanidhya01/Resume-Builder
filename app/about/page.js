@@ -110,7 +110,10 @@ const AboutPage = () => {
                             {/* Avatar */}
                             <div className="relative group">
                                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full blur-2xl opacity-50 group-hover:opacity-75 transition-opacity"></div>
-                                <img 
+                                {/* Remote GitHub avatar — next/Image would require whitelisting the
+                                    host in next.config and adds no optimization value for avatars. */}
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
                                     src={adminInfo.avatar}
                                     alt={adminInfo.name}
                                     className="relative w-40 h-40 rounded-full border-4 border-white/20 shadow-xl transition-transform group-hover:scale-105"
@@ -284,7 +287,9 @@ const AboutPage = () => {
                                 >
                                     <div className="relative">
                                         <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full blur-lg opacity-0 group-hover:opacity-50 transition-opacity"></div>
-                                        <img 
+                                        {/* Remote GitHub avatar — see note on the admin avatar above. */}
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img
                                             src={contributor.avatar_url}
                                             alt={contributor.login}
                                             className="relative w-16 h-16 rounded-full border-2 border-white/20 transition-transform group-hover:scale-110"

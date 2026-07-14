@@ -17,31 +17,37 @@ const useAutoSave = (resumeId, resumeData, uid) => {
     const performSave = useCallback(async () => {
         if (!resumeId || !uid) return;
 
-        setStatus('saving');
-        try {
-            const { selectedTemplate, contact, summary, education, experience, projects, skills, certificates, languages } = resumeData;
-            const fields = { selectedTemplate, contact, summary, education, experience, projects, skills, certificates, languages };
+        // Hoisted inner function so the retry timeout can re-run this exact
+        // save attempt (same data closure) without the callback referencing itself.
+        async function attempt() {
+            setStatus('saving');
+            try {
+                const { selectedTemplate, contact, summary, education, experience, projects, skills, certificates, languages } = resumeData;
+                const fields = { selectedTemplate, contact, summary, education, experience, projects, skills, certificates, languages };
 
-            await updateResume(resumeId, fields, uid);
+                await updateResume(resumeId, fields, uid);
 
-            const now = Date.now();
-            if (now - lastVersionSnapshotAtRef.current >= VERSION_SNAPSHOT_INTERVAL_MS) {
-                await saveVersionSnapshot(resumeId, fields);
-                lastVersionSnapshotAtRef.current = now;
-            }
+                const now = Date.now();
+                if (now - lastVersionSnapshotAtRef.current >= VERSION_SNAPSHOT_INTERVAL_MS) {
+                    await saveVersionSnapshot(resumeId, fields);
+                    lastVersionSnapshotAtRef.current = now;
+                }
 
-            retryCountRef.current = 0;
-            setStatus('saved');
-        } catch (err) {
-            console.warn('Resume Builder: autosave failed.', err);
-            if (retryCountRef.current < MAX_RETRIES) {
-                const delay = 1000 * 2 ** retryCountRef.current;
-                retryCountRef.current += 1;
-                setTimeout(performSave, delay);
-            } else {
-                setStatus('error');
+                retryCountRef.current = 0;
+                setStatus('saved');
+            } catch (err) {
+                console.warn('Resume Builder: autosave failed.', err);
+                if (retryCountRef.current < MAX_RETRIES) {
+                    const delay = 1000 * 2 ** retryCountRef.current;
+                    retryCountRef.current += 1;
+                    setTimeout(attempt, delay);
+                } else {
+                    setStatus('error');
+                }
             }
         }
+
+        await attempt();
     }, [resumeId, resumeData, uid]);
 
     useEffect(() => {

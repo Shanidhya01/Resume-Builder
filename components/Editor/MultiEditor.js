@@ -68,7 +68,7 @@ const MultiEditor = ({ tab }) => {
                         <LuPlus className="text-3xl text-purple-600" />
                     </div>
                     <p className="text-gray-500 text-lg font-medium">No {tab} added yet</p>
-                    <p className="text-gray-400 text-sm mt-2">Click "Add New" to get started</p>
+                    <p className="text-gray-400 text-sm mt-2">Click &ldquo;Add New&rdquo; to get started</p>
                 </div>
             )}
 

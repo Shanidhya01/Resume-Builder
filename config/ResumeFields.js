@@ -1,4 +1,4 @@
-export default {
+const resumeFields = {
     contact: {
         name: 'Contact',
         fields: [
@@ -138,3 +138,5 @@ export default {
         ],
     },
 };
+
+export default resumeFields;

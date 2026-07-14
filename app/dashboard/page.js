@@ -23,22 +23,34 @@ const DashboardContent = () => {
     const [creating, setCreating] = useState(false);
     const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
-    const fetchResumes = useCallback(async () => {
-        setLoading(true);
-        setError('');
-        try {
-            const list = await listResumesForUser(user.uid);
-            setResumes(list);
-        } catch (err) {
-            setError('Could not load your resumes.');
-        } finally {
-            setLoading(false);
-        }
-    }, [user.uid]);
+    // Data loads in the effect via promise callbacks (no sync setState in the
+    // effect body); bumping reloadKey re-runs it for retry / post-duplicate refresh.
+    const [reloadKey, setReloadKey] = useState(0);
 
     useEffect(() => {
-        fetchResumes();
-    }, [fetchResumes]);
+        let cancelled = false;
+        listResumesForUser(user.uid)
+            .then(list => {
+                if (cancelled) return;
+                setResumes(list);
+                setError('');
+            })
+            .catch(() => {
+                if (!cancelled) setError('Could not load your resumes.');
+            })
+            .finally(() => {
+                if (!cancelled) setLoading(false);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [user.uid, reloadKey]);
+
+    const fetchResumes = useCallback(() => {
+        setLoading(true);
+        setError('');
+        setReloadKey(k => k + 1);
+    }, []);
 
     const handleCreate = async () => {
         setCreating(true);

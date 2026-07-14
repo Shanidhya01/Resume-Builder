@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { createElement, useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { CgSpinner } from 'react-icons/cg';
 import { usePDF } from '@react-pdf/renderer';
@@ -30,16 +30,18 @@ const openPreviewWindow = url => {
 
 // Resolves the code-split PDF component for the currently selected template.
 // Kept as a hook so Preview and any future consumer (e.g. a print route)
-// share the same load/cache behavior.
+// share the same load/cache behavior. The loaded component is stored together
+// with the template id it belongs to, so switching templates yields `null`
+// (not a stale component) until the new one resolves — without any
+// synchronous state reset inside the effect.
 function useTemplateComponent(templateId) {
-    const [Component, setComponent] = useState(null);
+    const [loaded, setLoaded] = useState(null); // { id, Component }
 
     useEffect(() => {
         let cancelled = false;
-        setComponent(null);
 
         loadTemplateComponent(templateId).then(resolved => {
-            if (!cancelled) setComponent(() => resolved);
+            if (!cancelled) setLoaded({ id: templateId, Component: resolved });
         });
 
         return () => {
@@ -47,7 +49,7 @@ function useTemplateComponent(templateId) {
         };
     }, [templateId]);
 
-    return Component;
+    return loaded?.id === templateId ? loaded.Component : null;
 }
 
 const Preview = () => {
@@ -57,27 +59,47 @@ const Preview = () => {
 
     const TemplateComponent = useTemplateComponent(selectedTemplate);
 
-    const document = useMemo(() => {
+    // The resume content object is recreated on every render (destructured from
+    // the Redux state above), so the memo keys off a stable serialization of it.
+    const contentKey = JSON.stringify(content);
+    const pdfDocument = useMemo(() => {
         if (!TemplateComponent) return null;
-        return <TemplateComponent data={content} />;
+        return createElement(TemplateComponent, { data: content });
+        // `contentKey` stands in for `content` — same data, stable identity.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [TemplateComponent, JSON.stringify(content)]);
+    }, [TemplateComponent, contentKey]);
 
-    const [instance, updateInstance] = usePDF({ document: document ?? undefined });
-
-    useEffect(() => {
-        if (document && saved) updateInstance(document);
-    }, [saved, document, updateInstance]);
+    const [instance, updateInstance] = usePDF({ document: pdfDocument ?? undefined });
 
     useEffect(() => {
-        if (document) updateInstance(document);
+        if (pdfDocument && saved) updateInstance(pdfDocument);
+    }, [saved, pdfDocument, updateInstance]);
+
+    useEffect(() => {
+        if (pdfDocument) updateInstance(pdfDocument);
         // Force a refresh whenever the resolved template component itself changes,
         // independent of the `saved` flag, so switching templates updates instantly.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [TemplateComponent]);
 
+    // Measured via ResizeObserver so the render never reads the ref directly;
+    // also keeps the rendered PDF page in step with viewport resizes.
+    const [pageWidth, setPageWidth] = useState(null);
+
+    useEffect(() => {
+        const el = parentRef.current;
+        if (!el || typeof ResizeObserver === 'undefined') return undefined;
+
+        const observer = new ResizeObserver(() => {
+            setPageWidth(el.clientWidth - 16);
+        });
+        observer.observe(el);
+
+        return () => observer.disconnect();
+    }, []);
+
     const templateMeta = getTemplateById(selectedTemplate);
-    const isReady = document && !instance.loading;
+    const isReady = pdfDocument && !instance.loading;
 
     return (
         <div className="relative w-full md:max-w-[24rem] 2xl:max-w-[28rem]">
@@ -106,7 +128,7 @@ const Preview = () => {
 
                     {instance.error ? (
                         <div className="flex flex-col items-center gap-2 py-10 text-center text-sm text-red-600">
-                            <p className="font-semibold">Couldn't generate the PDF preview.</p>
+                            <p className="font-semibold">Couldn&apos;t generate the PDF preview.</p>
                             <p className="text-red-500">Please check your resume fields and try again.</p>
                         </div>
                     ) : !isReady ? (
@@ -118,7 +140,7 @@ const Preview = () => {
                                 file={instance.url}
                                 error={
                                     <p className="py-10 text-center text-sm text-red-600">
-                                        Couldn't render the PDF preview.
+                                        Couldn&apos;t render the PDF preview.
                                     </p>
                                 }
                             >
@@ -127,7 +149,7 @@ const Preview = () => {
                                     renderTextLayer={false}
                                     renderAnnotationLayer={false}
                                     loading={<Loader />}
-                                    width={parentRef.current?.clientWidth - 16}
+                                    width={pageWidth ?? undefined}
                                     className="shadow-lg rounded-lg overflow-hidden ring-1 ring-[#6F42C1]/20"
                                 />
                             </Document>

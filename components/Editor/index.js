@@ -6,28 +6,33 @@ import SingleEditor from './SingleEditor';
 import MultiEditor from './MultiEditor';
 import { useDispatch } from 'react-redux';
 import { saveResume } from '@/store/slices/resumeSlice';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const Editor = ({ tab }) => {
     const { multiple } = ResumeFields[tab];
     const dispatch = useDispatch();
     const [saveStatus, setSaveStatus] = useState('idle'); // idle, saving, saved
 
-    const save = e => {
-        e?.preventDefault();
-        setSaveStatus('saving');
-        dispatch(saveResume());
-        
-        setTimeout(() => {
-            setSaveStatus('saved');
-            setTimeout(() => setSaveStatus('idle'), 2000);
-        }, 500);
-    };
+    // Stable identity (dispatch never changes) so the auto-save interval
+    // effect below can depend on it without re-registering every render.
+    const save = useCallback(
+        e => {
+            e?.preventDefault();
+            setSaveStatus('saving');
+            dispatch(saveResume());
+
+            setTimeout(() => {
+                setSaveStatus('saved');
+                setTimeout(() => setSaveStatus('idle'), 2000);
+            }, 500);
+        },
+        [dispatch]
+    );
 
     useEffect(() => {
         const interval = setInterval(save, 10000);
         return () => clearInterval(interval);
-    }, []);
+    }, [save]);
 
     return (
         <>

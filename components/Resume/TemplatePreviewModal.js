@@ -23,16 +23,20 @@ const TemplatePreviewModal = ({ templates, activeIndex, onClose, onSelectTemplat
     const template = templates[activeIndex];
 
     useEffect(() => {
+        // Snapshot the trigger element at mount so the cleanup returns focus to
+        // it even if focus moved around while the dialog was open.
+        const triggerElement = triggerElementRef.current;
         closeButtonRef.current?.focus();
         return () => {
-            triggerElementRef.current?.focus?.();
+            triggerElement?.focus?.();
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    useEffect(() => {
+    // Navigating to another template also resets the zoom level.
+    const goToTemplate = index => {
         setZoom(1);
-    }, [activeIndex]);
+        onSelectTemplate(index);
+    };
 
     useEffect(() => {
         const handleKeyDown = e => {
@@ -40,8 +44,14 @@ const TemplatePreviewModal = ({ templates, activeIndex, onClose, onSelectTemplat
                 onClose();
                 return;
             }
-            if (e.key === 'ArrowRight') onSelectTemplate((activeIndex + 1) % templates.length);
-            if (e.key === 'ArrowLeft') onSelectTemplate((activeIndex - 1 + templates.length) % templates.length);
+            if (e.key === 'ArrowRight') {
+                setZoom(1);
+                onSelectTemplate((activeIndex + 1) % templates.length);
+            }
+            if (e.key === 'ArrowLeft') {
+                setZoom(1);
+                onSelectTemplate((activeIndex - 1 + templates.length) % templates.length);
+            }
 
             // Focus trap: keep Tab/Shift+Tab cycling within the dialog.
             if (e.key === 'Tab') {
@@ -118,7 +128,7 @@ const TemplatePreviewModal = ({ templates, activeIndex, onClose, onSelectTemplat
                     <div className="flex items-center gap-2">
                         <button
                             type="button"
-                            onClick={() => onSelectTemplate((activeIndex - 1 + templates.length) % templates.length)}
+                            onClick={() => goToTemplate((activeIndex - 1 + templates.length) % templates.length)}
                             aria-label="Previous template"
                             className="rounded-lg p-2 text-slate-300 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
                         >
@@ -126,7 +136,7 @@ const TemplatePreviewModal = ({ templates, activeIndex, onClose, onSelectTemplat
                         </button>
                         <button
                             type="button"
-                            onClick={() => onSelectTemplate((activeIndex + 1) % templates.length)}
+                            onClick={() => goToTemplate((activeIndex + 1) % templates.length)}
                             aria-label="Next template"
                             className="rounded-lg p-2 text-slate-300 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
                         >

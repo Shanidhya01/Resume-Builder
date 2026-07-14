@@ -180,6 +180,10 @@ const AccountContent = () => {
                         <label className="mb-1 block text-sm text-gray-300">Profile Picture URL</label>
                         <div className="flex items-center gap-4">
                             {photoURL ? (
+                                /* User-supplied URL on an arbitrary host — next/Image would throw
+                                   for any domain not whitelisted in next.config, so a plain img
+                                   is the only safe option here. */
+                                // eslint-disable-next-line @next/next/no-img-element
                                 <img src={photoURL} alt="Profile" className="h-14 w-14 rounded-full object-cover" />
                             ) : (
                                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-700 text-lg font-semibold text-gray-300">

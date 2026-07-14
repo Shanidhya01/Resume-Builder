@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import ImgTilt from './ImgTilt';
 import { FaGithub, FaRocket, FaFileAlt, FaDownload, FaUsers } from 'react-icons/fa';
 import { IoIosRocket, IoMdCheckmarkCircle } from 'react-icons/io';
@@ -134,9 +135,12 @@ const page = () => {
                             {/* Main image container */}
                             <div className="relative overflow-hidden rounded-3xl shadow-2xl shadow-black/50 bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10">
                                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
-                                <img 
-                                    src="/sample.png" 
+                                <Image
+                                    src="/sample.png"
                                     alt="Professional Resume Sample"
+                                    width={474}
+                                    height={612}
+                                    priority
                                     className="w-full h-auto transition-transform duration-700 group-hover:scale-105"
                                 />
                                 

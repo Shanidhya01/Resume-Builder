@@ -24,23 +24,34 @@ const VersionHistoryDrawer = ({ resumeId, onClose, onRestored }) => {
     const [error, setError] = useState('');
     const [pendingRestoreId, setPendingRestoreId] = useState(null);
 
-    const fetchVersions = async () => {
-        setLoading(true);
-        setError('');
-        try {
-            const list = await listVersions(resumeId);
-            setVersions(list);
-        } catch (err) {
-            setError('Could not load version history.');
-        } finally {
-            setLoading(false);
-        }
-    };
+    // Data loads in the effect via promise callbacks (no sync setState in the
+    // effect body); bumping reloadKey re-runs it for retry.
+    const [reloadKey, setReloadKey] = useState(0);
 
     useEffect(() => {
-        fetchVersions();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [resumeId]);
+        let cancelled = false;
+        listVersions(resumeId)
+            .then(list => {
+                if (cancelled) return;
+                setVersions(list);
+                setError('');
+            })
+            .catch(() => {
+                if (!cancelled) setError('Could not load version history.');
+            })
+            .finally(() => {
+                if (!cancelled) setLoading(false);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [resumeId, reloadKey]);
+
+    const fetchVersions = () => {
+        setLoading(true);
+        setError('');
+        setReloadKey(k => k + 1);
+    };
 
     const handleRestore = async () => {
         const versionId = pendingRestoreId;
