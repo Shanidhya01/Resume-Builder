@@ -415,6 +415,45 @@ importHistory/{entryId}
   resumeId, resumeName, error, importedAt
 ```
 
+## Phase 8: Premium UI / UX
+
+Phase 8 is a design-system and experience pass over the whole app — a polished, theme-aware SaaS surface — layered on top of the existing features without changing any business logic (auth, Firestore sync, AI, ATS, sharing, and import/export are untouched).
+
+### Design tokens & theming
+
+- **Semantic colour tokens.** `app/globals.scss` defines a set of CSS custom properties (`--canvas`, `--surface`, `--surface-2`, `--fg`, `--fg-muted`, `--line`, `--accent`, `--accent-fg`) as space-separated RGB channels, with light values on `:root` and dark values on `.dark`. `tailwind.config.js` maps these to Tailwind colours (`bg-canvas`, `bg-surface`, `text-fg`, `border-line`, `bg-accent`, …) using the `rgb(var(--x) / <alpha-value>)` pattern, so opacity modifiers (`bg-surface/60`) still work. New UI is built from these tokens and therefore adapts to light/dark and the accent picker automatically.
+- **Dark mode** uses [`next-themes`](https://github.com/pacocoursey/next-themes) (`attribute="class"`, `defaultTheme="dark"`, `enableSystem`), wired in `context/ThemeProvider.js` and toggled from the header (`components/UI/ThemeToggle.js`) and Settings. `<html suppressHydrationWarning>` is set as next-themes requires.
+- **Theme customization** (`config/themePresets.js` + `context/ThemeProvider.js`): accent colour, font family, font size, spacing, density, and one-click presets. Preferences live in a small `useSyncExternalStore`-backed store persisted to `localStorage` (`hireready:preferences:v1`) and are applied as CSS variables on `<html>`. Managed from **`/dashboard/settings`**.
+
+### Reusable UI primitives (`components/UI/`)
+
+`Button`, `Card`, `Badge`, `ThemeToggle`, plus the pre-existing `Input`, `Skeleton`, `EmptyState`, `ErrorMessage`, `ConfirmModal` (migrated to tokens). `lib/cn.js` wraps `tailwind-merge` for conflict-free class composition. Prefer these over ad-hoc markup for visual consistency.
+
+### Feature highlights
+
+- **Dashboard** (`/dashboard`) — overview stat tiles (resume count, average completion, ATS score of the latest resume, public views/downloads/shares, AI usage) via `components/Dashboard/DashboardStats.js` + `StatCard.js`, a Quick Actions grid, per-card completion bars, and a friendlier empty state.
+- **Editor** (`/editor/[resumeId]`) — sticky toolbar with an autosave indicator, **undo/redo** (`hooks/useUndoRedo.js`, a dependency-free snapshot stack restored via the `restoreContent` reducer), keyboard shortcuts (`Ctrl/⌘+Z`, `Ctrl/⌘+Shift+Z`/`Ctrl+Y`, `Ctrl/⌘+S`), and a split-screen sticky preview.
+- **Drag & drop ordering** — repeatable sections (experience, projects, education, certificates, languages) are reorderable with [`@dnd-kit`](https://dndkit.com/) (`components/Editor/MultiEditor.js`), persisted through the `reorderList` reducer and autosaved. Arrow buttons remain as a keyboard-accessible fallback, and dnd-kit's `KeyboardSensor` makes the drag handle keyboard-operable.
+- **Notifications** (`context/ToastContext.js`) — success/error/warning/info tones, optional action buttons (e.g. undo), auto-dismiss, and Framer Motion enter/exit.
+- **Animations** — Framer Motion page transitions (`app/template.js`, excluded on `/r/*` to keep public pages crawlable), card/stat entrances, and toast/modal motion. A global `MotionConfig reducedMotion="user"` makes every animation honour the OS "reduce motion" setting.
+- **Error & offline states** — redesigned `app/not-found.js` and `app/error.js`, plus a global connectivity banner (`components/UI/OfflineBanner.js`).
+
+### Accessibility
+
+- Global `:focus-visible` ring, a skip-to-content link, and a `<main id="main-content">` landmark in the root layout.
+- `prefers-reduced-motion` is respected in CSS (globals) and in JS animations (MotionConfig).
+- ARIA roles/labels on toggles, switches, toolbar buttons, drag handles, and icon-only controls; colour choices target WCAG-AA contrast in both themes.
+
+### Performance
+
+- Heavy, client-only modules stay lazily loaded (`next/dynamic`) — AI assistant, version history, and Recharts dashboards.
+- Preferences use `useSyncExternalStore` (no setState-in-effect, no extra renders); list rows and cards are memoised; the dashboard derives metrics from data already fetched rather than making new round-trips.
+- `next-themes` sets the theme class before paint (no flash), and `disableTransitionOnChange` avoids transition flicker on toggle.
+
+### New dependencies
+
+`next-themes` (theming), `@dnd-kit/core` · `@dnd-kit/sortable` · `@dnd-kit/utilities` (drag & drop). Framer Motion and tailwind-merge were already present.
+
 ## Deployment
 
 The app is a standard Next.js project and deploys cleanly to [Vercel](https://vercel.com/) (recommended) or any Node.js host that supports `next build` / `next start`. Set the `NEXT_PUBLIC_FIREBASE_*` and `NEXT_PUBLIC_SITE_URL` environment variables in your hosting provider's dashboard (the latter should be your production domain, e.g. `https://your-app.vercel.app`, so share links and SEO metadata resolve correctly). Deploy the updated `firestore.rules` (Firebase Console > Firestore > Rules, or `firebase deploy --only firestore:rules`) before shipping Phase 6/7 — public sharing and import history depend on it. Phase 7 also requires `OPENROUTER_API_KEY` (already needed since Phase 4) for AI resume parsing. The Google Analytics ID is currently hardcoded in `app/layout.js`.

@@ -1,16 +1,20 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FaPlus } from 'react-icons/fa';
+import { Plus, Upload, Sparkles } from 'lucide-react';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { listResumesForUser, createResume, duplicateResume, deleteResume, renameResume } from '@/lib/resumes';
 import ResumeCard from '@/components/Dashboard/ResumeCard';
+import DashboardStats from '@/components/Dashboard/DashboardStats';
+import QuickActions from '@/components/Dashboard/QuickActions';
 import { SkeletonGrid } from '@/components/UI/Skeleton';
 import EmptyState from '@/components/UI/EmptyState';
 import ErrorMessage from '@/components/UI/ErrorMessage';
 import ConfirmModal from '@/components/UI/ConfirmModal';
+import Button from '@/components/UI/Button';
 import DashboardNav from '@/components/Ats/DashboardNav';
 import { DEFAULT_TEMPLATE_ID } from '@/config/templates';
 
@@ -97,22 +101,36 @@ const DashboardContent = () => {
     }, []);
 
     const recentResumes = useMemo(() => resumes.slice(0, 3), [resumes]);
+    const firstName = user.displayName ? user.displayName.split(' ')[0] : null;
 
     return (
-        <div className="mx-auto mt-10 max-w-screen-xl px-4 pb-10 md:mt-12">
-            <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold text-white md:text-3xl">Welcome back{user.displayName ? `, ${user.displayName}` : ''}</h1>
-                    <p className="text-sm text-slate-400">{user.email} &middot; {resumes.length} resume{resumes.length !== 1 ? 's' : ''}</p>
+        <div className="mx-auto mt-8 max-w-screen-xl px-4 pb-16 md:mt-10">
+            {/* Hero */}
+            <section className="relative mb-8 overflow-hidden rounded-3xl border border-line bg-surface p-6 shadow-ds-sm md:p-8">
+                <div className="pointer-events-none absolute inset-0 bg-grid opacity-[0.4] [mask-image:radial-gradient(ellipse_at_top_right,black,transparent_70%)]" aria-hidden="true" />
+                <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-accent/20 blur-3xl" aria-hidden="true" />
+                <div className="relative flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+                    <div>
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-2 px-2.5 py-1 text-xs font-medium text-fg-muted">
+                            <Sparkles className="h-3 w-3 text-accent" /> Your workspace
+                        </span>
+                        <h1 className="mt-3 text-2xl font-bold tracking-tight text-fg md:text-3xl">
+                            Welcome back{firstName ? `, ${firstName}` : ''}
+                        </h1>
+                        <p className="mt-1 text-sm text-fg-muted">
+                            {resumes.length} resume{resumes.length !== 1 ? 's' : ''} &middot; {user.email}
+                        </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2.5">
+                        <Button as={Link} href="/dashboard/import" variant="secondary" size="lg" leftIcon={<Upload className="h-4 w-4" />}>
+                            Import
+                        </Button>
+                        <Button onClick={handleCreate} loading={creating} variant="primary" size="lg" leftIcon={<Plus className="h-4 w-4" />}>
+                            {creating ? 'Creating…' : 'New Resume'}
+                        </Button>
+                    </div>
                 </div>
-                <button
-                    onClick={handleCreate}
-                    disabled={creating}
-                    className="flex items-center justify-center gap-2 self-start rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 px-6 py-2.5 font-bold text-white shadow-lg shadow-purple-500/40 transition-all duration-300 hover:scale-105 disabled:opacity-60"
-                >
-                    <FaPlus /> {creating ? 'Creating...' : 'Create New Resume'}
-                </button>
-            </div>
+            </section>
 
             <DashboardNav />
 
@@ -123,15 +141,22 @@ const DashboardContent = () => {
             ) : resumes.length === 0 ? (
                 <EmptyState
                     title="No resumes yet"
-                    description="Create your first resume to get started."
+                    description="Create your first resume, or import an existing one to get started."
                     actionLabel="Create New Resume"
                     onAction={handleCreate}
                 />
             ) : (
                 <>
+                    <DashboardStats resumes={resumes} />
+
+                    <div className="mb-8">
+                        <h2 className="mb-3 text-sm font-semibold text-fg-muted">Quick Actions</h2>
+                        <QuickActions />
+                    </div>
+
                     {recentResumes.length > 0 && (
                         <div className="mb-6">
-                            <h2 className="mb-3 text-sm font-semibold text-slate-300">Recently Edited</h2>
+                            <h2 className="mb-3 text-sm font-semibold text-fg-muted">Recently Edited</h2>
                             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                                 {recentResumes.map(resume => (
                                     <ResumeCard
@@ -148,7 +173,7 @@ const DashboardContent = () => {
                         </div>
                     )}
 
-                    <h2 className="mb-3 text-sm font-semibold text-slate-300">All Resumes</h2>
+                    <h2 className="mb-3 text-sm font-semibold text-fg-muted">All Resumes</h2>
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                         {resumes.map(resume => (
                             <ResumeCard

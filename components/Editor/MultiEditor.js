@@ -1,15 +1,126 @@
 'use client';
 
-import { useDispatch } from 'react-redux';
-import Input from '../UI/Input';
-import { useSelector } from 'react-redux';
-import { addNewIndex, deleteIndex, moveIndex, updateResumeValue } from '@/store/slices/resumeSlice';
-import ResumeFields from '@/config/ResumeFields';
-import { LuPlus } from 'react-icons/lu';
 import { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+} from '@dnd-kit/core';
+import {
+    SortableContext,
+    sortableKeyboardCoordinates,
+    useSortable,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { LuPlus } from 'react-icons/lu';
 import { FaArrowUp, FaPencil, FaTrash } from 'react-icons/fa6';
 import { FaArrowDown } from 'react-icons/fa';
-import { TbArrowsMinimize } from "react-icons/tb";
+import { TbArrowsMinimize } from 'react-icons/tb';
+import { MdDragIndicator } from 'react-icons/md';
+import Input from '../UI/Input';
+import { addNewIndex, deleteIndex, moveIndex, reorderList, updateResumeValue } from '@/store/slices/resumeSlice';
+import ResumeFields from '@/config/ResumeFields';
+
+/** One draggable, expandable entry card. */
+const SortableCard = ({ id, index, item, fields, isSelected, count, onSelect, onCollapse, onDelete, onMove, onChange }) => {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 20 : undefined,
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            className={`group relative rounded-xl border bg-surface px-4 py-4 shadow-sm transition-colors ${
+                isSelected ? 'border-accent ring-1 ring-accent' : 'border-line hover:border-accent/40'
+            } ${isDragging ? 'opacity-80 shadow-lg' : ''}`}
+        >
+            <div className="flex items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-2">
+                    {/* Drag handle */}
+                    <button
+                        type="button"
+                        className="cursor-grab touch-none rounded-md p-1 text-fg-muted hover:bg-surface-2 hover:text-fg active:cursor-grabbing"
+                        aria-label={`Drag to reorder (item ${index + 1} of ${count})`}
+                        {...attributes}
+                        {...listeners}
+                    >
+                        <MdDragIndicator className="h-5 w-5" />
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => (isSelected ? onCollapse() : onSelect(index))}
+                        className="flex min-w-0 items-center gap-2 text-left text-sm font-semibold text-fg md:text-base"
+                    >
+                        <span className={`h-2 w-2 shrink-0 rounded-full ${isSelected ? 'bg-accent' : 'bg-fg-muted/40'}`} />
+                        <span className="truncate">{Object.values(item)[0] || 'Untitled'}</span>
+                    </button>
+                </div>
+
+                <div className="flex items-center gap-1">
+                    <button
+                        type="button"
+                        disabled={index === 0}
+                        className="rounded-lg p-2 text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+                        onClick={() => onMove(index, 'up')}
+                        title="Move up"
+                        aria-label="Move item up"
+                    >
+                        <FaArrowUp className="text-sm" />
+                    </button>
+                    <button
+                        type="button"
+                        disabled={index === count - 1}
+                        className="rounded-lg p-2 text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+                        onClick={() => onMove(index, 'down')}
+                        title="Move down"
+                        aria-label="Move item down"
+                    >
+                        <FaArrowDown className="text-sm" />
+                    </button>
+                    <button
+                        type="button"
+                        className="rounded-lg p-2 text-accent transition-colors hover:bg-accent/10"
+                        onClick={() => (isSelected ? onCollapse() : onSelect(index))}
+                        title={isSelected ? 'Collapse' : 'Edit'}
+                        aria-label={isSelected ? 'Collapse item' : 'Edit item'}
+                        aria-expanded={isSelected}
+                    >
+                        {isSelected ? <TbArrowsMinimize className="text-sm" /> : <FaPencil className="text-sm" />}
+                    </button>
+                    <button
+                        type="button"
+                        className="rounded-lg p-2 text-red-500 transition-colors hover:bg-red-500/10"
+                        onClick={() => onDelete(index)}
+                        title="Delete"
+                        aria-label="Delete item"
+                    >
+                        <FaTrash className="text-sm" />
+                    </button>
+                </div>
+            </div>
+
+            {isSelected && (
+                <div className="mt-5 border-t border-line pt-5">
+                    <div className="grid gap-5 md:grid-cols-2 md:gap-6">
+                        {fields.map(field => (
+                            <Input key={field.name} {...field} onChange={e => onChange(e, index)} value={item[field.name]} />
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
 
 const MultiEditor = ({ tab }) => {
     const { fields } = ResumeFields[tab];
@@ -18,28 +129,18 @@ const MultiEditor = ({ tab }) => {
     const dispatch = useDispatch();
     const resumeData = useSelector(state => state.resume[tab]);
 
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    );
+
     const handleChange = (e, i) => {
         const { name, value } = e.target;
-
-        dispatch(
-            updateResumeValue({
-                tab,
-                name,
-                value,
-                index: i,
-            }),
-        );
+        dispatch(updateResumeValue({ tab, name, value, index: i }));
     };
 
     const addNew = () => {
-        dispatch(
-            addNewIndex({
-                tab,
-                name: 'degree',
-                value: 'new',
-            }),
-        );
-
+        dispatch(addNewIndex({ tab }));
         setSelectedCard(resumeData.length);
     };
 
@@ -48,178 +149,80 @@ const MultiEditor = ({ tab }) => {
         setSelectedCard(null);
     };
 
+    const handleMove = (index, dir) => {
+        dispatch(moveIndex({ tab, index, dir }));
+        setSelectedCard(prev => {
+            if (prev == null) return prev;
+            const target = dir === 'up' ? index - 1 : index + 1;
+            if (prev === index) return target;
+            if (prev === target) return index;
+            return prev;
+        });
+    };
+
+    const handleDragEnd = event => {
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+        const from = Number(active.id);
+        const to = Number(over.id);
+        dispatch(reorderList({ tab, from, to }));
+        setSelectedCard(prev => {
+            if (prev == null) return prev;
+            if (prev === from) return to;
+            if (from < prev && to >= prev) return prev - 1;
+            if (from > prev && to <= prev) return prev + 1;
+            return prev;
+        });
+    };
+
+    const ids = resumeData.map((_, i) => i);
+
     return (
         <div>
-            {/* Add New Button */}
-            <button 
-                type="button" 
-                className="group relative btn mb-6 ml-auto bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white text-sm 2xl:text-base shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 overflow-hidden border-0" 
+            <button
+                type="button"
                 onClick={addNew}
+                className="mb-6 ml-auto flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-accent-fg shadow-sm transition-all hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
             >
-                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
-                <LuPlus className="relative z-10 group-hover:rotate-90 transition-transform duration-300" />
-                <span className="relative z-10 font-semibold">Add New</span>
+                <LuPlus /> Add New
             </button>
 
-            {/* Empty State */}
-            {resumeData?.length == 0 && (
+            {resumeData?.length === 0 && (
                 <div className="my-16 text-center">
-                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 mb-4">
-                        <LuPlus className="text-3xl text-purple-600" />
+                    <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-accent/10">
+                        <LuPlus className="text-2xl text-accent" />
                     </div>
-                    <p className="text-gray-500 text-lg font-medium">No {tab} added yet</p>
-                    <p className="text-gray-400 text-sm mt-2">Click &ldquo;Add New&rdquo; to get started</p>
+                    <p className="text-lg font-medium text-fg">No {tab} added yet</p>
+                    <p className="mt-1 text-sm text-fg-muted">Click &ldquo;Add New&rdquo; to get started</p>
                 </div>
             )}
 
-            {/* Cards List */}
-            <div className="space-y-4">
-                {resumeData.map((e, i) => (
-                    <div
-                        key={i}
-                        className={`group relative card py-4 px-5 transition-all duration-300 cursor-pointer overflow-hidden ${
-                            selectedCard === i 
-                                ? 'ring-2 ring-purple-500 shadow-xl bg-gradient-to-br from-white to-purple-50/30' 
-                                : 'hover:shadow-lg hover:border-purple-300'
-                        }`}
-                        onClick={_ => setSelectedCard(i)}
-                    >
-                        {/* Gradient background for selected card */}
-                        {selectedCard === i && (
-                            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-purple-500/5 animate-gradient-xy pointer-events-none"></div>
-                        )}
+            {resumeData.length > 1 && (
+                <p className="mb-3 text-xs text-fg-muted">Drag the handle to reorder, or use the arrow buttons.</p>
+            )}
 
-                        {/* Card Header */}
-                        <div className="relative z-10 flex items-center justify-between gap-3">
-                            <span className="mr-auto text-sm md:text-base font-semibold truncate text-gray-800 flex items-center gap-2">
-                                <span className={`w-2 h-2 rounded-full ${selectedCard === i ? 'bg-purple-500 animate-pulse' : 'bg-gray-300'}`}></span>
-                                {Object.values(e)[0] || 'Untitled'}
-                            </span>
-
-                            {/* Action Buttons */}
-                            <div className="flex items-center gap-2">
-                                {/* Move Up */}
-                                <button
-                                    type="button"
-                                    disabled={i == 0}
-                                    className="p-2 rounded-lg hover:bg-purple-100 text-gray-600 hover:text-purple-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent transition-all duration-200"
-                                    onClick={_ => {
-                                        _.stopPropagation();
-                                        dispatch(moveIndex({ tab, index: i, dir: 'up' }));
-                                    }}
-                                    title="Move up"
-                                    aria-label="Move item up"
-                                >
-                                    <FaArrowUp className="text-sm" />
-                                </button>
-
-                                {/* Move Down */}
-                                <button
-                                    type="button"
-                                    disabled={i == resumeData.length - 1}
-                                    className="p-2 rounded-lg hover:bg-purple-100 text-gray-600 hover:text-purple-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent transition-all duration-200"
-                                    onClick={_ => {
-                                        _.stopPropagation();
-                                        dispatch(moveIndex({ tab, index: i, dir: 'down' }));
-                                    }}
-                                    title="Move down"
-                                    aria-label="Move item down"
-                                >
-                                    <FaArrowDown className="text-sm" />
-                                </button>
-
-                                {/* Expand/Collapse */}
-                                {selectedCard == i ?
-                                    <button
-                                        type="button"
-                                        className="p-2 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200 transition-all duration-200"
-                                        onClick={_ => {
-                                            _.stopPropagation();
-                                            setSelectedCard(null);
-                                        }}
-                                        title="Collapse"
-                                        aria-label="Collapse item"
-                                    >
-                                        <TbArrowsMinimize className="text-sm" />
-                                    </button>
-                                :   <button 
-                                        type="button" 
-                                        className="p-2 rounded-lg hover:bg-purple-100 text-purple-600 transition-all duration-200"
-                                        title="Edit"
-                                        aria-label="Edit item"
-                                    >
-                                        <FaPencil className="text-sm" />
-                                    </button>
-                                }
-
-                                {/* Delete */}
-                                <button
-                                    type="button"
-                                    className="p-2 rounded-lg hover:bg-red-100 text-red-500 hover:text-red-600 transition-all duration-200"
-                                    onClick={_ => {
-                                        _.stopPropagation();
-                                        deleteCard(i);
-                                    }}
-                                    title="Delete"
-                                    aria-label="Delete item"
-                                >
-                                    <FaTrash className="text-sm" />
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Expanded Content */}
-                        {selectedCard == i && (
-                            <div className="relative z-10 mt-6 pt-6 border-t border-purple-200/50">
-                                <div className="grid gap-5 md:grid-cols-2 md:gap-6">
-                                    {fields.map((field, fieldIndex) => (
-                                        <div 
-                                            key={field.name}
-                                            className="animate-fadeIn"
-                                            style={{ animationDelay: `${fieldIndex * 40}ms` }}
-                                        >
-                                            <Input
-                                                {...field}
-                                                onChange={e => handleChange(e, i)}
-                                                value={resumeData[i][field.name]}
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+                    <div className="space-y-4">
+                        {resumeData.map((item, i) => (
+                            <SortableCard
+                                key={i}
+                                id={i}
+                                index={i}
+                                item={item}
+                                fields={fields}
+                                count={resumeData.length}
+                                isSelected={selectedCard === i}
+                                onSelect={setSelectedCard}
+                                onCollapse={() => setSelectedCard(null)}
+                                onDelete={deleteCard}
+                                onMove={handleMove}
+                                onChange={handleChange}
+                            />
+                        ))}
                     </div>
-                ))}
-            </div>
-
-            <style jsx>{`
-                @keyframes gradient-xy {
-                    0%, 100% {
-                        background-position: 0% 50%;
-                    }
-                    50% {
-                        background-position: 100% 50%;
-                    }
-                }
-                .animate-gradient-xy {
-                    background-size: 200% 200%;
-                    animation: gradient-xy 3s ease infinite;
-                }
-                @keyframes fadeIn {
-                    from {
-                        opacity: 0;
-                        transform: translateY(10px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-                .animate-fadeIn {
-                    animation: fadeIn 0.3s ease-out forwards;
-                    opacity: 0;
-                }
-            `}</style>
+                </SortableContext>
+            </DndContext>
         </div>
     );
 };

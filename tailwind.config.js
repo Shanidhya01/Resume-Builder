@@ -11,9 +11,44 @@ module.exports = {
     darkMode: 'class',
     theme: {
         extend: {
+            fontFamily: {
+                sans: ['var(--font-geist-sans)', 'system-ui', 'sans-serif'],
+                mono: ['var(--font-geist-mono)', 'ui-monospace', 'monospace'],
+            },
             colors: {
-                primary: { ...colors.teal },
+                // `primary` remapped to blue (Phase 9 brand) so not-yet-migrated
+                // legacy pages inherit the new accent automatically.
+                primary: { ...colors.blue },
                 gray: { ...colors.zinc },
+                // Semantic, theme-aware tokens. Backed by CSS vars in
+                // globals.scss so they adapt to light/dark and the accent picker.
+                canvas: 'rgb(var(--canvas) / <alpha-value>)',
+                surface: {
+                    DEFAULT: 'rgb(var(--surface) / <alpha-value>)',
+                    2: 'rgb(var(--surface-2) / <alpha-value>)',
+                    3: 'rgb(var(--surface-3) / <alpha-value>)',
+                },
+                fg: {
+                    DEFAULT: 'rgb(var(--fg) / <alpha-value>)',
+                    muted: 'rgb(var(--fg-muted) / <alpha-value>)',
+                    subtle: 'rgb(var(--fg-subtle) / <alpha-value>)',
+                },
+                line: {
+                    DEFAULT: 'rgb(var(--line) / <alpha-value>)',
+                    strong: 'rgb(var(--line-strong) / <alpha-value>)',
+                },
+                accent: {
+                    DEFAULT: 'rgb(var(--accent) / <alpha-value>)',
+                    hover: 'rgb(var(--accent-hover) / <alpha-value>)',
+                    fg: 'rgb(var(--accent-fg) / <alpha-value>)',
+                    soft: 'rgb(var(--accent-soft) / <alpha-value>)',
+                },
+            },
+            boxShadow: {
+                'ds-sm': 'var(--shadow-sm)',
+                'ds-md': 'var(--shadow-md)',
+                'ds-lg': 'var(--shadow-lg)',
+                'ds-xl': 'var(--shadow-xl)',
             },
             animation: {
                 'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
@@ -23,8 +58,23 @@ module.exports = {
                 'blob': 'blob 7s infinite',
                 'float': 'float 6s ease-in-out infinite',
                 'shake': 'shake 0.5s ease-in-out infinite',
+                'shimmer': 'shimmer 1.6s ease-in-out infinite',
+                'fade-in': 'fadeIn 0.2s ease-out forwards',
+                'scale-in': 'scaleIn 0.15s ease-out forwards',
             },
             keyframes: {
+                shimmer: {
+                    '0%': { 'background-position': '-200% 0' },
+                    '100%': { 'background-position': '200% 0' },
+                },
+                fadeIn: {
+                    '0%': { opacity: '0' },
+                    '100%': { opacity: '1' },
+                },
+                scaleIn: {
+                    '0%': { opacity: '0', transform: 'scale(0.96)' },
+                    '100%': { opacity: '1', transform: 'scale(1)' },
+                },
                 fadeInUp: {
                     '0%': {
                         opacity: '0',

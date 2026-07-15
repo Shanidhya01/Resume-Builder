@@ -1,237 +1,282 @@
-'use client'
+'use client';
+
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import { FaGithub, FaFileAlt, FaUserCircle, FaChartBar, FaTasks } from 'react-icons/fa';
-import { HiMenuAlt3, HiX, HiSparkles } from 'react-icons/hi';
-import { IoIosRocket } from 'react-icons/io';
+import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+    FileText, LayoutDashboard, LayoutTemplate, BarChart3, Sparkles, Settings,
+    User, LogOut, Github, Search, Menu, X, ChevronDown,
+} from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { cn } from '@/lib/cn';
+import ThemeToggle from '@/components/UI/ThemeToggle';
+import Avatar from '@/components/UI/Avatar';
+import Button from '@/components/UI/Button';
+import Kbd from '@/components/UI/Kbd';
+import CommandPalette, { openCommandPalette } from '@/components/UI/CommandPalette';
+
+const AUTHED_LINKS = [
+    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/editor', label: 'Editor', icon: FileText },
+    { href: '/templates', label: 'Templates', icon: LayoutTemplate },
+    { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
+    { href: '/improvements', label: 'Improvements', icon: Sparkles },
+];
+
+const GUEST_LINKS = [
+    { href: '/', label: 'Home' },
+    { href: '/templates', label: 'Templates' },
+    { href: '/about', label: 'About' },
+];
+
+const isActivePath = (pathname, href) =>
+    href === '/' ? pathname === '/' : pathname === href || pathname?.startsWith(`${href}/`);
 
 const Header = () => {
-    const [isScrolled, setIsScrolled] = useState(false);
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
     const { user, loading, logOut } = useAuth();
+    const [mobileOpen, setMobileOpen] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
+    const menuRef = useRef(null);
 
+    const closeMenus = () => {
+        setMobileOpen(false);
+        setMenuOpen(false);
+    };
+
+    // Click-outside + Escape for the profile menu.
     useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 20);
+        if (!menuOpen) return;
+        const onClick = e => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
+        const onKey = e => { if (e.key === 'Escape') setMenuOpen(false); };
+        document.addEventListener('mousedown', onClick);
+        document.addEventListener('keydown', onKey);
+        return () => {
+            document.removeEventListener('mousedown', onClick);
+            document.removeEventListener('keydown', onKey);
         };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+    }, [menuOpen]);
 
     const handleLogout = async () => {
         await logOut();
-        setIsMobileMenuOpen(false);
+        setMenuOpen(false);
+        setMobileOpen(false);
         router.push('/');
     };
 
-    // Public resume pages are a standalone, shareable surface with no
-    // internal navigation, dashboard/editor links, or other site chrome.
+    // Public resume pages are a standalone shareable surface with no chrome.
     if (pathname?.startsWith('/r/')) return null;
 
-    const navLinks = user
-        ? [
-              { href: '/dashboard', label: 'Dashboard', icon: null },
-              { href: '/editor', label: 'Editor', icon: FaFileAlt },
-              { href: '/dashboard/analytics', label: 'Analytics', icon: FaChartBar },
-              { href: '/improvements', label: 'Improvements', icon: FaTasks },
-              { href: '/templates', label: 'Templates', icon: null },
-              { href: '/account', label: 'Account', icon: FaUserCircle },
-          ]
-        : [
-              { href: '/', label: 'Home', icon: null },
-              { href: '/templates', label: 'Templates', icon: null },
-              { href: '/about', label: 'About', icon: null },
-          ];
+    const links = user ? AUTHED_LINKS : GUEST_LINKS;
 
     return (
         <>
-            <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-                isScrolled 
-                    ? 'bg-gradient-to-br from-purple-900/80 via-slate-900/90 to-blue-900/80 backdrop-blur-xl border-b border-purple-400/30 shadow-2xl shadow-purple-900/20' 
-                    : 'bg-slate-900/40 backdrop-blur-md'
-            }`}>
-                <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+            <header className="sticky top-0 z-50 border-b border-line bg-canvas/80 backdrop-blur-xl">
+                <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
                     {/* Logo */}
-                    <Link 
-                        href={'/'} 
-                        className="group flex items-center gap-2 text-2xl font-bold transition-all duration-300 hover:scale-105"
-                    >
-                        <div className="relative">
-                            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 rounded-lg blur-xl opacity-40 group-hover:opacity-70 transition-opacity"></div>
-                            <div className="relative bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 p-2 rounded-lg shadow-lg">
-                                <IoIosRocket className="w-6 h-6 text-white transform group-hover:rotate-12 transition-transform" />
-                            </div>
-                        </div>
-                        <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent font-black tracking-tight">
-                            HireReady
+                    <Link href="/" className="group flex shrink-0 items-center gap-2.5">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-accent-fg shadow-ds-sm transition-transform group-hover:scale-105">
+                            <FileText className="h-4 w-4" strokeWidth={2.4} />
                         </span>
-                        <HiSparkles className="w-5 h-5 text-yellow-400 animate-pulse" />
+                        <span className="text-[15px] font-semibold tracking-tight text-fg">HireReady</span>
                     </Link>
 
-                    {/* Desktop Navigation */}
-                    <nav className="hidden md:flex items-center space-x-1">
-                        {navLinks.map((link, index) => {
-                            const isActive = pathname === link.href;
+                    {/* Desktop nav */}
+                    <nav className="hidden items-center gap-0.5 md:flex">
+                        {links.map(link => {
+                            const active = isActivePath(pathname, link.href);
                             return (
                                 <Link
-                                    key={index}
+                                    key={link.href}
                                     href={link.href}
-                                    className={`group relative px-4 py-2 font-medium transition-all duration-300 rounded-xl ${
-                                        isActive 
-                                            ? 'text-white bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 shadow-lg shadow-purple-500/20' 
-                                            : 'text-slate-300 hover:text-white hover:bg-gradient-to-r hover:from-blue-500/10 hover:via-purple-500/10 hover:to-pink-500/10'
-                                    }`}
+                                    onClick={closeMenus}
+                                    className={cn(
+                                        'relative rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                                        active ? 'text-fg' : 'text-fg-muted hover:text-fg',
+                                    )}
                                 >
-                                    <span className="flex items-center gap-2">
-                                        {link.icon && <link.icon className="w-4 h-4" />}
-                                        {link.label}
-                                    </span>
-                                    <span className={`absolute bottom-0 h-0.5 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 transition-all duration-300 rounded-full ${
-                                        isActive 
-                                            ? 'w-full left-0 shadow-lg shadow-purple-400/50' 
-                                            : 'w-0 left-1/2 group-hover:w-full group-hover:left-0'
-                                    }`}></span>
+                                    {link.label}
+                                    {active && (
+                                        <motion.span
+                                            layoutId="nav-active"
+                                            className="absolute inset-0 -z-10 rounded-lg bg-surface-2"
+                                            transition={{ type: 'spring', stiffness: 500, damping: 34 }}
+                                        />
+                                    )}
                                 </Link>
                             );
                         })}
                     </nav>
 
-                    {/* Desktop CTA Buttons */}
-                    <div className="hidden md:flex items-center space-x-3">
+                    {/* Right cluster */}
+                    <div className="flex items-center gap-1.5">
+                        {/* Command palette trigger (desktop) */}
+                        <button
+                            onClick={openCommandPalette}
+                            className="hidden items-center gap-2 rounded-xl border border-line bg-surface px-2.5 py-1.5 text-xs text-fg-subtle transition-colors hover:border-line-strong hover:text-fg-muted lg:flex"
+                            aria-label="Open command palette"
+                        >
+                            <Search className="h-3.5 w-3.5" />
+                            <span>Search…</span>
+                            <span className="flex items-center gap-0.5">
+                                <Kbd>⌘</Kbd>
+                                <Kbd>K</Kbd>
+                            </span>
+                        </button>
+
                         <a
                             href="https://github.com/Shanidhya01/Resume-Builder"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group flex items-center gap-2 px-4 py-2 text-slate-300 font-medium transition-all duration-300 hover:text-white hover:bg-gradient-to-r hover:from-slate-800/50 hover:via-purple-800/30 hover:to-slate-800/50 rounded-xl border border-transparent hover:border-purple-500/20"
+                            aria-label="View source on GitHub"
+                            className="hidden h-9 w-9 items-center justify-center rounded-xl border border-line text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg sm:inline-flex"
                         >
-                            <FaGithub className="w-4 h-4 transition-transform group-hover:rotate-12" />
-                            <span className="hidden lg:inline">GitHub</span>
+                            <Github className="h-4 w-4" />
                         </a>
 
+                        <ThemeToggle />
+
                         {!loading && user ? (
-                            <button
-                                onClick={handleLogout}
-                                className="group relative flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold rounded-xl shadow-lg shadow-purple-500/40 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/60 hover:scale-110 overflow-hidden"
-                            >
-                                <span className="relative">Logout</span>
-                            </button>
-                        ) : (
-                            <>
-                                <Link
-                                    href="/login"
-                                    className="px-4 py-2 text-slate-300 font-medium transition-all duration-300 hover:text-white"
+                            <div ref={menuRef} className="relative hidden md:block">
+                                <button
+                                    onClick={() => setMenuOpen(o => !o)}
+                                    aria-haspopup="menu"
+                                    aria-expanded={menuOpen}
+                                    className="flex items-center gap-1.5 rounded-xl border border-transparent p-0.5 pr-1.5 transition-colors hover:bg-surface-2"
                                 >
-                                    Login
-                                </Link>
-                                <Link
-                                    href="/register"
-                                    className="group relative flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold rounded-xl shadow-lg shadow-purple-500/40 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/60 hover:scale-110 overflow-hidden animate-gradient-x bg-[length:200%_auto]"
-                                >
-                                    <span className="absolute inset-0 w-0 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 transition-all duration-500 ease-out group-hover:w-full"></span>
-                                    <div className="relative flex items-center gap-2">
-                                        <span className="absolute -left-1 w-6 h-6 bg-white rounded-full blur-md opacity-0 group-hover:opacity-60 transition-all duration-300"></span>
-                                        <IoIosRocket className="relative w-5 h-5 group-hover:animate-shake" />
-                                    </div>
-                                    <span className="relative">Get Started</span>
-                                </Link>
-                            </>
-                        )}
-                    </div>
-
-                    {/* Mobile Menu Button */}
-                    <button
-                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                        aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
-                        aria-expanded={isMobileMenuOpen}
-                        className="md:hidden p-2 text-slate-300 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-300"
-                    >
-                        {isMobileMenuOpen ? (
-                            <HiX className="w-6 h-6" />
-                        ) : (
-                            <HiMenuAlt3 className="w-6 h-6" />
-                        )}
-                    </button>
-                </div>
-
-                {/* Mobile Navigation */}
-                <div className={`md:hidden transition-all duration-300 ease-in-out ${
-                    isMobileMenuOpen 
-                        ? 'max-h-96 opacity-100' 
-                        : 'max-h-0 opacity-0 overflow-hidden'
-                }`}>
-                    <div className="px-6 py-4 bg-gradient-to-br from-slate-900/95 via-purple-900/80 to-slate-900/95 backdrop-blur-lg border-t border-purple-500/20">
-                        <nav className="flex flex-col space-y-2">
-                            {navLinks.map((link, index) => {
-                                const isActive = pathname === link.href;
-                                return (
-                                    <Link
-                                        key={index}
-                                        href={link.href}
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                        className={`group flex items-center gap-3 px-4 py-3 font-medium transition-all duration-300 rounded-xl ${
-                                            isActive 
-                                                ? 'text-white bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 border border-purple-500/40 shadow-lg shadow-purple-500/20' 
-                                                : 'text-slate-300 hover:text-white hover:bg-gradient-to-r hover:from-blue-500/10 hover:via-purple-500/10 hover:to-pink-500/10'
-                                        }`}
-                                    >
-                                        {link.icon && <link.icon className="w-5 h-5" />}
-                                        <span>{link.label}</span>
-                                        {isActive && (
-                                            <div className="ml-auto w-2 h-2 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full animate-pulse shadow-lg shadow-purple-400/50"></div>
-                                        )}
-                                    </Link>
-                                );
-                            })}
-                            
-                            <div className="pt-4 border-t border-purple-500/20 space-y-2">
-                                <a
-                                    href="https://github.com/Shanidhya01/Resume-Builder"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-3 px-4 py-3 text-slate-300 font-medium transition-all duration-300 hover:text-white hover:bg-gradient-to-r hover:from-slate-800/50 hover:via-purple-800/30 hover:to-slate-800/50 rounded-xl border border-transparent hover:border-purple-500/20"
-                                >
-                                    <FaGithub className="w-5 h-5" />
-                                    <span>View Source</span>
-                                </a>
-                                
-                                {!loading && user ? (
-                                    <button
-                                        onClick={handleLogout}
-                                        className="flex items-center justify-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold rounded-xl shadow-lg shadow-purple-500/40 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:shadow-purple-500/60"
-                                    >
-                                        <span>Logout</span>
-                                    </button>
-                                ) : (
-                                    <>
-                                        <Link
-                                            href="/login"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                            className="flex items-center justify-center gap-3 px-4 py-3 text-slate-300 font-medium rounded-xl border border-purple-500/20"
+                                    <Avatar src={user.photoURL} name={user.displayName} email={user.email} size="sm" />
+                                    <ChevronDown className={cn('h-3.5 w-3.5 text-fg-muted transition-transform', menuOpen && 'rotate-180')} />
+                                </button>
+                                <AnimatePresence>
+                                    {menuOpen && (
+                                        <motion.div
+                                            role="menu"
+                                            initial={{ opacity: 0, scale: 0.96, y: -6 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 0.98, y: -4 }}
+                                            transition={{ duration: 0.14 }}
+                                            className="absolute right-0 mt-2 w-60 origin-top-right overflow-hidden rounded-2xl border border-line bg-surface p-1.5 shadow-ds-xl"
                                         >
-                                            <span>Login</span>
-                                        </Link>
-                                        <Link
-                                            href="/register"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                            className="flex items-center justify-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold rounded-xl shadow-lg shadow-purple-500/40 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:shadow-purple-500/60"
-                                        >
-                                            <IoIosRocket className="w-5 h-5" />
-                                            <span>Get Started</span>
-                                        </Link>
-                                    </>
-                                )}
+                                            <div className="flex items-center gap-3 px-2.5 py-2">
+                                                <Avatar src={user.photoURL} name={user.displayName} email={user.email} size="md" />
+                                                <div className="min-w-0">
+                                                    {user.displayName && <p className="truncate text-sm font-semibold text-fg">{user.displayName}</p>}
+                                                    <p className="truncate text-xs text-fg-muted">{user.email}</p>
+                                                </div>
+                                            </div>
+                                            <div className="my-1.5 h-px bg-line" />
+                                            {[
+                                                { href: '/dashboard/settings', label: 'Settings', icon: Settings },
+                                                { href: '/account', label: 'Account', icon: User },
+                                            ].map(item => (
+                                                <Link
+                                                    key={item.href}
+                                                    href={item.href}
+                                                    role="menuitem"
+                                                    onClick={closeMenus}
+                                                    className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg"
+                                                >
+                                                    <item.icon className="h-4 w-4" />
+                                                    {item.label}
+                                                </Link>
+                                            ))}
+                                            <div className="my-1.5 h-px bg-line" />
+                                            <button
+                                                onClick={handleLogout}
+                                                role="menuitem"
+                                                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-red-500 transition-colors hover:bg-red-500/10"
+                                            >
+                                                <LogOut className="h-4 w-4" />
+                                                Log out
+                                            </button>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
-                        </nav>
+                        ) : (
+                            !loading && (
+                                <div className="hidden items-center gap-1.5 md:flex">
+                                    <Button as={Link} href="/login" variant="ghost" size="sm">
+                                        Log in
+                                    </Button>
+                                    <Button as={Link} href="/register" variant="primary" size="sm">
+                                        Get started
+                                    </Button>
+                                </div>
+                            )
+                        )}
+
+                        {/* Mobile menu toggle */}
+                        <button
+                            onClick={() => setMobileOpen(o => !o)}
+                            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+                            aria-expanded={mobileOpen}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-line text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg md:hidden"
+                        >
+                            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                        </button>
                     </div>
                 </div>
+
+                {/* Mobile nav */}
+                <AnimatePresence>
+                    {mobileOpen && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden border-t border-line bg-canvas md:hidden"
+                        >
+                            <nav className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-3">
+                                {links.map(link => {
+                                    const active = isActivePath(pathname, link.href);
+                                    const Icon = link.icon;
+                                    return (
+                                        <Link
+                                            key={link.href}
+                                            href={link.href}
+                                            onClick={closeMenus}
+                                            className={cn(
+                                                'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
+                                                active ? 'bg-surface-2 text-fg' : 'text-fg-muted hover:bg-surface-2 hover:text-fg',
+                                            )}
+                                        >
+                                            {Icon && <Icon className="h-4 w-4" />}
+                                            {link.label}
+                                        </Link>
+                                    );
+                                })}
+                                <div className="my-1.5 h-px bg-line" />
+                                {!loading && user ? (
+                                    <>
+                                        <Link href="/dashboard/settings" onClick={closeMenus} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg">
+                                            <Settings className="h-4 w-4" /> Settings
+                                        </Link>
+                                        <Link href="/account" onClick={closeMenus} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg">
+                                            <User className="h-4 w-4" /> Account
+                                        </Link>
+                                        <button onClick={handleLogout} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-red-500 transition-colors hover:bg-red-500/10">
+                                            <LogOut className="h-4 w-4" /> Log out
+                                        </button>
+                                    </>
+                                ) : (
+                                    !loading && (
+                                        <div className="flex flex-col gap-2 pt-1">
+                                            <Button as={Link} href="/login" variant="outline" size="md" fullWidth>Log in</Button>
+                                            <Button as={Link} href="/register" variant="primary" size="md" fullWidth>Get started</Button>
+                                        </div>
+                                    )
+                                )}
+                            </nav>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </header>
 
-            {/* Spacer to prevent content overlap */}
-            <div className="h-20"></div>
+            <CommandPalette authed={!!user} />
         </>
     );
 };

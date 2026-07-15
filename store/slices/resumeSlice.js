@@ -56,6 +56,16 @@ const resumeSlice = createSlice({
             state.saved = false;
         },
 
+        reorderList: (state, action) => {
+            const { tab, from, to } = action.payload;
+            if (!Array.isArray(state[tab])) return;
+            const len = state[tab].length;
+            if (from < 0 || from >= len || to < 0 || to >= len || from === to) return;
+            const [moved] = state[tab].splice(from, 1);
+            state[tab].splice(to, 0, moved);
+            state.saved = false;
+        },
+
         saveResume: state => {
             state.saved = true;
         },
@@ -76,8 +86,22 @@ const resumeSlice = createSlice({
                 saved: true,
             };
         },
+
+        // Restore a previous content snapshot for undo/redo. Unlike loadResume,
+        // this marks the resume unsaved so the change is autosaved to Firestore.
+        restoreContent: (state, action) => {
+            const data = action.payload || {};
+            return {
+                ...defaultResume,
+                ...data,
+                selectedTemplate: isValidTemplateId(data.selectedTemplate)
+                    ? data.selectedTemplate
+                    : state.selectedTemplate,
+                saved: false,
+            };
+        },
     },
 });
 
-export const { updateResumeValue, addNewIndex, deleteIndex, saveResume, moveIndex, setTemplate, loadResume } = resumeSlice.actions;
+export const { updateResumeValue, addNewIndex, deleteIndex, saveResume, moveIndex, reorderList, setTemplate, loadResume, restoreContent } = resumeSlice.actions;
 export default resumeSlice.reducer;

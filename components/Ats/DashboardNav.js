@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { cn } from '@/lib/cn';
 
 const TABS = [
     { href: '/dashboard', label: 'Overview' },
@@ -14,13 +16,14 @@ const TABS = [
     { href: '/dashboard/recruiter', label: 'Recruiter Preview' },
     { href: '/dashboard/comparison', label: 'Comparison' },
     { href: '/improvements', label: 'Improvement Center' },
+    { href: '/dashboard/settings', label: 'Settings' },
 ];
 
 const DashboardNav = () => {
     const pathname = usePathname();
 
     return (
-        <nav aria-label="Dashboard sections" className="mb-8 -mt-2 flex gap-2 overflow-x-auto pb-2">
+        <nav aria-label="Dashboard sections" className="mb-8 flex gap-1.5 overflow-x-auto pb-2">
             {TABS.map(tab => {
                 const isActive = pathname === tab.href;
                 return (
@@ -28,12 +31,18 @@ const DashboardNav = () => {
                         key={tab.href}
                         href={tab.href}
                         aria-current={isActive ? 'page' : undefined}
-                        className={`whitespace-nowrap rounded-full border px-4 py-1.5 text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 ${
-                            isActive
-                                ? 'border-purple-400 bg-purple-500/20 text-white'
-                                : 'border-purple-500/20 text-slate-300 hover:bg-purple-500/10 hover:text-white'
-                        }`}
+                        className={cn(
+                            'relative whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+                            isActive ? 'text-accent-fg' : 'text-fg-muted hover:bg-surface-2 hover:text-fg',
+                        )}
                     >
+                        {isActive && (
+                            <motion.span
+                                layoutId="dashnav-active"
+                                className="absolute inset-0 -z-10 rounded-full bg-accent"
+                                transition={{ type: 'spring', stiffness: 500, damping: 34 }}
+                            />
+                        )}
                         {tab.label}
                     </Link>
                 );

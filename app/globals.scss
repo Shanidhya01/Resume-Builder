@@ -2,17 +2,144 @@
 @tailwind components;
 @tailwind utilities;
 
-// @import url('https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap');
-
-// import nuinto
-
+/*
+ * ============================================================================
+ *  HireReady — Design System (Phase 9 rebuild)
+ * ============================================================================
+ *  Semantic colour tokens are stored as space-separated RGB channels so
+ *  Tailwind's `rgb(var(--x) / <alpha-value>)` mapping keeps opacity modifiers
+ *  working (e.g. `bg-surface/60`). Light values live on `:root`, dark on
+ *  `.dark`. `--accent` is overridden at runtime by the theme customization
+ *  context (context/ThemeProvider.js).
+ *
+ *  Elevation model (premium SaaS): canvas < surface < surface-2 < surface-3.
+ *  Borders: `line` (hairline) and `line-strong` (emphasis).
+ * ============================================================================
+ */
 @layer base {
+    :root {
+        /* Surfaces — light */
+        --canvas: 250 250 251; /* app background */
+        --surface: 255 255 255; /* cards / panels */
+        --surface-2: 244 244 245; /* insets / hover */
+        --surface-3: 228 228 231; /* pressed / stronger inset */
+
+        /* Text */
+        --fg: 9 9 11; /* primary text */
+        --fg-muted: 82 82 91; /* secondary text */
+        --fg-subtle: 113 113 122; /* tertiary / placeholder */
+
+        /* Lines */
+        --line: 228 228 231; /* hairline border */
+        --line-strong: 212 212 216; /* emphasised border */
+
+        /* Brand accent (blue) — runtime-overridable */
+        --accent: 37 99 235; /* blue-600 */
+        --accent-hover: 29 78 216; /* blue-700 */
+        --accent-fg: 255 255 255;
+        --accent-soft: 239 246 255; /* blue-50 tint for pills */
+
+        /* Elevation shadows (tuned for light mode) */
+        --shadow-sm: 0 1px 2px 0 rgb(9 9 11 / 0.05);
+        --shadow-md: 0 4px 12px -2px rgb(9 9 11 / 0.08), 0 2px 4px -2px rgb(9 9 11 / 0.06);
+        --shadow-lg: 0 12px 32px -8px rgb(9 9 11 / 0.12), 0 4px 8px -4px rgb(9 9 11 / 0.08);
+        --shadow-xl: 0 24px 48px -12px rgb(9 9 11 / 0.18);
+
+        --ring: 37 99 235;
+        --app-font: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+        --app-font-scale: 1;
+        color-scheme: light;
+    }
+
+    .dark {
+        /* Surfaces — near-black, layered */
+        --canvas: 9 9 11; /* zinc-950 */
+        --surface: 24 24 27; /* zinc-900 */
+        --surface-2: 39 39 42; /* zinc-800 */
+        --surface-3: 63 63 70; /* zinc-700 */
+
+        --fg: 250 250 250;
+        --fg-muted: 161 161 170;
+        --fg-subtle: 113 113 122;
+
+        --line: 39 39 42; /* subtle hairline */
+        --line-strong: 63 63 70;
+
+        --accent: 59 130 246; /* blue-500 reads better on dark */
+        --accent-hover: 96 165 250; /* blue-400 */
+        --accent-fg: 255 255 255;
+        --accent-soft: 30 58 138; /* blue-900 tint */
+
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+        --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+        --shadow-lg: 0 12px 32px -8px rgb(0 0 0 / 0.6), 0 4px 8px -4px rgb(0 0 0 / 0.5);
+        --shadow-xl: 0 24px 48px -12px rgb(0 0 0 / 0.7);
+
+        --ring: 96 165 250;
+        color-scheme: dark;
+    }
+
+    html {
+        font-size: calc(100% * var(--app-font-scale, 1));
+        scroll-behavior: smooth;
+        -webkit-tap-highlight-color: transparent;
+    }
+
     body {
-        @apply bg-gray-800 text-gray-200 caret-primary-400;
-        font-family: 'Ubuntu', sans-serif;
+        @apply bg-canvas text-fg antialiased;
+        font-family: var(--app-font), system-ui, sans-serif;
+        font-feature-settings: 'cv11', 'ss01';
+        font-optical-sizing: auto;
+        text-rendering: optimizeLegibility;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Balanced headings + tighter tracking for a premium type feel. */
+    h1, h2, h3, h4 {
+        text-wrap: balance;
+        letter-spacing: -0.02em;
+    }
+
+    /* Skip-to-content link — visible only when focused (a11y). */
+    .skip-link {
+        @apply sr-only;
+    }
+    .skip-link:focus {
+        @apply not-sr-only fixed left-4 top-4 z-[400] rounded-lg bg-accent px-4 py-2 font-semibold text-accent-fg shadow-lg;
+    }
+
+    /* Respect users who ask their OS to minimise motion. */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        ::before,
+        ::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+        }
+    }
+
+    /* Consistent, visible keyboard focus ring across the app. */
+    :focus-visible {
+        outline: 2px solid rgb(var(--ring));
+        outline-offset: 2px;
+    }
+
+    ::selection {
+        background: rgb(var(--accent) / 0.25);
+        color: rgb(var(--fg));
     }
 }
 
+/*
+ * ----------------------------------------------------------------------------
+ *  LEGACY component/utility classes (pre-Phase 9).
+ *  Still referenced by not-yet-migrated pages (home, auth, about, account,
+ *  ATS dashboards, import/export). Kept verbatim so those surfaces don't break
+ *  while they await migration. New UI must use the design-system components.
+ * ----------------------------------------------------------------------------
+ */
 @layer components {
     .btn {
         @apply flex cursor-pointer items-center justify-center gap-3 rounded-md border border-gray-600 bg-gray-700 px-6 py-1.5 font-medium shadow-lg shadow-gray-900/25 hover:brightness-125 2xl:text-lg;
@@ -30,7 +157,7 @@
 
 @layer utilities {
     .gradient {
-        @apply bg-gradient-to-r from-primary-400 to-green-400;
+        @apply bg-gradient-to-r from-primary-400 to-blue-400;
     }
 
     .text-gradient {
@@ -38,37 +165,22 @@
         @apply bg-clip-text text-transparent;
     }
 
-    .animation-delay-200 {
-        animation-delay: 200ms;
+    /* Subtle brand-tinted radial glow for hero sections. */
+    .bg-grid {
+        background-image:
+            linear-gradient(to right, rgb(var(--line) / 0.6) 1px, transparent 1px),
+            linear-gradient(to bottom, rgb(var(--line) / 0.6) 1px, transparent 1px);
+        background-size: 56px 56px;
     }
 
-    .animation-delay-400 {
-        animation-delay: 400ms;
-    }
-
-    .animation-delay-600 {
-        animation-delay: 600ms;
-    }
-
-    .animation-delay-800 {
-        animation-delay: 800ms;
-    }
-
-    .animation-delay-1000 {
-        animation-delay: 1000ms;
-    }
-
-    .animation-delay-1200 {
-        animation-delay: 1200ms;
-    }
-
-    .animation-delay-2000 {
-        animation-delay: 2000ms;
-    }
-
-    .animation-delay-4000 {
-        animation-delay: 4000ms;
-    }
+    .animation-delay-200 { animation-delay: 200ms; }
+    .animation-delay-400 { animation-delay: 400ms; }
+    .animation-delay-600 { animation-delay: 600ms; }
+    .animation-delay-800 { animation-delay: 800ms; }
+    .animation-delay-1000 { animation-delay: 1000ms; }
+    .animation-delay-1200 { animation-delay: 1200ms; }
+    .animation-delay-2000 { animation-delay: 2000ms; }
+    .animation-delay-4000 { animation-delay: 4000ms; }
 }
 
 .tabs {
@@ -78,21 +190,28 @@
     }
 }
 
-::-webkit-scrollbar {
+/* Refined, unobtrusive scrollbars (token-aware). */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--line-strong)) transparent;
+}
 
-    @apply  md:size-1.5;
+::-webkit-scrollbar {
+    @apply size-2;
 
     &-track {
-        @apply bg-gray-700 ;
+        background: transparent;
     }
 
     &-thumb {
-        @apply bg-primary-500 rounded-sm;
+        @apply rounded-full;
+        background: rgb(var(--line-strong));
+        border: 2px solid transparent;
+        background-clip: content-box;
 
-        &:hover{
-            @apply bg-primary-500;
+        &:hover {
+            background: rgb(var(--fg-subtle));
+            background-clip: content-box;
         }
     }
-
-
 }
