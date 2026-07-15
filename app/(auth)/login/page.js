@@ -5,6 +5,15 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import GoogleButton from '@/components/Auth/GoogleButton';
+import Button from '@/components/UI/Button';
+import {
+    AuthShell,
+    AuthHeading,
+    AuthError,
+    AuthField,
+    PasswordField,
+    AuthDivider,
+} from '@/components/Auth/AuthUI';
 
 const LoginPage = () => {
     const { logIn, signInWithGoogle, user, loading: authLoading } = useAuth();
@@ -54,74 +63,66 @@ const LoginPage = () => {
     };
 
     return (
-        <div className="mx-auto mt-16 max-w-md px-4 pb-10">
-            <div className="card">
-                <h1 className="mb-6 text-2xl font-bold text-white">Log In</h1>
+        <AuthShell>
+            <AuthHeading title="Welcome back" subtitle="Log in to continue building your resume." />
 
-                {error && (
-                    <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-300">
-                        {error}
-                    </div>
-                )}
+            <AuthError>{error}</AuthError>
 
-                <form onSubmit={onSubmit} className="flex flex-col gap-4">
-                    <div>
-                        <label className="mb-1 block text-sm text-gray-300">Email</label>
+            <form onSubmit={onSubmit} className="flex flex-col gap-4">
+                <AuthField
+                    label="Email"
+                    id="email"
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                />
+                <PasswordField
+                    label="Password"
+                    id="password"
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                />
+
+                <div className="flex items-center justify-between text-sm">
+                    <label className="flex cursor-pointer items-center gap-2 text-fg-muted">
                         <input
-                            type="email"
-                            value={email}
-                            onChange={e => setEmail(e.target.value)}
-                            className="w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-white outline-none focus:border-primary-400"
-                            placeholder="you@example.com"
+                            type="checkbox"
+                            checked={rememberMe}
+                            onChange={e => setRememberMe(e.target.checked)}
+                            className="h-4 w-4 rounded border-line-strong bg-surface-2 accent-accent"
                         />
-                    </div>
-                    <div>
-                        <label className="mb-1 block text-sm text-gray-300">Password</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={e => setPassword(e.target.value)}
-                            className="w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-white outline-none focus:border-primary-400"
-                            placeholder="••••••••"
-                        />
-                    </div>
-
-                    <div className="flex items-center justify-between text-sm">
-                        <label className="flex items-center gap-2 text-gray-300">
-                            <input
-                                type="checkbox"
-                                checked={rememberMe}
-                                onChange={e => setRememberMe(e.target.checked)}
-                                className="h-4 w-4 rounded border-gray-600 bg-gray-800 accent-primary-400"
-                            />
-                            Remember me
-                        </label>
-                        <Link href="/forgot-password" className="text-primary-400 hover:underline">
-                            Forgot password?
-                        </Link>
-                    </div>
-
-                    <button type="submit" disabled={loading} className="btn-filled mt-2 w-full justify-center disabled:opacity-60">
-                        {loading ? 'Logging in...' : 'Log In'}
-                    </button>
-                </form>
-
-                <div className="my-6 flex items-center gap-3 text-xs text-gray-500">
-                    <div className="h-px flex-1 bg-gray-700" />
-                    OR
-                    <div className="h-px flex-1 bg-gray-700" />
+                        Remember me
+                    </label>
+                    <Link href="/forgot-password" className="font-medium text-accent hover:underline">
+                        Forgot password?
+                    </Link>
                 </div>
 
-                <GoogleButton onClick={onGoogleSignIn} disabled={googleLoading} label={googleLoading ? 'Signing in...' : 'Continue with Google'} />
+                <Button type="submit" size="lg" fullWidth loading={loading} className="mt-2">
+                    {loading ? 'Logging in…' : 'Log in'}
+                </Button>
+            </form>
 
-                <p className="mt-6 text-center text-sm text-gray-400">
-                    Don&apos;t have an account?{' '}
-                    <Link href="/register" className="text-primary-400 hover:underline">
-                        Register
-                    </Link>
-                </p>
-            </div>
-        </div>
+            <AuthDivider />
+
+            <GoogleButton
+                onClick={onGoogleSignIn}
+                disabled={googleLoading}
+                loading={googleLoading}
+                label={googleLoading ? 'Signing in…' : 'Continue with Google'}
+            />
+
+            <p className="mt-8 text-center text-sm text-fg-muted">
+                Don&apos;t have an account?{' '}
+                <Link href="/register" className="font-semibold text-accent hover:underline">
+                    Sign up
+                </Link>
+            </p>
+        </AuthShell>
     );
 };
 
