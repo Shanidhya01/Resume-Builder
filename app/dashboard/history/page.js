@@ -85,8 +85,8 @@ const HistoryContent = () => {
     return (
         <div className="mx-auto mt-10 max-w-screen-xl px-4 pb-10 md:mt-12">
             <div className="mb-8">
-                <h1 className="text-2xl font-bold text-white md:text-3xl">Import History</h1>
-                <p className="mt-1 text-sm text-slate-400">Every resume import and backup restore, with parse results and confidence.</p>
+                <h1 className="text-2xl font-bold text-fg md:text-3xl">Import History</h1>
+                <p className="mt-1 text-sm text-fg-muted">Every resume import and backup restore, with parse results and confidence.</p>
             </div>
 
             <DashboardNav />
@@ -108,11 +108,11 @@ const HistoryContent = () => {
                     onAction={() => router.push('/dashboard/import')}
                 />
             ) : (
-                <div className="overflow-x-auto rounded-xl border border-purple-500/20">
+                <div className="overflow-x-auto rounded-xl border border-line">
                     <table className="w-full min-w-[720px] text-left text-sm">
                         <caption className="sr-only">Import history: file, date, source, status, parse result, confidence, and created resume.</caption>
                         <thead>
-                            <tr className="border-b border-purple-500/20 bg-slate-900/60 text-xs uppercase tracking-wide text-slate-400">
+                            <tr className="border-b border-line bg-surface-2 text-xs uppercase tracking-wide text-fg-muted">
                                 <th scope="col" className="px-4 py-3">Imported File</th>
                                 <th scope="col" className="px-4 py-3">Date</th>
                                 <th scope="col" className="px-4 py-3">Source</th>
@@ -130,34 +130,34 @@ const HistoryContent = () => {
                                 const source = SOURCE_META[entry.source] || { icon: FaFileAlt, label: entry.source || 'Unknown' };
                                 const SourceIcon = source.icon;
                                 return (
-                                    <tr key={entry.id} className="border-b border-purple-500/10 last:border-0 hover:bg-purple-500/5">
-                                        <td className="max-w-[220px] truncate px-4 py-3 font-medium text-white" title={entry.fileName}>
+                                    <tr key={entry.id} className="border-b border-line last:border-0 hover:bg-surface-2">
+                                        <td className="max-w-[220px] truncate px-4 py-3 font-medium text-fg" title={entry.fileName}>
                                             {entry.fileName}
                                         </td>
-                                        <td className="whitespace-nowrap px-4 py-3 text-slate-300">{formatTimestamp(entry.importedAt)}</td>
+                                        <td className="whitespace-nowrap px-4 py-3 text-fg-muted">{formatTimestamp(entry.importedAt)}</td>
                                         <td className="px-4 py-3">
-                                            <span className="inline-flex items-center gap-1.5 text-slate-300">
-                                                <SourceIcon className="text-purple-400" aria-hidden="true" /> {source.label}
+                                            <span className="inline-flex items-center gap-1.5 text-fg-muted">
+                                                <SourceIcon className="text-accent" aria-hidden="true" /> {source.label}
                                             </span>
                                         </td>
                                         <td className="px-4 py-3">
                                             <Badge tone={entry.status === 'success' ? 'Excellent' : 'Missing'}>{entry.status}</Badge>
                                         </td>
-                                        <td className="px-4 py-3 text-slate-300">{entry.parseSuccess ? 'Parsed' : entry.error ? 'Failed' : '—'}</td>
+                                        <td className="px-4 py-3 text-fg-muted">{entry.parseSuccess ? 'Parsed' : entry.error ? 'Failed' : '—'}</td>
                                         <td className="px-4 py-3">
                                             {entry.confidence != null ? (
                                                 <Badge tone={confidenceTone(entry.confidence)}>{entry.confidence}%</Badge>
                                             ) : (
-                                                <span className="text-slate-500">—</span>
+                                                <span className="text-fg-subtle">—</span>
                                             )}
                                         </td>
                                         <td className="px-4 py-3">
                                             {entry.resumeId ? (
-                                                <Link href={`/editor/${entry.resumeId}`} className="font-semibold text-purple-300 underline hover:text-purple-200">
+                                                <Link href={`/editor/${entry.resumeId}`} className="font-semibold text-accent underline hover:text-accent-hover">
                                                     {entry.resumeName || 'Open resume'}
                                                 </Link>
                                             ) : (
-                                                <span className="text-slate-500">{entry.error ? entry.error.slice(0, 60) : '—'}</span>
+                                                <span className="text-fg-subtle">{entry.error ? entry.error.slice(0, 60) : '—'}</span>
                                             )}
                                         </td>
                                         <td className="px-4 py-3 text-right">
@@ -165,7 +165,7 @@ const HistoryContent = () => {
                                                 type="button"
                                                 onClick={() => setPendingDeleteId(entry.id)}
                                                 aria-label={`Delete history entry for ${entry.fileName}`}
-                                                className="rounded p-2 text-red-400 hover:bg-red-500/10"
+                                                className="rounded p-2 text-red-500 hover:bg-red-500/10"
                                             >
                                                 <FaTrash className="h-3.5 w-3.5" aria-hidden="true" />
                                             </button>

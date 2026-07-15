@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { HiX } from 'react-icons/hi';
+import { motion } from 'framer-motion';
+import { X, RotateCcw } from 'lucide-react';
 import { listVersions, restoreVersion } from '@/lib/resumes';
 import { loadResume } from '@/store/slices/resumeSlice';
 import { useAuth } from '@/context/AuthContext';
@@ -67,12 +68,26 @@ const VersionHistoryDrawer = ({ resumeId, onClose, onRestored }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-[90] flex justify-end bg-black/50 backdrop-blur-sm">
-            <div className="h-full w-full max-w-md overflow-y-auto border-l border-purple-500/30 bg-slate-900 p-6">
+        <div className="fixed inset-0 z-[200] flex justify-end bg-black/50 backdrop-blur-sm" onClick={onClose}>
+            <motion.div
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'spring', stiffness: 400, damping: 40 }}
+                onClick={e => e.stopPropagation()}
+                className="h-full w-full max-w-md overflow-y-auto border-l border-line bg-surface p-6 shadow-ds-xl"
+            >
                 <div className="mb-6 flex items-center justify-between">
-                    <h2 className="text-lg font-semibold text-white">Version History</h2>
-                    <button onClick={onClose} className="rounded-lg p-2 text-slate-300 hover:bg-white/5">
-                        <HiX className="h-5 w-5" />
+                    <div>
+                        <h2 className="text-lg font-semibold text-fg">Version history</h2>
+                        <p className="text-xs text-fg-muted">Restore a previously saved version.</p>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        aria-label="Close version history"
+                        className="rounded-lg p-2 text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                    >
+                        <X className="h-5 w-5" />
                     </button>
                 </div>
 
@@ -91,20 +106,20 @@ const VersionHistoryDrawer = ({ resumeId, onClose, onRestored }) => {
                         {versions.map(version => (
                             <li
                                 key={version.id}
-                                className="flex items-center justify-between rounded-lg border border-purple-500/20 px-4 py-3"
+                                className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface-2/50 px-4 py-3 transition-colors hover:border-line-strong"
                             >
-                                <span className="text-sm text-slate-300">{formatTimestamp(version.savedAt)}</span>
+                                <span className="text-sm text-fg-muted">{formatTimestamp(version.savedAt)}</span>
                                 <button
                                     onClick={() => setPendingRestoreId(version.id)}
-                                    className="text-xs font-semibold text-primary-400 underline"
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-xs font-semibold text-accent transition-colors hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                                 >
-                                    Restore
+                                    <RotateCcw className="h-3.5 w-3.5" /> Restore
                                 </button>
                             </li>
                         ))}
                     </ul>
                 )}
-            </div>
+            </motion.div>
 
             {pendingRestoreId && (
                 <ConfirmModal

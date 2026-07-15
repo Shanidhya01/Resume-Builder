@@ -4,8 +4,9 @@ import { useEffect, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
-import { FaRedo, FaUndo, FaHistory } from 'react-icons/fa';
+import { Undo2, Redo2, History } from 'lucide-react';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
+import Button from '@/components/UI/Button';
 import { useAuth } from '@/context/AuthContext';
 import { getResume } from '@/lib/resumes';
 import { loadResume } from '@/store/slices/resumeSlice';
@@ -156,9 +157,9 @@ const EditorContent = () => {
         return (
             <div className="mx-auto mt-16 max-w-md px-4">
                 <ErrorMessage message={error} onRetry={loadFromFirestore} />
-                <button onClick={() => router.push('/dashboard')} className="btn-filled mt-4 w-full justify-center">
+                <Button variant="primary" fullWidth className="mt-4" onClick={() => router.push('/dashboard')}>
                     Back to Dashboard
-                </button>
+                </Button>
             </div>
         );
     }
@@ -178,16 +179,16 @@ const EditorContent = () => {
                     <SaveStatusPill status={saveStatus} onRetry={retry} />
                     <div className="flex items-center gap-2">
                         <ToolbarButton onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)" ariaLabel="Undo">
-                            <FaUndo className="h-3.5 w-3.5" />
+                            <Undo2 className="h-4 w-4" />
                         </ToolbarButton>
                         <ToolbarButton onClick={redo} disabled={!canRedo} title="Redo (Ctrl+Shift+Z)" ariaLabel="Redo">
-                            <FaRedo className="h-3.5 w-3.5" />
+                            <Redo2 className="h-4 w-4" />
                         </ToolbarButton>
                         <button
                             onClick={() => setHistoryOpen(true)}
                             className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                         >
-                            <FaHistory className="h-3 w-3" /> <span className="hidden sm:inline">History</span>
+                            <History className="h-3.5 w-3.5" /> <span className="hidden sm:inline">History</span>
                         </button>
                     </div>
                 </div>

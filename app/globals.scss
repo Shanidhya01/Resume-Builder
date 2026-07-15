@@ -132,61 +132,13 @@
     }
 }
 
-/*
- * ----------------------------------------------------------------------------
- *  LEGACY component/utility classes (pre-Phase 9).
- *  Still referenced by not-yet-migrated pages (home, auth, about, account,
- *  ATS dashboards, import/export). Kept verbatim so those surfaces don't break
- *  while they await migration. New UI must use the design-system components.
- * ----------------------------------------------------------------------------
- */
-@layer components {
-    .btn {
-        @apply flex cursor-pointer items-center justify-center gap-3 rounded-md border border-gray-600 bg-gray-700 px-6 py-1.5 font-medium shadow-lg shadow-gray-900/25 hover:brightness-125 2xl:text-lg;
-
-        &-filled {
-            @extend .btn;
-            @apply border-primary-500 bg-primary-400 text-gray-900;
-        }
-    }
-
-    .card {
-        @apply rounded-md border border-gray-600 bg-gray-700/25 p-4 shadow-xl md:p-6 2xl:p-8;
-    }
-}
-
 @layer utilities {
-    .gradient {
-        @apply bg-gradient-to-r from-primary-400 to-blue-400;
-    }
-
-    .text-gradient {
-        @extend .gradient;
-        @apply bg-clip-text text-transparent;
-    }
-
-    /* Subtle brand-tinted radial glow for hero sections. */
+    /* Subtle grid backdrop for hero / ambient sections (token-aware). */
     .bg-grid {
         background-image:
             linear-gradient(to right, rgb(var(--line) / 0.6) 1px, transparent 1px),
             linear-gradient(to bottom, rgb(var(--line) / 0.6) 1px, transparent 1px);
         background-size: 56px 56px;
-    }
-
-    .animation-delay-200 { animation-delay: 200ms; }
-    .animation-delay-400 { animation-delay: 400ms; }
-    .animation-delay-600 { animation-delay: 600ms; }
-    .animation-delay-800 { animation-delay: 800ms; }
-    .animation-delay-1000 { animation-delay: 1000ms; }
-    .animation-delay-1200 { animation-delay: 1200ms; }
-    .animation-delay-2000 { animation-delay: 2000ms; }
-    .animation-delay-4000 { animation-delay: 4000ms; }
-}
-
-.tabs {
-    &::after {
-        content: '';
-        @apply absolute bottom-0 left-0 h-2 w-full;
     }
 }
 

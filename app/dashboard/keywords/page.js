@@ -15,7 +15,7 @@ import { resumeToText } from '@/lib/ats/textUtils';
 const KeywordDistributionChart = dynamic(() => import('@/components/Ats/charts/KeywordDistributionChart'), { ssr: false, loading: () => <ChartSkeleton /> });
 
 function KeywordBadgeList({ items, tone, emptyLabel }) {
-    if (!items || items.length === 0) return <p className="text-sm text-slate-400">{emptyLabel}</p>;
+    if (!items || items.length === 0) return <p className="text-sm text-fg-muted">{emptyLabel}</p>;
     return (
         <div className="flex flex-wrap gap-2">
             {items.map(k => <Badge key={k} tone={tone}>{k}</Badge>)}
@@ -31,7 +31,7 @@ function KeywordsContent() {
     const keywordCounts = useMemo(() => extractKeywords(resumeToText(resume), { limit: 15 }), [resume]);
 
     if (!analysis) {
-        return <div className="mx-auto mt-10 max-w-screen-xl px-4 text-slate-300" role="status" aria-live="polite">Analyzing resume...</div>;
+        return <div className="mx-auto mt-10 max-w-screen-xl px-4 text-fg-muted" role="status" aria-live="polite">Analyzing resume...</div>;
     }
 
     const { keywordAnalysis } = analysis;
@@ -39,8 +39,8 @@ function KeywordsContent() {
     return (
         <div className="mx-auto mt-10 max-w-screen-xl px-4 pb-16 md:mt-12">
             <div className="mb-8">
-                <h1 className="text-2xl font-bold text-white md:text-3xl">Keyword Dashboard</h1>
-                <p className="text-sm text-slate-400">Everything the ATS engine sees when it scans your resume for keywords.</p>
+                <h1 className="text-2xl font-bold text-fg md:text-3xl">Keyword Dashboard</h1>
+                <p className="text-sm text-fg-muted">Everything the ATS engine sees when it scans your resume for keywords.</p>
             </div>
 
             <DashboardNav />
@@ -54,14 +54,14 @@ function KeywordsContent() {
                     {ats.jdAnalysis ? (
                         <KeywordBadgeList items={ats.jdAnalysis.matchedKeywords} tone="Good" emptyLabel="No matches found." />
                     ) : (
-                        <p className="text-sm text-slate-400">Analyze a job description from the Job Match page first.</p>
+                        <p className="text-sm text-fg-muted">Analyze a job description from the Job Match page first.</p>
                     )}
                 </Card>
                 <Card title="Missing Keywords (vs. last analyzed job description)">
                     {ats.jdAnalysis ? (
                         <KeywordBadgeList items={ats.jdAnalysis.missingKeywords} tone="Missing" emptyLabel="None missing." />
                     ) : (
-                        <p className="text-sm text-slate-400">Analyze a job description from the Job Match page first.</p>
+                        <p className="text-sm text-fg-muted">Analyze a job description from the Job Match page first.</p>
                     )}
                 </Card>
             </div>

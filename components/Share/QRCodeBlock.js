@@ -56,13 +56,13 @@ const QRCodeBlock = ({ url, fileName = 'resume-qr' }) => {
     };
 
     if (error) {
-        return <p className="text-sm text-red-300">Couldn&apos;t generate the QR code.</p>;
+        return <p className="text-sm text-red-600 dark:text-red-400">Couldn&apos;t generate the QR code.</p>;
     }
 
     return (
         <div className="flex flex-col items-center gap-3">
             {!dataUrl ? (
-                <div className="h-[180px] w-[180px] animate-pulse rounded-lg bg-slate-800/60" role="status" aria-label="Generating QR code" />
+                <div className="h-[180px] w-[180px] animate-pulse rounded-lg bg-surface-2" role="status" aria-label="Generating QR code" />
             ) : (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={dataUrl} alt="QR code linking to the public resume" className="h-[180px] w-[180px] rounded-lg bg-white p-2" />
@@ -73,7 +73,7 @@ const QRCodeBlock = ({ url, fileName = 'resume-qr' }) => {
                     onClick={handleDownload}
                     disabled={!dataUrl}
                     aria-label="Download QR code as PNG"
-                    className="flex items-center gap-1.5 rounded-lg border border-purple-500/30 px-3 py-1.5 text-xs font-semibold text-purple-200 hover:bg-purple-500/10 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
+                    className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent/10 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 >
                     <FaDownload className="h-3 w-3" aria-hidden="true" /> Download
                 </button>
@@ -82,7 +82,7 @@ const QRCodeBlock = ({ url, fileName = 'resume-qr' }) => {
                     onClick={handleCopy}
                     disabled={!dataUrl}
                     aria-label="Copy QR code image"
-                    className="flex items-center gap-1.5 rounded-lg border border-purple-500/30 px-3 py-1.5 text-xs font-semibold text-purple-200 hover:bg-purple-500/10 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
+                    className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent/10 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 >
                     <FaCopy className="h-3 w-3" aria-hidden="true" /> Copy
                 </button>
@@ -91,7 +91,7 @@ const QRCodeBlock = ({ url, fileName = 'resume-qr' }) => {
                     onClick={handlePrint}
                     disabled={!dataUrl}
                     aria-label="Print QR code"
-                    className="flex items-center gap-1.5 rounded-lg border border-purple-500/30 px-3 py-1.5 text-xs font-semibold text-purple-200 hover:bg-purple-500/10 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
+                    className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent/10 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 >
                     <FaPrint className="h-3 w-3" aria-hidden="true" /> Print
                 </button>

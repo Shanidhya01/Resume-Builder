@@ -23,13 +23,13 @@ const TemplateSwitcher = () => {
                         aria-checked={isSelected}
                         aria-label={`Use ${template.name} template`}
                         onClick={() => dispatch(setTemplate(template.id))}
-                        className={`group relative flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-1 ${
+                        className={`group relative flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-surface ${
                             isSelected
-                                ? 'border-[#6F42C1] bg-[#6F42C1]/10 text-[#6F42C1] shadow-sm'
-                                : 'border-gray-300 bg-white text-gray-600 hover:border-[#6F42C1]/50 hover:bg-[#6F42C1]/5'
+                                ? 'border-accent bg-accent/10 text-accent shadow-ds-sm'
+                                : 'border-line bg-surface text-fg-muted hover:border-accent/50 hover:bg-surface-2 hover:text-fg'
                         }`}
                     >
-                        <span className="relative h-8 w-6 overflow-hidden rounded border border-black/10">
+                        <span className="relative h-8 w-6 overflow-hidden rounded border border-line">
                             <Image src={template.thumbnail} alt="" fill sizes="24px" className="object-cover" />
                         </span>
                         {template.name}

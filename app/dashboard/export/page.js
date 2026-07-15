@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FaFilePdf, FaFileWord, FaFileCode, FaMarkdown, FaFileAlt, FaCloudDownloadAlt, FaCloudUploadAlt } from 'react-icons/fa';
+import { FileText, FileType2, FileCode2, FileJson, Hash, DownloadCloud, UploadCloud } from 'lucide-react';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
+import Button from '@/components/UI/Button';
 import DashboardNav from '@/components/Ats/DashboardNav';
 import Card from '@/components/Ats/Card';
 import Badge from '@/components/Ats/Badge';
@@ -20,11 +21,11 @@ import { recordImport } from '@/lib/importExport/history';
 import { getTemplateById } from '@/config/templates';
 
 const FORMAT_ICONS = {
-    pdf: FaFilePdf,
-    docx: FaFileWord,
-    html: FaFileCode,
-    markdown: FaMarkdown,
-    json: FaFileAlt,
+    pdf: FileText,
+    docx: FileType2,
+    html: FileCode2,
+    markdown: Hash,
+    json: FileJson,
 };
 
 const RESTORE_MODES = [
@@ -183,8 +184,8 @@ const ExportContent = () => {
     return (
         <div className="mx-auto mt-10 max-w-screen-xl px-4 pb-10 md:mt-12">
             <div className="mb-8">
-                <h1 className="text-2xl font-bold text-white md:text-3xl">Export Resume</h1>
-                <p className="mt-1 text-sm text-slate-400">
+                <h1 className="text-2xl font-bold text-fg md:text-3xl">Export Resume</h1>
+                <p className="mt-1 text-sm text-fg-muted">
                     Download your resume in any format, or back up and restore everything. Files are generated on demand — nothing is stored.
                 </p>
             </div>
@@ -216,7 +217,7 @@ const ExportContent = () => {
                                 id="export-resume-select"
                                 value={selectedId}
                                 onChange={e => setSelectedId(e.target.value)}
-                                className="w-full max-w-md rounded-lg border border-purple-500/30 bg-slate-900 px-3 py-2 text-sm text-white focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-400"
+                                className="w-full max-w-md rounded-xl border border-line bg-surface-2 px-3 py-2 text-sm text-fg outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/30"
                             >
                                 {resumes.map(resume => (
                                     <option key={resume.id} value={resume.id}>
@@ -242,11 +243,11 @@ const ExportContent = () => {
                                         disabled={Boolean(exporting) || !selectedResume}
                                         onClick={() => handleExport(format.id)}
                                         aria-label={`Export as ${format.label}. ${format.description}`}
-                                        className="flex flex-col items-center gap-2 rounded-xl border border-purple-500/20 p-5 text-center transition-all hover:border-purple-400 hover:bg-purple-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 disabled:cursor-not-allowed disabled:opacity-50"
+                                        className="flex flex-col items-center gap-2 rounded-xl border border-line bg-surface p-5 text-center transition-all hover:-translate-y-0.5 hover:border-accent hover:bg-accent/5 hover:shadow-ds-md focus:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-50"
                                     >
-                                        <Icon className={`h-8 w-8 ${isExporting ? 'animate-pulse text-purple-300' : 'text-purple-400'}`} aria-hidden="true" />
-                                        <span className="text-sm font-bold text-white">{isExporting ? 'Generating...' : format.label}</span>
-                                        <span className="text-xs text-slate-400">{format.description}</span>
+                                        <Icon className={`h-8 w-8 ${isExporting ? 'animate-pulse text-accent' : 'text-accent'}`} aria-hidden="true" />
+                                        <span className="text-sm font-bold text-fg">{isExporting ? 'Generating…' : format.label}</span>
+                                        <span className="text-xs text-fg-muted">{format.description}</span>
                                     </button>
                                 );
                             })}
@@ -255,21 +256,17 @@ const ExportContent = () => {
 
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                         <Card title="Backup">
-                            <p className="mb-4 text-sm text-slate-400">
+                            <p className="mb-4 text-sm text-fg-muted">
                                 Download a versioned JSON backup of all {resumes.length} resume{resumes.length !== 1 ? 's' : ''} — contacts, content,
                                 and template choices. Keep it safe; you can restore it any time.
                             </p>
-                            <button
-                                type="button"
-                                onClick={handleBackupDownload}
-                                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-purple-500/40 transition-all hover:scale-105"
-                            >
-                                <FaCloudDownloadAlt aria-hidden="true" /> Download Full Backup
-                            </button>
+                            <Button onClick={handleBackupDownload} leftIcon={<DownloadCloud className="h-4 w-4" aria-hidden="true" />}>
+                                Download full backup
+                            </Button>
                         </Card>
 
                         <Card title="Restore">
-                            <p className="mb-4 text-sm text-slate-400">Upload a HireReady backup file (.json) to bring your resumes back.</p>
+                            <p className="mb-4 text-sm text-fg-muted">Upload a HireReady backup file (.json) to bring your resumes back.</p>
 
                             <input
                                 ref={restoreInputRef}
@@ -279,52 +276,47 @@ const ExportContent = () => {
                                 className="sr-only"
                                 aria-label="Choose a backup file to restore"
                             />
-                            <button
-                                type="button"
+                            <Button
+                                variant="outline"
                                 onClick={() => restoreInputRef.current?.click()}
                                 disabled={restoring}
-                                className="inline-flex items-center gap-2 rounded-xl border border-purple-500/40 px-5 py-2.5 text-sm font-semibold text-purple-200 hover:bg-purple-500/10 disabled:opacity-50"
+                                leftIcon={<UploadCloud className="h-4 w-4" aria-hidden="true" />}
                             >
-                                <FaCloudUploadAlt aria-hidden="true" /> {restoreFile ? `Selected: ${restoreFile}` : 'Choose Backup File'}
-                            </button>
+                                {restoreFile ? `Selected: ${restoreFile}` : 'Choose backup file'}
+                            </Button>
 
                             {restoreBackup && (
                                 <div className="mt-4 space-y-3">
-                                    <p className="text-xs text-slate-400">
-                                        Backup contains <span className="font-semibold text-white">{restoreBackup.resumes.length}</span> resume
+                                    <p className="text-xs text-fg-muted">
+                                        Backup contains <span className="font-semibold text-fg">{restoreBackup.resumes.length}</span> resume
                                         {restoreBackup.resumes.length !== 1 ? 's' : ''}
                                         {restoreBackup.exportedAt ? ` · exported ${new Date(restoreBackup.exportedAt).toLocaleDateString()}` : ''}
                                         {restoreBackup.version ? ` · format v${restoreBackup.version}` : ''}
                                     </p>
                                     <fieldset>
-                                        <legend className="mb-2 text-xs font-semibold uppercase tracking-wide text-purple-300">Restore mode</legend>
+                                        <legend className="mb-2 text-xs font-semibold uppercase tracking-wide text-accent">Restore mode</legend>
                                         <div className="space-y-2">
                                             {RESTORE_MODES.map(mode => (
-                                                <label key={mode.id} className="flex cursor-pointer items-start gap-2 rounded-lg border border-purple-500/15 p-3 hover:bg-purple-500/5">
+                                                <label key={mode.id} className="flex cursor-pointer items-start gap-2 rounded-lg border border-line p-3 hover:bg-accent/5">
                                                     <input
                                                         type="radio"
                                                         name="restore-mode"
                                                         value={mode.id}
                                                         checked={restoreMode === mode.id}
                                                         onChange={() => setRestoreMode(mode.id)}
-                                                        className="mt-0.5 accent-purple-500"
+                                                        className="mt-0.5 accent-accent"
                                                     />
                                                     <span>
-                                                        <span className="block text-sm font-semibold text-white">{mode.label}</span>
-                                                        <span className="block text-xs text-slate-400">{mode.description}</span>
+                                                        <span className="block text-sm font-semibold text-fg">{mode.label}</span>
+                                                        <span className="block text-xs text-fg-muted">{mode.description}</span>
                                                     </span>
                                                 </label>
                                             ))}
                                         </div>
                                     </fieldset>
-                                    <button
-                                        type="button"
-                                        onClick={handleRestore}
-                                        disabled={restoring}
-                                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-purple-500/40 transition-all hover:scale-105 disabled:opacity-60"
-                                    >
-                                        {restoring ? 'Restoring...' : 'Restore Backup'}
-                                    </button>
+                                    <Button onClick={handleRestore} disabled={restoring} loading={restoring}>
+                                        {restoring ? 'Restoring…' : 'Restore backup'}
+                                    </Button>
                                 </div>
                             )}
                         </Card>

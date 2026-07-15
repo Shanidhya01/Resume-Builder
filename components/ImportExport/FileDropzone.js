@@ -2,18 +2,18 @@
 
 import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { FaFileUpload, FaFilePdf, FaFileWord, FaFileCode } from 'react-icons/fa';
+import { UploadCloud, FileText, FileType2, FileJson } from 'lucide-react';
 import { ACCEPTED_MIME_MAP, MAX_UPLOAD_BYTES } from '@/lib/import/validation';
 
 const FORMAT_BADGES = [
-    { icon: FaFilePdf, label: 'PDF' },
-    { icon: FaFileWord, label: 'DOCX' },
-    { icon: FaFileCode, label: 'JSON' },
+    { icon: FileText, label: 'PDF' },
+    { icon: FileType2, label: 'DOCX' },
+    { icon: FileJson, label: 'JSON' },
 ];
 
 // Drag & drop + browse upload zone. Client-side validation gives instant
 // feedback; the server re-validates everything (size, MIME, magic bytes).
-const FileDropzone = ({ onFile, disabled = false, progress = null, busyLabel = 'Processing...' }) => {
+const FileDropzone = ({ onFile, disabled = false, progress = null, busyLabel = 'Processing…' }) => {
     const onDrop = useCallback(
         (accepted, rejections) => {
             if (rejections.length > 0) {
@@ -50,49 +50,51 @@ const FileDropzone = ({ onFile, disabled = false, progress = null, busyLabel = '
                 'aria-label': 'Upload a resume file: drag and drop or press Enter to browse. Supported formats: PDF, DOCX, JSON. Maximum size 5 megabytes.',
                 'aria-disabled': disabled,
             })}
-            className={`relative flex min-h-[16rem] cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed p-8 text-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 ${
+            className={`relative flex min-h-[16rem] cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed p-8 text-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                 isDragActive
-                    ? 'border-purple-400 bg-purple-500/10'
+                    ? 'border-accent bg-accent/10'
                     : disabled
-                      ? 'cursor-not-allowed border-slate-600/40 bg-slate-900/30 opacity-70'
-                      : 'border-purple-500/40 bg-slate-900/40 hover:border-purple-400 hover:bg-purple-500/5'
+                      ? 'cursor-not-allowed border-line bg-surface-2 opacity-70'
+                      : 'border-line-strong bg-surface hover:border-accent hover:bg-accent/5'
             }`}
         >
             <input {...getInputProps()} aria-hidden="true" />
 
-            <FaFileUpload className={`h-10 w-10 ${isDragActive ? 'text-purple-300' : 'text-purple-400'}`} aria-hidden="true" />
+            <span className={`grid h-16 w-16 place-items-center rounded-2xl transition-colors ${isDragActive ? 'bg-accent/15 text-accent' : 'bg-surface-2 text-accent'}`}>
+                <UploadCloud className="h-8 w-8" aria-hidden="true" />
+            </span>
 
             {busy ? (
                 <div className="w-full max-w-xs" role="status" aria-live="polite">
-                    <p className="mb-2 text-sm font-semibold text-white">{progress < 100 ? `Uploading... ${progress}%` : busyLabel}</p>
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-700" aria-hidden="true">
+                    <p className="mb-2 text-sm font-semibold text-fg">{progress < 100 ? `Uploading… ${progress}%` : busyLabel}</p>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-surface-2" aria-hidden="true">
                         <div
-                            className="h-full rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300"
+                            className="h-full rounded-full bg-accent transition-all duration-300"
                             style={{ width: `${progress}%` }}
-                        ></div>
+                        />
                     </div>
                 </div>
             ) : (
                 <>
                     <div>
-                        <p className="text-base font-semibold text-white">
+                        <p className="text-base font-semibold text-fg">
                             {isDragActive ? 'Drop your resume here' : 'Drag & drop your resume here'}
                         </p>
-                        <p className="mt-1 text-sm text-slate-400">
-                            or <span className="font-semibold text-purple-300 underline">browse files</span>
+                        <p className="mt-1 text-sm text-fg-muted">
+                            or <span className="font-semibold text-accent underline">browse files</span>
                         </p>
                     </div>
-                    <div className="flex flex-wrap items-center justify-center gap-3">
+                    <div className="flex flex-wrap items-center justify-center gap-2.5">
                         {FORMAT_BADGES.map(({ icon: Icon, label }) => (
                             <span
                                 key={label}
-                                className="inline-flex items-center gap-1.5 rounded-full border border-purple-500/20 px-3 py-1 text-xs font-semibold text-slate-300"
+                                className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-2 px-3 py-1 text-xs font-semibold text-fg-muted"
                             >
-                                <Icon aria-hidden="true" /> {label}
+                                <Icon className="h-3.5 w-3.5" aria-hidden="true" /> {label}
                             </span>
                         ))}
                     </div>
-                    <p className="text-xs text-slate-500">Maximum file size: 5 MB. Files are parsed in memory and never stored.</p>
+                    <p className="text-xs text-fg-subtle">Maximum file size: 5 MB. Files are parsed in memory and never stored.</p>
                 </>
             )}
         </div>

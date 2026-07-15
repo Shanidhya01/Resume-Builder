@@ -42,17 +42,17 @@ const DuplicateResolver = ({ matches, onResolve, onCancel, busy = false }) => {
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="duplicate-resolver-title"
-                className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-purple-500/30 bg-slate-900 p-6 shadow-2xl"
+                className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-line bg-surface p-6 shadow-2xl"
             >
-                <h3 id="duplicate-resolver-title" className="mb-1 text-lg font-semibold text-white">
+                <h3 id="duplicate-resolver-title" className="mb-1 text-lg font-semibold text-fg">
                     Possible duplicate detected
                 </h3>
-                <p className="mb-4 text-sm text-slate-400">
-                    This import looks {top.score}% similar to <span className="font-semibold text-white">&ldquo;{top.name}&rdquo;</span>.
+                <p className="mb-4 text-sm text-fg-muted">
+                    This import looks {top.score}% similar to <span className="font-semibold text-fg">&ldquo;{top.name}&rdquo;</span>.
                 </p>
 
-                <div className="mb-5 rounded-lg border border-purple-500/15 bg-slate-950/50 p-3">
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-purple-300">Why it matched</p>
+                <div className="mb-5 rounded-lg border border-line bg-surface-2 p-3">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-accent">Why it matched</p>
                     <ul className="flex flex-wrap gap-1.5">
                         {top.reasons.map(reason => (
                             <li key={reason}>
@@ -70,12 +70,12 @@ const DuplicateResolver = ({ matches, onResolve, onCancel, busy = false }) => {
                             type="button"
                             disabled={busy}
                             onClick={() => onResolve(id, top)}
-                            className="flex w-full items-start gap-3 rounded-xl border border-purple-500/20 p-4 text-left transition-colors hover:border-purple-400 hover:bg-purple-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 disabled:opacity-50"
+                            className="flex w-full items-start gap-3 rounded-xl border border-line p-4 text-left transition-colors hover:border-accent hover:bg-accent/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50"
                         >
-                            <Icon className="mt-0.5 h-4 w-4 shrink-0 text-purple-300" aria-hidden="true" />
+                            <Icon className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
                             <span>
-                                <span className="block text-sm font-semibold text-white">{label}</span>
-                                <span className="block text-xs text-slate-400">{description}</span>
+                                <span className="block text-sm font-semibold text-fg">{label}</span>
+                                <span className="block text-xs text-fg-muted">{description}</span>
                             </span>
                         </button>
                     ))}
@@ -86,7 +86,7 @@ const DuplicateResolver = ({ matches, onResolve, onCancel, busy = false }) => {
                         type="button"
                         onClick={onCancel}
                         disabled={busy}
-                        className="rounded-lg px-4 py-2 text-sm font-medium text-slate-300 hover:bg-white/5 disabled:opacity-50"
+                        className="rounded-lg px-4 py-2 text-sm font-medium text-fg-muted hover:bg-surface-2 disabled:opacity-50"
                     >
                         Back to review
                     </button>

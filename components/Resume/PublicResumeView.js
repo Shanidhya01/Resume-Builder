@@ -18,7 +18,7 @@ const normalizeUrl = (value, prefix) => {
 };
 
 const SectionTitle = ({ children }) => (
-    <h2 className="mb-3 border-b-2 border-purple-500/40 pb-1.5 text-sm font-bold uppercase tracking-widest text-purple-700 print:border-slate-400 print:text-slate-800">
+    <h2 className="mb-3 border-b-2 border-blue-600/40 pb-1.5 text-sm font-bold uppercase tracking-widest text-blue-700 print:border-slate-400 print:text-slate-800">
         {children}
     </h2>
 );
@@ -62,7 +62,7 @@ const PublicResumeView = ({ resume }) => {
                 target="_blank"
                 rel="noopener noreferrer nofollow"
                 aria-label={label}
-                className="flex items-center gap-1.5 rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:border-purple-400 hover:text-purple-700 print:border-slate-400"
+                className="flex items-center gap-1.5 rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:border-blue-400 hover:text-blue-700 print:border-slate-400"
             >
                 <Icon className="h-3 w-3" aria-hidden="true" />
                 {label}
@@ -74,7 +74,7 @@ const PublicResumeView = ({ resume }) => {
         <article className="mx-auto w-full max-w-3xl rounded-2xl border border-slate-200 bg-white p-6 text-slate-800 shadow-xl sm:p-10 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
             <header className="mb-8 border-b border-slate-200 pb-6 text-center print:text-left">
                 <h1 className="text-3xl font-black text-slate-900 sm:text-4xl">{contact.name || 'Untitled Resume'}</h1>
-                {contact.title && <p className="mt-1 text-lg font-medium text-purple-700 print:text-slate-700">{contact.title}</p>}
+                {contact.title && <p className="mt-1 text-lg font-medium text-blue-700 print:text-slate-700">{contact.title}</p>}
 
                 <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm text-slate-600 print:justify-start">
                     {contact.email && (
@@ -138,7 +138,7 @@ const PublicResumeView = ({ resume }) => {
                                             href={normalizeUrl(entry.url, 'https://')}
                                             target="_blank"
                                             rel="noopener noreferrer nofollow"
-                                            className="mb-1 block text-xs text-purple-700 underline print:text-slate-600"
+                                            className="mb-1 block text-xs text-blue-700 underline print:text-slate-600"
                                         >
                                             {entry.url}
                                         </a>
@@ -174,7 +174,7 @@ const PublicResumeView = ({ resume }) => {
                             {skillList.map((skill, i) => (
                                 <span
                                     key={i}
-                                    className="rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-800 print:border print:border-slate-300 print:bg-transparent"
+                                    className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-800 print:border print:border-slate-300 print:bg-transparent"
                                 >
                                     {skill}
                                 </span>

@@ -1,12 +1,13 @@
 'use client';
 
 import ResumeFields from '@/config/ResumeFields';
-import { FaSave } from 'react-icons/fa';
+import { Save } from 'lucide-react';
 import SingleEditor from './SingleEditor';
 import MultiEditor from './MultiEditor';
 import { useDispatch } from 'react-redux';
 import { saveResume } from '@/store/slices/resumeSlice';
 import { useCallback, useEffect, useState } from 'react';
+import Button from '@/components/UI/Button';
 
 const Editor = ({ tab }) => {
     const { multiple } = ResumeFields[tab];
@@ -34,47 +35,42 @@ const Editor = ({ tab }) => {
         return () => clearInterval(interval);
     }, [save]);
 
+    const statusDot =
+        saveStatus === 'saving'
+            ? 'bg-amber-500 animate-pulse'
+            : saveStatus === 'saved'
+              ? 'bg-emerald-500'
+              : 'bg-fg-subtle';
+
     return (
-        <>
-            <div className="relative my-8">
-                {/* Ambient glow */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-blue-600/20 rounded-2xl blur-xl opacity-50"></div>
-                
-                <form onSubmit={save} className="relative card">
-                    {multiple && <MultiEditor tab={tab} />}
-                    {!multiple && <SingleEditor tab={tab} />}
+        <form onSubmit={save}>
+            {multiple && <MultiEditor tab={tab} />}
+            {!multiple && <SingleEditor tab={tab} />}
 
-                    <div className="flex items-center justify-between mt-8 pt-6 border-t border-purple-200/50">
-                        {/* Auto-save indicator */}
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                                saveStatus === 'saving' ? 'bg-yellow-500 animate-pulse' :
-                                saveStatus === 'saved' ? 'bg-green-500' : 'bg-gray-400'
-                            }`}></div>
-                            <span className="hidden sm:inline">
-                                {saveStatus === 'saving' ? 'Saving...' :
-                                 saveStatus === 'saved' ? 'All changes saved' : 'Auto-save enabled'}
-                            </span>
-                        </div>
+            <div className="mt-8 flex items-center justify-between border-t border-line pt-6">
+                {/* Auto-save indicator */}
+                <div className="flex items-center gap-2 text-sm text-fg-muted">
+                    <span className={`h-2 w-2 rounded-full transition-colors duration-300 ${statusDot}`} />
+                    <span className="hidden sm:inline">
+                        {saveStatus === 'saving'
+                            ? 'Saving…'
+                            : saveStatus === 'saved'
+                              ? 'All changes saved'
+                              : 'Auto-save enabled'}
+                    </span>
+                </div>
 
-                        {/* Save button */}
-                        <button 
-                            type="submit" 
-                            className="group relative btn-filled ml-auto gap-2 px-8 py-3 text-center overflow-hidden"
-                            disabled={saveStatus === 'saving'}
-                        >
-                            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
-                            <span className="relative z-10 font-semibold">
-                                {saveStatus === 'saving' ? 'Saving...' : 'Save Changes'}
-                            </span>
-                            <FaSave className={`relative z-10 transition-transform duration-300 ${
-                                saveStatus === 'saving' ? 'animate-pulse' : 'group-hover:scale-110'
-                            }`} />
-                        </button>
-                    </div>
-                </form>
+                <Button
+                    type="submit"
+                    size="lg"
+                    className="ml-auto"
+                    loading={saveStatus === 'saving'}
+                    rightIcon={<Save className="h-4 w-4" />}
+                >
+                    {saveStatus === 'saving' ? 'Saving…' : 'Save changes'}
+                </Button>
             </div>
-        </>
+        </form>
     );
 };
 

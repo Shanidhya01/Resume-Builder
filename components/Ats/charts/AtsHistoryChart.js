@@ -10,20 +10,20 @@ const AtsHistoryChart = ({ history = [] }) => {
     }));
 
     if (data.length < 2) {
-        return <p className="text-sm text-slate-400">Keep editing your resume — the ATS score history chart appears once there are at least two analyses.</p>;
+        return <p className="text-sm text-fg-muted">Keep editing your resume — the ATS score history chart appears once there are at least two analyses.</p>;
     }
 
     return (
         <ResponsiveContainer width="100%" height={220}>
             <LineChart data={data} margin={{ top: 8, right: 16, left: -16, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.2)" />
                 <XAxis dataKey="index" stroke="#64748b" fontSize={12} tickLine={false} />
                 <YAxis domain={[0, 100]} stroke="#64748b" fontSize={12} tickLine={false} />
                 <Tooltip
-                    contentStyle={{ background: '#0f172a', border: '1px solid #7c3aed40', borderRadius: 8, fontSize: 12 }}
+                    contentStyle={{ background: '#0f172a', border: '1px solid rgba(148,163,184,0.35)', borderRadius: 8, fontSize: 12 }}
                     labelFormatter={i => data[i - 1]?.date || ''}
                 />
-                <Line type="monotone" dataKey="score" stroke="#a78bfa" strokeWidth={2} dot={{ r: 3, fill: '#a78bfa' }} activeDot={{ r: 5 }} />
+                <Line type="monotone" dataKey="score" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3, fill: '#3b82f6' }} activeDot={{ r: 5 }} />
             </LineChart>
         </ResponsiveContainer>
     );

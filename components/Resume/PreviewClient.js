@@ -1,11 +1,11 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { CgSpinner } from 'react-icons/cg';
+import { Loader2 } from 'lucide-react';
 
 const Loader = () => (
     <div className="flex min-h-[24rem] w-full items-center justify-center">
-        <CgSpinner className="animate-spin text-[#6F42C1] text-5xl md:text-6xl" />
+        <Loader2 className="h-12 w-12 animate-spin text-accent" />
     </div>
 );
 

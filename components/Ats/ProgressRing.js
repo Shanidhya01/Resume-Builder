@@ -1,10 +1,10 @@
 'use client';
 
 const colorFor = value => {
-    if (value >= 80) return '#34d399';
-    if (value >= 60) return '#a78bfa';
-    if (value >= 40) return '#fbbf24';
-    return '#f87171';
+    if (value >= 80) return '#10b981'; // emerald-500
+    if (value >= 60) return '#3b82f6'; // blue-500
+    if (value >= 40) return '#f59e0b'; // amber-500
+    return '#ef4444'; // red-500
 };
 
 const ProgressRing = ({ value = 0, size = 96, strokeWidth = 8, label }) => {
@@ -16,7 +16,14 @@ const ProgressRing = ({ value = 0, size = 96, strokeWidth = 8, label }) => {
         <div className="flex flex-col items-center gap-2">
             <div className="relative" style={{ width: size, height: size }}>
                 <svg width={size} height={size} className="-rotate-90">
-                    <circle cx={size / 2} cy={size / 2} r={radius} stroke="#1e293b" strokeWidth={strokeWidth} fill="none" />
+                    <circle
+                        cx={size / 2}
+                        cy={size / 2}
+                        r={radius}
+                        stroke="rgb(var(--surface-3))"
+                        strokeWidth={strokeWidth}
+                        fill="none"
+                    />
                     <circle
                         cx={size / 2}
                         cy={size / 2}
@@ -31,10 +38,10 @@ const ProgressRing = ({ value = 0, size = 96, strokeWidth = 8, label }) => {
                     />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-2xl font-black text-white">{Math.round(value)}</span>
+                    <span className="text-2xl font-black text-fg">{Math.round(value)}</span>
                 </div>
             </div>
-            {label && <span className="text-xs text-slate-400">{label}</span>}
+            {label && <span className="text-xs text-fg-muted">{label}</span>}
         </div>
     );
 };

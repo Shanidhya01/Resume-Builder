@@ -1,17 +1,17 @@
-import { CgSpinner } from 'react-icons/cg';
+import { Loader2 } from 'lucide-react';
 
 const Loader = () => {
     return (
-        <div className="relative flex min-h-[calc(100vh-6rem)] items-center justify-center overflow-hidden">
-            {/* Animated gradient background */}
-            <div className="absolute inset-0 z-0 animate-gradient-xy bg-gradient-to-br from-purple-900 via-blue-900 to-pink-900 opacity-40 blur-xl"></div>
-            {/* Glowing spinner */}
-            <div className="relative z-10 flex flex-col items-center">
-                <div className="relative">
-                    <CgSpinner className="text-6xl md:text-7xl animate-spin text-primary-400 drop-shadow-lg" />
-                    <div className="absolute inset-0 rounded-full blur-2xl opacity-40 bg-gradient-to-r from-purple-400 via-blue-400 to-pink-400 animate-pulse"></div>
-                </div>
-                <span className="mt-8 text-lg md:text-xl font-semibold text-primary-300 animate-pulse tracking-wide drop-shadow">Loading, please wait...</span>
+        <div className="relative flex min-h-[calc(100vh-6rem)] items-center justify-center overflow-hidden bg-canvas">
+            <div className="bg-grid pointer-events-none absolute inset-0 opacity-40" aria-hidden="true" />
+            <div
+                className="pointer-events-none absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-20 blur-3xl"
+                style={{ background: 'radial-gradient(circle, rgb(var(--accent)) 0%, transparent 70%)' }}
+                aria-hidden="true"
+            />
+            <div className="relative z-10 flex flex-col items-center gap-5" role="status" aria-live="polite">
+                <Loader2 className="h-12 w-12 animate-spin text-accent" aria-hidden="true" />
+                <span className="text-sm font-medium tracking-wide text-fg-muted">Loading, please wait…</span>
             </div>
         </div>
     );

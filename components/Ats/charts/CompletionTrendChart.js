@@ -10,7 +10,7 @@ const CompletionTrendChart = ({ history = [] }) => {
     }));
 
     if (data.length < 2) {
-        return <p className="text-sm text-slate-400">Completion trend appears once there are at least two analyses.</p>;
+        return <p className="text-sm text-fg-muted">Completion trend appears once there are at least two analyses.</p>;
     }
 
     return (
@@ -22,10 +22,10 @@ const CompletionTrendChart = ({ history = [] }) => {
                         <stop offset="100%" stopColor="#34d399" stopOpacity={0} />
                     </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.2)" />
                 <XAxis dataKey="index" stroke="#64748b" fontSize={12} tickLine={false} />
                 <YAxis domain={[0, 100]} stroke="#64748b" fontSize={12} tickLine={false} />
-                <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #7c3aed40', borderRadius: 8, fontSize: 12 }} />
+                <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid rgba(148,163,184,0.35)', borderRadius: 8, fontSize: 12 }} />
                 <Area type="monotone" dataKey="completion" stroke="#34d399" strokeWidth={2} fill="url(#completionFill)" />
             </AreaChart>
         </ResponsiveContainer>

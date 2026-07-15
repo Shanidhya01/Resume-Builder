@@ -3,8 +3,9 @@
 import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { FaMagic, FaRedo, FaSave } from 'react-icons/fa';
+import { Wand2, RotateCcw, Save } from 'lucide-react';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
+import Button from '@/components/UI/Button';
 import DashboardNav from '@/components/Ats/DashboardNav';
 import FileDropzone from '@/components/ImportExport/FileDropzone';
 import ImportReview from '@/components/ImportExport/ImportReview';
@@ -262,8 +263,8 @@ const ImportContent = () => {
     return (
         <div className="mx-auto mt-10 max-w-screen-xl px-4 pb-10 md:mt-12">
             <div className="mb-8">
-                <h1 className="text-2xl font-bold text-white md:text-3xl">Import Resume</h1>
-                <p className="mt-1 text-sm text-slate-400">
+                <h1 className="text-2xl font-bold text-fg md:text-3xl">Import Resume</h1>
+                <p className="mt-1 text-sm text-fg-muted">
                     Upload an existing resume (PDF, DOCX, or JSON backup) and let AI convert it into an editable resume.
                     Files are processed in memory and never stored.
                 </p>
@@ -274,11 +275,11 @@ const ImportContent = () => {
             <nav aria-label="Import progress" className="mb-6 flex items-center gap-2 text-xs font-semibold">
                 {Object.entries(STEP_LABELS).map(([key, label], index) => (
                     <div key={key} className="flex items-center gap-2">
-                        {index > 0 && <span className="text-slate-600" aria-hidden="true">→</span>}
+                        {index > 0 && <span className="text-fg-subtle" aria-hidden="true">→</span>}
                         <span
                             aria-current={step === key ? 'step' : undefined}
                             className={`rounded-full border px-3 py-1 ${
-                                step === key ? 'border-purple-400 bg-purple-500/20 text-white' : 'border-purple-500/20 text-slate-400'
+                                step === key ? 'border-accent bg-accent text-accent-fg' : 'border-line text-fg-muted'
                             }`}
                         >
                             {index + 1}. {label}
@@ -302,13 +303,13 @@ const ImportContent = () => {
                         busyLabel={phase === 'parsing' ? 'AI is parsing your resume...' : 'Extracting text...'}
                     />
                     {busy && (
-                        <p className="mt-4 text-center text-sm text-slate-400" role="status" aria-live="polite">
+                        <p className="mt-4 text-center text-sm text-fg-muted" role="status" aria-live="polite">
                             {phase === 'parsing' ? 'Converting the extracted text into structured resume data with AI…' : 'Uploading and extracting text from your file…'}
                         </p>
                     )}
-                    <p className="mt-6 text-center text-xs text-slate-500">
+                    <p className="mt-6 text-center text-xs text-fg-subtle">
                         Looking for a backup you exported earlier? JSON backups restore instantly — or use{' '}
-                        <Link href="/dashboard/export" className="text-purple-300 underline">
+                        <Link href="/dashboard/export" className="text-accent underline">
                             the Export Center
                         </Link>{' '}
                         to restore full account backups.
@@ -328,31 +329,32 @@ const ImportContent = () => {
                         onChange={setResume}
                     />
 
-                    <div className="sticky bottom-4 mt-8 flex flex-wrap items-center justify-end gap-3 rounded-xl border border-purple-500/30 bg-slate-900/90 p-4 shadow-2xl backdrop-blur">
-                        <button
-                            type="button"
+                    <div className="sticky bottom-4 mt-8 flex flex-wrap items-center justify-end gap-3 rounded-2xl border border-line bg-surface/95 p-4 shadow-ds-lg backdrop-blur">
+                        <Button
+                            variant="ghost"
                             onClick={reset}
                             disabled={saving || cleanupLoading}
-                            className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-slate-300 hover:bg-white/5 disabled:opacity-50"
+                            leftIcon={<RotateCcw className="h-4 w-4" aria-hidden="true" />}
                         >
-                            <FaRedo aria-hidden="true" /> Start Over
-                        </button>
-                        <button
-                            type="button"
+                            Start over
+                        </Button>
+                        <Button
+                            variant="outline"
                             onClick={() => runCleanup(resume)}
                             disabled={saving || cleanupLoading}
-                            className="inline-flex items-center gap-2 rounded-lg border border-purple-500/40 px-4 py-2 text-sm font-semibold text-purple-200 hover:bg-purple-500/10 disabled:opacity-50"
+                            loading={cleanupLoading}
+                            leftIcon={!cleanupLoading ? <Wand2 className="h-4 w-4" aria-hidden="true" /> : null}
                         >
-                            <FaMagic aria-hidden="true" /> {cleanupLoading ? 'Cleaning up...' : cleanup ? 'Re-run AI Cleanup' : 'Run AI Cleanup'}
-                        </button>
-                        <button
-                            type="button"
+                            {cleanupLoading ? 'Cleaning up…' : cleanup ? 'Re-run AI cleanup' : 'Run AI cleanup'}
+                        </Button>
+                        <Button
                             onClick={handleSave}
                             disabled={saving || cleanupLoading}
-                            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 px-6 py-2.5 font-bold text-white shadow-lg shadow-purple-500/40 transition-all duration-300 hover:scale-105 disabled:opacity-60"
+                            loading={saving}
+                            leftIcon={!saving ? <Save className="h-4 w-4" aria-hidden="true" /> : null}
                         >
-                            <FaSave aria-hidden="true" /> {saving ? 'Saving...' : 'Save Resume'}
-                        </button>
+                            {saving ? 'Saving…' : 'Save resume'}
+                        </Button>
                     </div>
                 </>
             )}

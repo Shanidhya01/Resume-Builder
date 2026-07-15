@@ -79,14 +79,22 @@ export default async function PublicResumePage({ params }) {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950/40 to-slate-950 px-4 py-10 print:bg-white print:px-0 print:py-0 sm:px-6">
+        <div className="relative min-h-screen overflow-hidden bg-canvas px-4 py-10 print:bg-white print:px-0 print:py-0 sm:px-6">
+            <div className="bg-grid pointer-events-none absolute inset-0 opacity-40 print:hidden" aria-hidden="true" />
+            <div
+                className="pointer-events-none absolute left-1/2 top-0 h-96 w-[42rem] -translate-x-1/2 rounded-full opacity-15 blur-3xl print:hidden"
+                style={{ background: 'radial-gradient(circle, rgb(var(--accent)) 0%, transparent 70%)' }}
+                aria-hidden="true"
+            />
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
             <ViewTracker slug={slug} />
-            <PublicResumeView resume={resume} />
-            <PublicResumeActions resume={resume} slug={slug} publicUrl={url} />
-            <p className="mt-8 text-center text-xs text-slate-500 print:hidden">
-                Built with <span className="font-semibold text-purple-300">HireReady</span>
-            </p>
+            <div className="relative">
+                <PublicResumeView resume={resume} />
+                <PublicResumeActions resume={resume} slug={slug} publicUrl={url} />
+                <p className="mt-8 text-center text-xs text-fg-subtle print:hidden">
+                    Built with <span className="font-semibold text-accent">HireReady</span>
+                </p>
+            </div>
         </div>
     );
 }

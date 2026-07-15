@@ -2,8 +2,11 @@
 
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles, Copy, Check, RotateCcw, WandSparkles } from 'lucide-react';
 import { updateResumeValue } from '@/store/slices/resumeSlice';
 import useAI from '@/hooks/useAI';
+import Button from '@/components/UI/Button';
 
 const FEATURES = [
     { key: 'summary', label: 'Generate Summary' },
@@ -18,11 +21,8 @@ const FEATURES = [
     { key: 'jobMatch', label: 'Job Match' },
 ];
 
-const copyToClipboard = text => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-        navigator.clipboard.writeText(text).catch(() => {});
-    }
-};
+const fieldClass =
+    'w-full rounded-xl border border-line bg-surface-2 p-2.5 text-sm text-fg outline-none transition-colors placeholder:text-fg-subtle focus:border-accent focus:ring-2 focus:ring-accent/30';
 
 const resultText = (feature, result) => {
     if (!result) return '';
@@ -63,6 +63,7 @@ const AIAssistantPanel = () => {
     const [jobTitle, setJobTitle] = useState('');
     const [company, setCompany] = useState('');
     const [jobDescription, setJobDescription] = useState('');
+    const [copied, setCopied] = useState(false);
 
     const isLoading = !!loading[feature];
     const featureError = error[feature];
@@ -97,6 +98,19 @@ const AIAssistantPanel = () => {
 
     const handleGenerate = () => {
         run(feature, buildBody(), { inputSummary: feature });
+    };
+
+    const handleCopy = () => {
+        const text = resultText(feature, result);
+        if (typeof navigator !== 'undefined' && navigator.clipboard) {
+            navigator.clipboard
+                .writeText(text)
+                .then(() => {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 1500);
+                })
+                .catch(() => {});
+        }
     };
 
     const handleAccept = () => {
@@ -142,13 +156,9 @@ const AIAssistantPanel = () => {
     const renderInputs = () => {
         if (feature === 'experience') {
             return (
-                <select
-                    value={expIndex}
-                    onChange={e => setExpIndex(Number(e.target.value))}
-                    className="w-full rounded-lg border border-[#6F42C1]/50 bg-transparent p-2 text-sm text-gray-200"
-                >
+                <select value={expIndex} onChange={e => setExpIndex(Number(e.target.value))} className={fieldClass}>
                     {(resume.experience || []).map((e, i) => (
-                        <option key={i} value={i} className="bg-gray-900">
+                        <option key={i} value={i}>
                             {e.role || e.company || `Entry ${i + 1}`}
                         </option>
                     ))}
@@ -158,13 +168,9 @@ const AIAssistantPanel = () => {
         }
         if (feature === 'projects') {
             return (
-                <select
-                    value={projIndex}
-                    onChange={e => setProjIndex(Number(e.target.value))}
-                    className="w-full rounded-lg border border-[#6F42C1]/50 bg-transparent p-2 text-sm text-gray-200"
-                >
+                <select value={projIndex} onChange={e => setProjIndex(Number(e.target.value))} className={fieldClass}>
                     {(resume.projects || []).map((p, i) => (
-                        <option key={i} value={i} className="bg-gray-900">
+                        <option key={i} value={i}>
                             {p.title || `Project ${i + 1}`}
                         </option>
                     ))}
@@ -177,33 +183,23 @@ const AIAssistantPanel = () => {
                 <textarea
                     value={rewriteText}
                     onChange={e => setRewriteText(e.target.value)}
-                    placeholder="Paste text to rewrite or grammar-check..."
+                    placeholder="Paste text to rewrite or grammar-check…"
                     rows={4}
-                    className="w-full rounded-lg border border-[#6F42C1]/50 bg-transparent p-2 text-sm text-gray-200"
+                    className={fieldClass}
                 />
             );
         }
         if (feature === 'coverLetter') {
             return (
                 <div className="flex flex-col gap-2">
-                    <input
-                        value={jobTitle}
-                        onChange={e => setJobTitle(e.target.value)}
-                        placeholder="Job title"
-                        className="w-full rounded-lg border border-[#6F42C1]/50 bg-transparent p-2 text-sm text-gray-200"
-                    />
-                    <input
-                        value={company}
-                        onChange={e => setCompany(e.target.value)}
-                        placeholder="Company"
-                        className="w-full rounded-lg border border-[#6F42C1]/50 bg-transparent p-2 text-sm text-gray-200"
-                    />
+                    <input value={jobTitle} onChange={e => setJobTitle(e.target.value)} placeholder="Job title" className={fieldClass} />
+                    <input value={company} onChange={e => setCompany(e.target.value)} placeholder="Company" className={fieldClass} />
                     <textarea
                         value={jobDescription}
                         onChange={e => setJobDescription(e.target.value)}
-                        placeholder="Paste job description..."
+                        placeholder="Paste job description…"
                         rows={3}
-                        className="w-full rounded-lg border border-[#6F42C1]/50 bg-transparent p-2 text-sm text-gray-200"
+                        className={fieldClass}
                     />
                 </div>
             );
@@ -213,63 +209,98 @@ const AIAssistantPanel = () => {
                 <textarea
                     value={jobDescription}
                     onChange={e => setJobDescription(e.target.value)}
-                    placeholder="Paste job description..."
+                    placeholder="Paste job description…"
                     rows={4}
-                    className="w-full rounded-lg border border-[#6F42C1]/50 bg-transparent p-2 text-sm text-gray-200"
+                    className={fieldClass}
                 />
             );
         }
-        return <p className="text-xs text-gray-400">Uses your current resume data as context automatically.</p>;
+        return (
+            <p className="flex items-center gap-2 rounded-xl border border-line bg-surface-2 px-3 py-2.5 text-xs text-fg-muted">
+                <Sparkles className="h-3.5 w-3.5 shrink-0 text-accent" />
+                Uses your current resume data as context automatically.
+            </p>
+        );
     };
 
     const canAccept = ['summary', 'experience', 'projects', 'skills', 'rewrite', 'grammar'].includes(feature);
 
     return (
         <div className="flex flex-col gap-4">
-            <select
-                value={feature}
-                onChange={e => setFeature(e.target.value)}
-                className="w-full rounded-lg border border-[#6F42C1]/50 bg-transparent p-2 text-sm font-semibold text-gray-200"
-            >
-                {FEATURES.map(f => (
-                    <option key={f.key} value={f.key} className="bg-gray-900">
-                        {f.label}
-                    </option>
-                ))}
-            </select>
+            <div>
+                <label htmlFor="ai-feature" className="mb-1.5 block text-xs font-medium text-fg-muted">
+                    Assistant task
+                </label>
+                <select id="ai-feature" value={feature} onChange={e => setFeature(e.target.value)} className={`${fieldClass} font-semibold`}>
+                    {FEATURES.map(f => (
+                        <option key={f.key} value={f.key}>
+                            {f.label}
+                        </option>
+                    ))}
+                </select>
+            </div>
 
             {renderInputs()}
 
-            <button
+            <Button
                 onClick={handleGenerate}
-                disabled={isLoading}
-                className="rounded-lg bg-[#6F42C1] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                loading={isLoading}
+                leftIcon={!isLoading ? <WandSparkles className="h-4 w-4" /> : null}
             >
-                {isLoading ? 'Working...' : result ? 'Regenerate' : 'Generate'}
-            </button>
+                {isLoading ? 'Working…' : result ? 'Regenerate' : 'Generate'}
+            </Button>
 
-            {featureError && <p className="text-xs text-red-400">{featureError}</p>}
+            {featureError && (
+                <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-600 dark:text-red-400">
+                    {featureError}
+                </p>
+            )}
+
+            <AnimatePresence>
+                {isLoading && !result && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="flex items-center gap-1.5 px-1 py-2 text-sm text-fg-muted"
+                        aria-live="polite"
+                    >
+                        <span className="h-2 w-2 animate-bounce rounded-full bg-accent [animation-delay:-0.3s]" />
+                        <span className="h-2 w-2 animate-bounce rounded-full bg-accent [animation-delay:-0.15s]" />
+                        <span className="h-2 w-2 animate-bounce rounded-full bg-accent" />
+                        <span className="ml-1">Generating…</span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {result && (
-                <div className="flex flex-col gap-2 rounded-lg border border-[#6F42C1]/40 bg-black/20 p-3">
-                    <pre className="whitespace-pre-wrap break-words text-xs text-gray-200">{resultText(feature, result)}</pre>
-                    <div className="flex flex-wrap gap-2">
+                <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex flex-col gap-3 rounded-xl border border-line bg-surface-2 p-3.5"
+                >
+                    <pre className="whitespace-pre-wrap break-words font-sans text-xs leading-relaxed text-fg">
+                        {resultText(feature, result)}
+                    </pre>
+                    <div className="flex flex-wrap gap-2 border-t border-line pt-3">
                         {canAccept && (
-                            <button onClick={handleAccept} className="rounded bg-green-600 px-3 py-1 text-xs font-semibold text-white">
+                            <Button variant="success" size="sm" onClick={handleAccept} leftIcon={<Check className="h-3.5 w-3.5" />}>
                                 Accept
-                            </button>
+                            </Button>
                         )}
-                        <button onClick={handleGenerate} className="rounded bg-[#6F42C1] px-3 py-1 text-xs font-semibold text-white">
+                        <Button variant="secondary" size="sm" onClick={handleGenerate} leftIcon={<RotateCcw className="h-3.5 w-3.5" />}>
                             Regenerate
-                        </button>
-                        <button
-                            onClick={() => copyToClipboard(resultText(feature, result))}
-                            className="rounded bg-gray-700 px-3 py-1 text-xs font-semibold text-white"
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleCopy}
+                            leftIcon={copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                         >
-                            Copy
-                        </button>
+                            {copied ? 'Copied' : 'Copy'}
+                        </Button>
                     </div>
-                </div>
+                </motion.div>
             )}
         </div>
     );

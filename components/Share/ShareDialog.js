@@ -116,52 +116,52 @@ const ShareDialog = ({ resumeName = 'Resume', publicUrl, owner, onClose }) => {
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="share-dialog-title"
-                className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-purple-500/30 bg-slate-900 p-6 shadow-2xl"
+                className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-line bg-surface p-6 shadow-2xl"
             >
                 <div className="mb-5 flex items-center justify-between">
-                    <h2 id="share-dialog-title" className="flex items-center gap-2 text-lg font-bold text-white">
-                        <FaShareAlt className="h-4 w-4 text-purple-400" aria-hidden="true" /> Share Resume
+                    <h2 id="share-dialog-title" className="flex items-center gap-2 text-lg font-bold text-fg">
+                        <FaShareAlt className="h-4 w-4 text-accent" aria-hidden="true" /> Share Resume
                     </h2>
                     <button
                         ref={closeButtonRef}
                         type="button"
                         onClick={onClose}
                         aria-label="Close share dialog"
-                        className="rounded-lg p-2 text-slate-400 hover:bg-white/5 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
+                        className="rounded-lg p-2 text-fg-muted hover:bg-surface-2 hover:text-fg focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                     >
                         <FaXmark className="h-4 w-4" />
                     </button>
                 </div>
 
                 {owner && (
-                    <div className="mb-5 rounded-xl border border-purple-500/20 bg-slate-800/50 p-4">
+                    <div className="mb-5 rounded-xl border border-line bg-surface-2 p-4">
                         <div className="flex items-center justify-between">
-                            <span className="text-sm font-semibold text-white">{owner.isPublic ? 'Public' : 'Private'}</span>
+                            <span className="text-sm font-semibold text-fg">{owner.isPublic ? 'Public' : 'Private'}</span>
                             <button
                                 type="button"
                                 onClick={handleTogglePublic}
                                 disabled={slugBusy}
                                 aria-pressed={owner.isPublic}
                                 aria-label={owner.isPublic ? 'Disable sharing' : 'Enable sharing'}
-                                className="text-2xl text-purple-400 transition-transform hover:scale-110 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 rounded"
+                                className="text-2xl text-accent transition-transform hover:scale-110 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
                             >
-                                {owner.isPublic ? <FaToggleOn /> : <FaToggleOff className="text-slate-500" />}
+                                {owner.isPublic ? <FaToggleOn /> : <FaToggleOff className="text-fg-subtle" />}
                             </button>
                         </div>
 
                         {owner.isPublic && (
                             <form onSubmit={handleSlugSubmit} className="mt-3">
-                                <label htmlFor="custom-slug" className="mb-1 block text-xs font-medium text-slate-400">
+                                <label htmlFor="custom-slug" className="mb-1 block text-xs font-medium text-fg-muted">
                                     Custom URL
                                 </label>
                                 <div className="flex gap-2">
-                                    <div className="flex flex-1 items-center rounded-lg border border-purple-500/20 bg-slate-900/60 px-2">
-                                        <span className="text-xs text-slate-500">/r/</span>
+                                    <div className="flex flex-1 items-center rounded-lg border border-line bg-surface-2 px-2">
+                                        <span className="text-xs text-fg-subtle">/r/</span>
                                         <input
                                             id="custom-slug"
                                             value={slugInput}
                                             onChange={e => setSlugInput(e.target.value.toLowerCase())}
-                                            className="w-full bg-transparent px-1 py-1.5 text-sm text-white outline-none"
+                                            className="w-full bg-transparent px-1 py-1.5 text-sm text-fg outline-none"
                                             placeholder="your-name"
                                             maxLength={40}
                                         />
@@ -169,7 +169,7 @@ const ShareDialog = ({ resumeName = 'Resume', publicUrl, owner, onClose }) => {
                                     <button
                                         type="submit"
                                         disabled={slugBusy}
-                                        className="rounded-lg bg-purple-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-purple-500 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
+                                        className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-accent-fg hover:bg-accent-hover disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                                     >
                                         <FaCheck className="h-3 w-3" />
                                     </button>
@@ -179,7 +179,7 @@ const ShareDialog = ({ resumeName = 'Resume', publicUrl, owner, onClose }) => {
                                         disabled={slugBusy}
                                         aria-label="Regenerate a random share link"
                                         title="Regenerate link"
-                                        className="rounded-lg border border-purple-500/30 px-3 py-1.5 text-xs font-semibold text-purple-200 hover:bg-purple-500/10 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
+                                        className="rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent/10 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                                     >
                                         <FaSync className="h-3 w-3" />
                                     </button>
@@ -190,16 +190,16 @@ const ShareDialog = ({ resumeName = 'Resume', publicUrl, owner, onClose }) => {
                 )}
 
                 {!publicUrl ? (
-                    <p className="text-sm text-slate-400">Enable sharing to get a public link, QR code, and social share options.</p>
+                    <p className="text-sm text-fg-muted">Enable sharing to get a public link, QR code, and social share options.</p>
                 ) : (
                     <div className="space-y-5">
-                        <div className="flex items-center gap-2 rounded-lg border border-purple-500/20 bg-slate-800/50 px-3 py-2">
-                            <span className="flex-1 truncate text-sm text-slate-300">{publicUrl}</span>
+                        <div className="flex items-center gap-2 rounded-lg border border-line bg-surface-2 px-3 py-2">
+                            <span className="flex-1 truncate text-sm text-fg-muted">{publicUrl}</span>
                             <button
                                 type="button"
                                 onClick={handleCopy}
                                 aria-label="Copy public resume link"
-                                className="shrink-0 rounded-md p-1.5 text-purple-300 hover:bg-purple-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
+                                className="shrink-0 rounded-md p-1.5 text-accent hover:bg-accent/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                             >
                                 <FaCopy className="h-3.5 w-3.5" />
                             </button>
@@ -212,7 +212,7 @@ const ShareDialog = ({ resumeName = 'Resume', publicUrl, owner, onClose }) => {
                                 href={publicUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center justify-center gap-2 rounded-lg border border-purple-500/20 py-2 font-medium text-slate-200 hover:bg-purple-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
+                                className="flex items-center justify-center gap-2 rounded-lg border border-line py-2 font-medium text-fg hover:bg-accent/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                             >
                                 <FaExternalLinkAlt className="h-3.5 w-3.5" aria-hidden="true" /> Open Page
                             </a>
@@ -220,7 +220,7 @@ const ShareDialog = ({ resumeName = 'Resume', publicUrl, owner, onClose }) => {
                                 href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(publicUrl)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center justify-center gap-2 rounded-lg border border-purple-500/20 py-2 font-medium text-slate-200 hover:bg-purple-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
+                                className="flex items-center justify-center gap-2 rounded-lg border border-line py-2 font-medium text-fg hover:bg-accent/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                             >
                                 <FaLinkedin className="h-3.5 w-3.5 text-[#0A66C2]" aria-hidden="true" /> LinkedIn
                             </a>
@@ -228,13 +228,13 @@ const ShareDialog = ({ resumeName = 'Resume', publicUrl, owner, onClose }) => {
                                 href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(publicUrl)}&text=${encodeURIComponent(shareText)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center justify-center gap-2 rounded-lg border border-purple-500/20 py-2 font-medium text-slate-200 hover:bg-purple-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
+                                className="flex items-center justify-center gap-2 rounded-lg border border-line py-2 font-medium text-fg hover:bg-accent/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                             >
                                 <FaXTwitter className="h-3.5 w-3.5" aria-hidden="true" /> X
                             </a>
                             <a
                                 href={`mailto:?subject=${encodeURIComponent(shareText)}&body=${encodeURIComponent(publicUrl)}`}
-                                className="flex items-center justify-center gap-2 rounded-lg border border-purple-500/20 py-2 font-medium text-slate-200 hover:bg-purple-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
+                                className="flex items-center justify-center gap-2 rounded-lg border border-line py-2 font-medium text-fg hover:bg-accent/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                             >
                                 <FaEnvelope className="h-3.5 w-3.5" aria-hidden="true" /> Email
                             </a>
@@ -244,7 +244,7 @@ const ShareDialog = ({ resumeName = 'Resume', publicUrl, owner, onClose }) => {
                             <button
                                 type="button"
                                 onClick={handleNativeShare}
-                                className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 py-2.5 text-sm font-semibold text-white hover:scale-[1.02] transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
+                                className="flex w-full items-center justify-center gap-2 rounded-lg bg-accent py-2.5 text-sm font-semibold text-accent-fg hover:scale-[1.02] transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                             >
                                 <FaShareAlt className="h-3.5 w-3.5" aria-hidden="true" /> More sharing options
                             </button>

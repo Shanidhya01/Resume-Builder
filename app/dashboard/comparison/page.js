@@ -8,6 +8,7 @@ import Card from '@/components/Ats/Card';
 import Badge from '@/components/Ats/Badge';
 import DashboardNav from '@/components/Ats/DashboardNav';
 import EmptyState from '@/components/UI/EmptyState';
+import Button from '@/components/UI/Button';
 import { snapshotPrevious } from '@/store/slices/atsSlice';
 import { compareResumes } from '@/lib/ats/comparison';
 
@@ -21,7 +22,7 @@ function DiffPill({ value }) {
     const positive = value > 0;
     const negative = value < 0;
     return (
-        <span className={`text-xs font-bold ${positive ? 'text-green-300' : negative ? 'text-red-300' : 'text-slate-400'}`}>
+        <span className={`text-xs font-bold ${positive ? 'text-emerald-600 dark:text-emerald-400' : negative ? 'text-red-600 dark:text-red-400' : 'text-fg-muted'}`}>
             {positive ? '+' : ''}{value}
         </span>
     );
@@ -48,22 +49,17 @@ function ComparisonContent() {
     const handleSnapshot = () => dispatch(snapshotPrevious({ resume, analysis }));
 
     if (!analysis) {
-        return <div className="mx-auto mt-10 max-w-screen-xl px-4 text-slate-300" role="status" aria-live="polite">Analyzing resume...</div>;
+        return <div className="mx-auto mt-10 max-w-screen-xl px-4 text-fg-muted" role="status" aria-live="polite">Analyzing resume...</div>;
     }
 
     return (
         <div className="mx-auto mt-10 max-w-screen-xl px-4 pb-16 md:mt-12">
             <div className="mb-8 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-white md:text-3xl">Resume Comparison</h1>
-                    <p className="text-sm text-slate-400">Compare the current resume against a previously saved baseline.</p>
+                    <h1 className="text-2xl font-bold text-fg md:text-3xl">Resume Comparison</h1>
+                    <p className="text-sm text-fg-muted">Compare the current resume against a previously saved baseline.</p>
                 </div>
-                <button
-                    onClick={handleSnapshot}
-                    className="rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 px-5 py-2 text-sm font-bold text-white shadow-lg shadow-purple-500/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
-                >
-                    Save Current as Baseline
-                </button>
+                <Button onClick={handleSnapshot}>Save current as baseline</Button>
             </div>
 
             <DashboardNav />
@@ -79,27 +75,27 @@ function ComparisonContent() {
                 <>
                     <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
                         <Card className="flex flex-col items-center justify-center">
-                            <span className="text-3xl font-black text-white"><DiffPill value={comparison.atsDifference} /></span>
-                            <span className="text-xs text-slate-400">ATS Score Difference</span>
+                            <span className="text-3xl font-black text-fg"><DiffPill value={comparison.atsDifference} /></span>
+                            <span className="text-xs text-fg-muted">ATS Score Difference</span>
                         </Card>
                         <Card className="flex flex-col items-center justify-center">
-                            <span className="text-3xl font-black text-white">{improvementPercent != null ? `${improvementPercent > 0 ? '+' : ''}${improvementPercent}%` : '—'}</span>
-                            <span className="text-xs text-slate-400">Improvement Percentage</span>
+                            <span className="text-3xl font-black text-fg">{improvementPercent != null ? `${improvementPercent > 0 ? '+' : ''}${improvementPercent}%` : '—'}</span>
+                            <span className="text-xs text-fg-muted">Improvement Percentage</span>
                         </Card>
                         <Card className="flex flex-col items-center justify-center">
-                            <span className="text-sm font-bold text-white">{new Date(ats.previousSnapshot.savedAt).toLocaleString()}</span>
-                            <span className="text-xs text-slate-400">Baseline Saved</span>
+                            <span className="text-sm font-bold text-fg">{new Date(ats.previousSnapshot.savedAt).toLocaleString()}</span>
+                            <span className="text-xs text-fg-muted">Baseline Saved</span>
                         </Card>
                     </div>
 
                     <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
                         <Card title="Current Resume">
-                            <p className="text-4xl font-black text-white">{analysis.overall}</p>
-                            <p className="text-xs text-slate-400">Grade {analysis.grade} · {analysis.completion}% complete</p>
+                            <p className="text-4xl font-black text-fg">{analysis.overall}</p>
+                            <p className="text-xs text-fg-muted">Grade {analysis.grade} · {analysis.completion}% complete</p>
                         </Card>
                         <Card title="Previous Resume">
-                            <p className="text-4xl font-black text-white">{ats.previousSnapshot.analysis?.overall ?? '—'}</p>
-                            <p className="text-xs text-slate-400">
+                            <p className="text-4xl font-black text-fg">{ats.previousSnapshot.analysis?.overall ?? '—'}</p>
+                            <p className="text-xs text-fg-muted">
                                 Grade {ats.previousSnapshot.analysis?.grade ?? '—'} · {ats.previousSnapshot.analysis?.completion ?? '—'}% complete
                             </p>
                         </Card>
@@ -108,28 +104,28 @@ function ComparisonContent() {
                     <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
                         <Card title="Added Skills">
                             {comparison.addedSkills.length === 0 ? (
-                                <p className="text-sm text-slate-400">No skills added.</p>
+                                <p className="text-sm text-fg-muted">No skills added.</p>
                             ) : (
                                 <div className="flex flex-wrap gap-2">{comparison.addedSkills.map(s => <Badge key={s} tone="Good">{s}</Badge>)}</div>
                             )}
                         </Card>
                         <Card title="Removed Skills">
                             {comparison.removedSkills.length === 0 ? (
-                                <p className="text-sm text-slate-400">No skills removed.</p>
+                                <p className="text-sm text-fg-muted">No skills removed.</p>
                             ) : (
                                 <div className="flex flex-wrap gap-2">{comparison.removedSkills.map(s => <Badge key={s} tone="Missing">{s}</Badge>)}</div>
                             )}
                         </Card>
                         <Card title="Added Keywords">
                             {comparison.addedKeywords.length === 0 ? (
-                                <p className="text-sm text-slate-400">No new keywords.</p>
+                                <p className="text-sm text-fg-muted">No new keywords.</p>
                             ) : (
                                 <div className="flex flex-wrap gap-2">{comparison.addedKeywords.map(s => <Badge key={s} tone="Good">{s}</Badge>)}</div>
                             )}
                         </Card>
                         <Card title="Removed Keywords">
                             {comparison.removedKeywords.length === 0 ? (
-                                <p className="text-sm text-slate-400">No keywords removed.</p>
+                                <p className="text-sm text-fg-muted">No keywords removed.</p>
                             ) : (
                                 <div className="flex flex-wrap gap-2">{comparison.removedKeywords.map(s => <Badge key={s} tone="Missing">{s}</Badge>)}</div>
                             )}
@@ -139,8 +135,8 @@ function ComparisonContent() {
                     <Card title="Section Score Difference">
                         <div className="space-y-2">
                             {Object.entries(comparison.sectionDifference).map(([key, value]) => (
-                                <div key={key} className="flex items-center justify-between rounded-lg border border-purple-500/10 p-2.5">
-                                    <span className="text-sm capitalize text-slate-200">{SECTION_LABELS[key] || key}</span>
+                                <div key={key} className="flex items-center justify-between rounded-lg border border-line p-2.5">
+                                    <span className="text-sm capitalize text-fg">{SECTION_LABELS[key] || key}</span>
                                     <DiffPill value={value} />
                                 </div>
                             ))}

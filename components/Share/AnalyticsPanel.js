@@ -13,10 +13,10 @@ const formatTimestamp = ts => {
 };
 
 const StatTile = ({ icon: Icon, label, value }) => (
-    <div className="flex flex-col items-center gap-1 rounded-xl border border-purple-500/20 bg-slate-800/50 p-4 text-center">
-        <Icon className="h-4 w-4 text-purple-400" aria-hidden="true" />
-        <span className="text-2xl font-black text-white">{value}</span>
-        <span className="text-xs text-slate-400">{label}</span>
+    <div className="flex flex-col items-center gap-1 rounded-xl border border-line bg-surface-2 p-4 text-center">
+        <Icon className="h-4 w-4 text-accent" aria-hidden="true" />
+        <span className="text-2xl font-black text-fg">{value}</span>
+        <span className="text-xs text-fg-muted">{label}</span>
     </div>
 );
 
@@ -54,27 +54,27 @@ const AnalyticsPanel = ({ resumeId, uid, onClose }) => {
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="analytics-dialog-title"
-                className="w-full max-w-md rounded-2xl border border-purple-500/30 bg-slate-900 p-6 shadow-2xl"
+                className="w-full max-w-md rounded-2xl border border-line bg-surface p-6 shadow-2xl"
             >
                 <div className="mb-5 flex items-center justify-between">
-                    <h2 id="analytics-dialog-title" className="text-lg font-bold text-white">Sharing Analytics</h2>
+                    <h2 id="analytics-dialog-title" className="text-lg font-bold text-fg">Sharing Analytics</h2>
                     <button
                         ref={closeButtonRef}
                         type="button"
                         onClick={onClose}
                         aria-label="Close analytics panel"
-                        className="rounded-lg p-2 text-slate-400 hover:bg-white/5 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
+                        className="rounded-lg p-2 text-fg-muted hover:bg-surface-2 hover:text-fg focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                     >
                         <FaXmark className="h-4 w-4" />
                     </button>
                 </div>
 
-                {error && <p className="text-sm text-red-300">{error}</p>}
+                {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
                 {!data && !error && (
                     <div className="grid grid-cols-2 gap-3" role="status" aria-label="Loading analytics">
                         {Array.from({ length: 4 }).map((_, i) => (
-                            <div key={i} className="h-24 animate-pulse rounded-xl bg-slate-800/60" />
+                            <div key={i} className="h-24 animate-pulse rounded-xl bg-surface-2" />
                         ))}
                     </div>
                 )}
@@ -87,12 +87,12 @@ const AnalyticsPanel = ({ resumeId, uid, onClose }) => {
                             <StatTile icon={FaDownload} label="Downloads" value={data.downloadCount} />
                             <StatTile icon={FaShareAlt} label="Shares" value={data.shareCount} />
                         </div>
-                        <div className="flex items-center gap-2 rounded-xl border border-purple-500/20 bg-slate-800/50 p-3 text-sm text-slate-300">
-                            <FaClock className="h-3.5 w-3.5 text-purple-400" aria-hidden="true" />
-                            Last viewed: <span className="font-semibold text-white">{formatTimestamp(data.lastViewed)}</span>
+                        <div className="flex items-center gap-2 rounded-xl border border-line bg-surface-2 p-3 text-sm text-fg-muted">
+                            <FaClock className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
+                            Last viewed: <span className="font-semibold text-fg">{formatTimestamp(data.lastViewed)}</span>
                         </div>
                         {!data.isPublic && (
-                            <p className="mt-4 text-xs text-slate-500">Sharing is currently disabled — these are historical totals.</p>
+                            <p className="mt-4 text-xs text-fg-subtle">Sharing is currently disabled — these are historical totals.</p>
                         )}
                     </>
                 )}

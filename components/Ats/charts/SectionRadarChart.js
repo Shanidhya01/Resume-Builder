@@ -14,11 +14,11 @@ const SectionRadarChart = ({ sectionScores = {} }) => {
     return (
         <ResponsiveContainer width="100%" height={280}>
             <RadarChart data={data} outerRadius="75%">
-                <PolarGrid stroke="#1e293b" />
+                <PolarGrid stroke="rgba(148,163,184,0.2)" />
                 <PolarAngleAxis dataKey="section" stroke="#94a3b8" fontSize={11} />
                 <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="#475569" fontSize={10} />
-                <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #7c3aed40', borderRadius: 8, fontSize: 12 }} />
-                <Radar dataKey="score" stroke="#a78bfa" fill="#a78bfa" fillOpacity={0.35} />
+                <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid rgba(148,163,184,0.35)', borderRadius: 8, fontSize: 12 }} />
+                <Radar dataKey="score" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.35} />
             </RadarChart>
         </ResponsiveContainer>
     );

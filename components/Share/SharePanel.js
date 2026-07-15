@@ -61,7 +61,7 @@ const SharePanel = ({ resume, uid, onUpdate }) => {
             <div className="flex items-center gap-1.5">
                 <span
                     className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                        resume.isPublic ? 'bg-green-500/15 text-green-300' : 'bg-slate-500/15 text-slate-400'
+                        resume.isPublic ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-surface-2 text-fg-muted'
                     }`}
                 >
                     {resume.isPublic ? 'Public' : 'Private'}
@@ -73,7 +73,7 @@ const SharePanel = ({ resume, uid, onUpdate }) => {
                         onClick={handleQuickCopy}
                         title="Copy public link"
                         aria-label="Copy public link"
-                        className="rounded-lg border border-purple-500/20 p-1.5 text-slate-300 transition-colors hover:bg-purple-500/10 hover:text-white"
+                        className="rounded-lg border border-line p-1.5 text-fg-muted transition-colors hover:bg-accent/10 hover:text-fg"
                     >
                         <FaCopy className="h-3 w-3" />
                     </button>
@@ -84,7 +84,7 @@ const SharePanel = ({ resume, uid, onUpdate }) => {
                     onClick={() => setShareOpen(true)}
                     title="Share resume"
                     aria-label="Share resume"
-                    className="rounded-lg border border-purple-500/20 p-1.5 text-slate-300 transition-colors hover:bg-purple-500/10 hover:text-white"
+                    className="rounded-lg border border-line p-1.5 text-fg-muted transition-colors hover:bg-accent/10 hover:text-fg"
                 >
                     <FaShareAlt className="h-3 w-3" />
                 </button>
@@ -95,7 +95,7 @@ const SharePanel = ({ resume, uid, onUpdate }) => {
                         onClick={() => setAnalyticsOpen(true)}
                         title="View analytics"
                         aria-label="View sharing analytics"
-                        className="rounded-lg border border-purple-500/20 p-1.5 text-slate-300 transition-colors hover:bg-purple-500/10 hover:text-white"
+                        className="rounded-lg border border-line p-1.5 text-fg-muted transition-colors hover:bg-accent/10 hover:text-fg"
                     >
                         <FaChartBar className="h-3 w-3" />
                     </button>
