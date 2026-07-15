@@ -1,10 +1,22 @@
-'use client'
-import Link from 'next/link';
+'use client';
+
 import { useState, useEffect } from 'react';
-import { FaGithub, FaLinkedin, FaTwitter, FaEnvelope, FaGlobe, FaHeart, FaStar, FaCode, FaUsers } from 'react-icons/fa';
+import { motion } from 'framer-motion';
+import { FaGithub, FaLinkedin, FaEnvelope, FaUsers } from 'react-icons/fa';
 import { IoIosRocket, IoMdCheckmarkCircle } from 'react-icons/io';
-import { HiSparkles, HiLightningBolt } from 'react-icons/hi';
+import { HiSparkles } from 'react-icons/hi';
 import { SiNextdotjs, SiReact, SiTailwindcss, SiRedux } from 'react-icons/si';
+import { Code2 } from 'lucide-react';
+import Card from '@/components/UI/Card';
+import Badge from '@/components/UI/Badge';
+import Spinner from '@/components/UI/Spinner';
+
+const reveal = {
+    initial: { opacity: 0, y: 20 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, margin: '-80px' },
+    transition: { duration: 0.5 },
+};
 
 const AboutPage = () => {
     const [contributors, setContributors] = useState([]);
@@ -26,300 +38,197 @@ const AboutPage = () => {
         fetchContributors();
     }, []);
 
-    // Admin/Creator Information
     const adminInfo = {
-        name: "Shanidhya Kumar",
-        role: "Full-Stack Developer",
-        bio: "3rd year B.E. in Computer Science & Engineering (IoT & Cyber Security) based in Bangalore, India. Passionate full-stack developer and AI/ML enthusiast with strong DSA foundations in C++. Building modern web applications with React, Next.js, TypeScript, Node.js, and MongoDB. Actively shipping projects and exploring AI assistants and real-time applications.",
-        avatar: "https://avatars.githubusercontent.com/u/152613465?v=4",
+        name: 'Shanidhya Kumar',
+        role: 'Full-Stack Developer',
+        bio: '3rd year B.E. in Computer Science & Engineering (IoT & Cyber Security) based in Bangalore, India. Passionate full-stack developer and AI/ML enthusiast with strong DSA foundations in C++. Building modern web applications with React, Next.js, TypeScript, Node.js, and MongoDB. Actively shipping projects and exploring AI assistants and real-time applications.',
+        avatar: 'https://avatars.githubusercontent.com/u/152613465?v=4',
         socials: {
-            github: "https://github.com/Shanidhya01",
-            linkedin: "https://www.linkedin.com/in/shanidhya-kumar/",
-            twitter: null,
-            email: "luckykumar0011s@gmail.com",
-            website: null
-        }
+            github: 'https://github.com/Shanidhya01',
+            linkedin: 'https://www.linkedin.com/in/shanidhya-kumar/',
+            email: 'luckykumar0011s@gmail.com',
+        },
     };
 
-    // Project Features
     const features = [
-        {
-            icon: IoIosRocket,
-            title: "Lightning Fast",
-            description: "Built with Next.js 14 for optimal performance and instant page loads"
-        },
-        {
-            icon: HiSparkles,
-            title: "Beautiful UI",
-            description: "Modern, gradient-rich design with smooth animations and transitions"
-        },
-        {
-            icon: IoMdCheckmarkCircle,
-            title: "ATS-Friendly",
-            description: "Resume formats optimized to pass Applicant Tracking Systems"
-        },
-        {
-            icon: FaCode,
-            title: "Open Source",
-            description: "100% free and open source - contribute and customize as you need"
-        }
+        { icon: IoIosRocket, title: 'Lightning fast', description: 'Built with Next.js for optimal performance and instant page loads.' },
+        { icon: HiSparkles, title: 'Beautiful UI', description: 'A modern, premium design system with smooth, purposeful motion.' },
+        { icon: IoMdCheckmarkCircle, title: 'ATS-friendly', description: 'Resume formats optimized to pass Applicant Tracking Systems.' },
+        { icon: Code2, title: 'Open source', description: '100% free and open source — contribute and customize as you need.' },
     ];
 
-    // Tech Stack
     const techStack = [
-        { name: "Next.js 14", icon: SiNextdotjs, color: "text-white" },
-        { name: "React 18", icon: SiReact, color: "text-blue-400" },
-        { name: "Tailwind CSS", icon: SiTailwindcss, color: "text-cyan-400" },
-        { name: "Redux Toolkit", icon: SiRedux, color: "text-purple-400" }
+        { name: 'Next.js', icon: SiNextdotjs },
+        { name: 'React', icon: SiReact },
+        { name: 'Tailwind CSS', icon: SiTailwindcss },
+        { name: 'Redux Toolkit', icon: SiRedux },
     ];
 
     return (
-        <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-            {/* Animated background elements */}
-            <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-                <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-                <div className="absolute top-40 left-40 w-80 h-80 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
-            </div>
+        <div className="relative overflow-hidden">
+            {/* Ambient accent glow + grid */}
+            <div className="bg-grid pointer-events-none absolute inset-0 opacity-40" aria-hidden="true" />
+            <div
+                className="pointer-events-none absolute left-1/2 top-0 h-[32rem] w-[32rem] -translate-x-1/2 rounded-full opacity-20 blur-3xl"
+                style={{ background: 'radial-gradient(circle, rgb(var(--accent)) 0%, transparent 70%)' }}
+                aria-hidden="true"
+            />
 
-            <div className="relative z-10 mx-auto max-w-7xl px-6 py-20">
-                
-                {/* Header Section */}
-                <div className="text-center mb-20 animate-fade-in-up">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full text-sm font-medium text-white/90 mb-6">
-                        <HiSparkles className="w-4 h-4 text-yellow-400" />
-                        <span>About HireReady</span>
-                    </div>
-                    <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black mb-6">
-                        <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                            Building the Future
-                        </span>
-                        <br />
-                        <span className="text-white">of Resume Creation</span>
+            <div className="relative z-10 mx-auto max-w-6xl px-6 py-20">
+                {/* Header */}
+                <motion.div {...reveal} className="mb-20 text-center">
+                    <Badge tone="accent" size="md" className="mb-5">
+                        <HiSparkles className="h-3.5 w-3.5" /> About HireReady
+                    </Badge>
+                    <h1 className="text-4xl font-extrabold tracking-tight text-fg sm:text-5xl lg:text-6xl">
+                        Building the future of <span className="text-accent">resume creation</span>
                     </h1>
-                    <p className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
-                        A modern, free, and open-source resume builder designed to help job seekers 
+                    <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-fg-muted">
+                        A modern, free, and open-source resume builder designed to help job seekers
                         create professional, ATS-friendly resumes in minutes.
                     </p>
-                </div>
+                </motion.div>
 
-                {/* Admin/Creator Section */}
-                <div className="mb-20 animate-fade-in-up animation-delay-200">
-                    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl p-8 lg:p-12 shadow-2xl">
-                        <div className="flex flex-col lg:flex-row items-center gap-8">
-                            {/* Avatar */}
-                            <div className="relative group">
-                                <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full blur-2xl opacity-50 group-hover:opacity-75 transition-opacity"></div>
-                                {/* Remote GitHub avatar — next/Image would require whitelisting the
-                                    host in next.config and adds no optimization value for avatars. */}
+                {/* Creator */}
+                <motion.div {...reveal} className="mb-20">
+                    <Card variant="elevated" className="overflow-hidden">
+                        <div className="flex flex-col items-center gap-8 lg:flex-row">
+                            <div className="relative shrink-0">
+                                <div
+                                    className="absolute inset-0 rounded-full opacity-40 blur-2xl"
+                                    style={{ background: 'radial-gradient(circle, rgb(var(--accent)) 0%, transparent 70%)' }}
+                                    aria-hidden="true"
+                                />
+                                {/* Remote GitHub avatar — plain img avoids next.config host whitelisting. */}
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
                                     src={adminInfo.avatar}
                                     alt={adminInfo.name}
-                                    className="relative w-40 h-40 rounded-full border-4 border-white/20 shadow-xl transition-transform group-hover:scale-105"
+                                    className="relative h-36 w-36 rounded-full border border-line object-cover shadow-ds-lg"
                                 />
                             </div>
-                            
-                            {/* Info */}
                             <div className="flex-1 text-center lg:text-left">
-                                <div className="flex items-center justify-center lg:justify-start gap-3 mb-2">
-                                    <h2 className="text-3xl font-bold text-white">{adminInfo.name}</h2>
-                                    <FaStar className="w-5 h-5 text-yellow-400" />
-                                </div>
-                                <p className="text-lg text-purple-300 font-semibold mb-4">{adminInfo.role}</p>
-                                <p className="text-slate-300 text-lg leading-relaxed mb-6 max-w-2xl">
-                                    {adminInfo.bio}
-                                </p>
-                                
-                                {/* Social Links */}
-                                <div className="flex items-center justify-center lg:justify-start gap-4">
-                                    <a 
-                                        href={adminInfo.socials.github}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all duration-300 hover:scale-105"
-                                    >
-                                        <FaGithub className="w-5 h-5 text-slate-300 group-hover:text-white" />
-                                        <span className="text-slate-300 group-hover:text-white font-medium">GitHub</span>
+                                <h2 className="text-2xl font-bold text-fg">{adminInfo.name}</h2>
+                                <p className="mt-1 font-semibold text-accent">{adminInfo.role}</p>
+                                <p className="mt-4 max-w-2xl leading-relaxed text-fg-muted">{adminInfo.bio}</p>
+                                <div className="mt-6 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+                                    <a href={adminInfo.socials.github} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-line bg-surface-2 px-4 py-2 text-sm font-medium text-fg transition-colors hover:bg-surface-3">
+                                        <FaGithub className="h-4 w-4" /> GitHub
                                     </a>
-                                    {adminInfo.socials.linkedin && (
-                                        <a 
-                                            href={adminInfo.socials.linkedin}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all duration-300 hover:scale-105"
-                                        >
-                                            <FaLinkedin className="w-5 h-5 text-blue-400" />
-                                            <span className="hidden sm:inline text-slate-300 group-hover:text-white font-medium">LinkedIn</span>
-                                        </a>
-                                    )}
-                                    {adminInfo.socials.email && (
-                                        <a 
-                                            href={`mailto:${adminInfo.socials.email}`}
-                                            className="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all duration-300 hover:scale-105"
-                                        >
-                                            <FaEnvelope className="w-5 h-5 text-purple-400" />
-                                            <span className="hidden sm:inline text-slate-300 group-hover:text-white font-medium">Email</span>
-                                        </a>
-                                    )}
-                                    {adminInfo.socials.twitter && (
-                                        <a 
-                                            href={adminInfo.socials.twitter}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all duration-300 hover:scale-105"
-                                        >
-                                            <FaTwitter className="w-5 h-5 text-sky-400" />
-                                        </a>
-                                    )}
-                                    {adminInfo.socials.website && (
-                                        <a 
-                                            href={adminInfo.socials.website}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all duration-300 hover:scale-105"
-                                        >
-                                            <FaGlobe className="w-5 h-5 text-green-400" />
-                                        </a>
-                                    )}
+                                    <a href={adminInfo.socials.linkedin} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-line bg-surface-2 px-4 py-2 text-sm font-medium text-fg transition-colors hover:bg-surface-3">
+                                        <FaLinkedin className="h-4 w-4 text-[#0a66c2]" /> LinkedIn
+                                    </a>
+                                    <a href={`mailto:${adminInfo.socials.email}`} className="inline-flex items-center gap-2 rounded-xl border border-line bg-surface-2 px-4 py-2 text-sm font-medium text-fg transition-colors hover:bg-surface-3">
+                                        <FaEnvelope className="h-4 w-4 text-accent" /> Email
+                                    </a>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
+                    </Card>
+                </motion.div>
 
-                {/* Project Description */}
-                <div className="mb-20 animate-fade-in-up animation-delay-400">
-                    <h2 className="text-4xl font-bold text-white mb-6 text-center">
-                        About the <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Project</span>
-                    </h2>
-                    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl p-8 lg:p-12">
-                        <p className="text-slate-300 text-lg leading-relaxed mb-6">
-                            <strong className="text-white">HireReady</strong> (formerly Resume Builder) is a powerful, 
-                            completely free resume builder designed to help job seekers create professional, 
-                            ATS-friendly resumes without any hassle. Built with modern web technologies, 
-                            it offers a seamless experience from creation to download.
+                {/* Project description */}
+                <motion.div {...reveal} className="mb-20">
+                    <h2 className="mb-6 text-center text-3xl font-bold text-fg">About the project</h2>
+                    <Card variant="elevated">
+                        <p className="text-lg leading-relaxed text-fg-muted">
+                            <strong className="text-fg">HireReady</strong> is a powerful, completely free
+                            resume builder designed to help job seekers create professional, ATS-friendly
+                            resumes without any hassle. Built with modern web technologies, it offers a
+                            seamless experience from creation to download.
                         </p>
-                        <p className="text-slate-300 text-lg leading-relaxed mb-6">
-                            No sign-up required, no hidden fees, no watermarks - just beautiful resumes ready 
-                            for download in PDF format. The tool is designed with simplicity and effectiveness 
-                            in mind, making professional resume creation accessible to everyone.
+                        <p className="mt-4 text-lg leading-relaxed text-fg-muted">
+                            No hidden fees, no watermarks — just beautiful resumes ready for download in PDF
+                            format. The tool is designed with simplicity and effectiveness in mind, making
+                            professional resume creation accessible to everyone.
                         </p>
-                        <div className="flex flex-wrap gap-3">
-                            <span className="px-4 py-2 bg-blue-500/20 border border-blue-500/30 rounded-full text-blue-300 font-medium">
-                                Free Forever
-                            </span>
-                            <span className="px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-full text-purple-300 font-medium">
-                                Open Source
-                            </span>
-                            <span className="px-4 py-2 bg-green-500/20 border border-green-500/30 rounded-full text-green-300 font-medium">
-                                No Registration
-                            </span>
-                            <span className="px-4 py-2 bg-pink-500/20 border border-pink-500/30 rounded-full text-pink-300 font-medium">
-                                ATS-Optimized
-                            </span>
+                        <div className="mt-6 flex flex-wrap gap-2.5">
+                            <Badge tone="info" size="md">Free forever</Badge>
+                            <Badge tone="accent" size="md">Open source</Badge>
+                            <Badge tone="success" size="md">Cloud sync</Badge>
+                            <Badge tone="warning" size="md">ATS-optimized</Badge>
                         </div>
-                    </div>
-                </div>
+                    </Card>
+                </motion.div>
 
-                {/* Features Grid */}
-                <div className="mb-20 animate-fade-in-up animation-delay-600">
-                    <h2 className="text-4xl font-bold text-white mb-12 text-center">
-                        Key <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Features</span>
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {features.map((feature, index) => (
-                            <div 
-                                key={index}
-                                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 transition-all duration-300 hover:bg-white/10 hover:scale-105 hover:border-purple-500/30"
-                            >
-                                <feature.icon className="w-12 h-12 text-purple-400 mb-4" />
-                                <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
-                                <p className="text-slate-300 leading-relaxed">{feature.description}</p>
-                            </div>
+                {/* Features */}
+                <motion.div {...reveal} className="mb-20">
+                    <h2 className="mb-10 text-center text-3xl font-bold text-fg">Key features</h2>
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        {features.map(feature => (
+                            <Card key={feature.title} variant="interactive">
+                                <span className="mb-4 grid h-12 w-12 place-items-center rounded-xl border border-line bg-surface-2 text-accent">
+                                    <feature.icon className="h-6 w-6" />
+                                </span>
+                                <h3 className="text-lg font-semibold text-fg">{feature.title}</h3>
+                                <p className="mt-1.5 text-sm leading-relaxed text-fg-muted">{feature.description}</p>
+                            </Card>
                         ))}
                     </div>
-                </div>
+                </motion.div>
 
-                {/* Tech Stack */}
-                <div className="mb-20 animate-fade-in-up animation-delay-800">
-                    <h2 className="text-4xl font-bold text-white mb-12 text-center">
-                        Built With <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Modern Tech</span>
-                    </h2>
-                    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl p-8">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                            {techStack.map((tech, index) => (
-                                <div 
-                                    key={index}
-                                    className="flex flex-col items-center gap-3 p-6 bg-white/5 rounded-2xl border border-white/10 transition-all duration-300 hover:bg-white/10 hover:scale-105"
-                                >
-                                    <tech.icon className={`w-12 h-12 ${tech.color}`} />
-                                    <span className="text-white font-semibold text-center">{tech.name}</span>
-                                </div>
-                            ))}
-                        </div>
+                {/* Tech stack */}
+                <motion.div {...reveal} className="mb-20">
+                    <h2 className="mb-10 text-center text-3xl font-bold text-fg">Built with modern tech</h2>
+                    <div className="grid grid-cols-2 gap-5 md:grid-cols-4">
+                        {techStack.map(tech => (
+                            <Card key={tech.name} variant="interactive" className="flex flex-col items-center gap-3 py-8">
+                                <tech.icon className="h-11 w-11 text-fg" />
+                                <span className="font-semibold text-fg">{tech.name}</span>
+                            </Card>
+                        ))}
                     </div>
-                </div>
+                </motion.div>
 
-                {/* Contributors Section */}
-                <div className="mb-20 animate-fade-in-up animation-delay-1000">
-                    <h2 className="text-4xl font-bold text-white mb-6 text-center flex items-center justify-center gap-3">
-                        <FaUsers className="w-8 h-8 text-purple-400" />
-                        <span>Amazing <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Contributors</span></span>
+                {/* Contributors */}
+                <motion.div {...reveal}>
+                    <h2 className="mb-3 flex items-center justify-center gap-3 text-center text-3xl font-bold text-fg">
+                        <FaUsers className="h-7 w-7 text-accent" /> Contributors
                     </h2>
-                    <p className="text-slate-300 text-center mb-12 text-lg">
-                        Special thanks to all the amazing people who have contributed to this project!
+                    <p className="mb-10 text-center text-fg-muted">
+                        Special thanks to everyone who has contributed to this project.
                     </p>
-                    
+
                     {loading ? (
                         <div className="flex items-center justify-center py-12">
-                            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+                            <Spinner size="lg" />
                         </div>
                     ) : contributors.length > 0 ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                            {contributors.map((contributor, index) => (
+                        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                            {contributors.map(contributor => (
                                 <a
-                                    key={index}
+                                    key={contributor.id ?? contributor.login}
                                     href={contributor.html_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="group flex flex-col items-center gap-3 p-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl transition-all duration-300 hover:bg-white/10 hover:scale-105 hover:border-purple-500/30"
+                                    className="group flex flex-col items-center gap-3 rounded-2xl border border-line bg-surface p-4 shadow-ds-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-ds-md"
                                 >
-                                    <div className="relative">
-                                        <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full blur-lg opacity-0 group-hover:opacity-50 transition-opacity"></div>
-                                        {/* Remote GitHub avatar — see note on the admin avatar above. */}
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img
-                                            src={contributor.avatar_url}
-                                            alt={contributor.login}
-                                            className="relative w-16 h-16 rounded-full border-2 border-white/20 transition-transform group-hover:scale-110"
-                                        />
-                                    </div>
+                                    {/* Remote GitHub avatar — see note above. */}
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                        src={contributor.avatar_url}
+                                        alt={contributor.login}
+                                        className="h-16 w-16 rounded-full border border-line object-cover transition-transform group-hover:scale-105"
+                                    />
                                     <div className="text-center">
-                                        <p className="text-white font-semibold text-sm truncate w-full">{contributor.login}</p>
-                                        <p className="text-slate-400 text-xs">{contributor.contributions} commits</p>
+                                        <p className="w-full truncate text-sm font-semibold text-fg">{contributor.login}</p>
+                                        <p className="text-xs text-fg-subtle">{contributor.contributions} commits</p>
                                     </div>
                                 </a>
                             ))}
                         </div>
                     ) : (
-                        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-12 text-center">
-                            <p className="text-slate-300 text-lg">
+                        <Card className="text-center">
+                            <p className="text-fg-muted">
                                 Want to be the first contributor? Check out our{' '}
-                                <a 
-                                    href="https://github.com/Shanidhya01/Resume-Builder"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-purple-400 hover:text-purple-300 font-semibold underline"
-                                >
+                                <a href="https://github.com/Shanidhya01/Resume-Builder" target="_blank" rel="noopener noreferrer" className="font-semibold text-accent hover:underline">
                                     GitHub repository
                                 </a>
                                 !
                             </p>
-                        </div>
+                        </Card>
                     )}
-                </div>
-
+                </motion.div>
             </div>
         </div>
     );

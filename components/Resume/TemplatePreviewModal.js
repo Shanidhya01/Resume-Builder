@@ -81,33 +81,33 @@ const TemplatePreviewModal = ({ templates, activeIndex, onClose, onSelectTemplat
             role="dialog"
             aria-modal="true"
             aria-label={`${template.name} template preview`}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
             onClick={onClose}
         >
             <div
                 ref={dialogRef}
-                className="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-slate-900 border border-white/10 shadow-2xl"
+                className="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-ds-xl"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+                <div className="flex items-center justify-between border-b border-line px-5 py-4">
                     <div>
-                        <h2 className="text-lg font-bold text-white">{template.name}</h2>
-                        <p className="text-xs text-slate-400">{activeIndex + 1} of {templates.length}</p>
+                        <h2 className="text-lg font-bold text-fg">{template.name}</h2>
+                        <p className="text-xs text-fg-muted">{activeIndex + 1} of {templates.length}</p>
                     </div>
                     <button
                         ref={closeButtonRef}
                         type="button"
                         onClick={onClose}
                         aria-label="Close template preview"
-                        className="rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+                        className="rounded-lg p-2 text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                     >
                         <X size={20} />
                     </button>
                 </div>
 
                 {/* Image viewport */}
-                <div className="relative flex-1 overflow-auto bg-slate-950 p-6">
+                <div className="relative flex-1 overflow-auto bg-canvas p-6">
                     <div
                         className="relative mx-auto aspect-[210/297] w-full max-w-md transition-transform duration-200"
                         style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
@@ -117,20 +117,20 @@ const TemplatePreviewModal = ({ templates, activeIndex, onClose, onSelectTemplat
                             alt={`${template.name} resume template preview`}
                             fill
                             sizes="480px"
-                            className="rounded-lg border border-white/10 object-cover shadow-xl"
+                            className="rounded-lg border border-line object-cover shadow-ds-lg"
                             priority
                         />
                     </div>
                 </div>
 
                 {/* Controls */}
-                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 px-5 py-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-5 py-4">
                     <div className="flex items-center gap-2">
                         <button
                             type="button"
                             onClick={() => goToTemplate((activeIndex - 1 + templates.length) % templates.length)}
                             aria-label="Previous template"
-                            className="rounded-lg p-2 text-slate-300 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+                            className="rounded-lg p-2 text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                         >
                             <ChevronLeft size={20} />
                         </button>
@@ -138,7 +138,7 @@ const TemplatePreviewModal = ({ templates, activeIndex, onClose, onSelectTemplat
                             type="button"
                             onClick={() => goToTemplate((activeIndex + 1) % templates.length)}
                             aria-label="Next template"
-                            className="rounded-lg p-2 text-slate-300 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+                            className="rounded-lg p-2 text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                         >
                             <ChevronRight size={20} />
                         </button>
@@ -150,17 +150,17 @@ const TemplatePreviewModal = ({ templates, activeIndex, onClose, onSelectTemplat
                             onClick={() => setZoom(z => Math.max(MIN_ZOOM, +(z - ZOOM_STEP).toFixed(2)))}
                             disabled={zoom <= MIN_ZOOM}
                             aria-label="Zoom out"
-                            className="rounded-lg p-2 text-slate-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+                            className="rounded-lg p-2 text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg disabled:cursor-not-allowed disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                         >
                             <ZoomOut size={18} />
                         </button>
-                        <span className="w-10 text-center text-xs text-slate-400">{Math.round(zoom * 100)}%</span>
+                        <span className="w-10 text-center text-xs text-fg-muted">{Math.round(zoom * 100)}%</span>
                         <button
                             type="button"
                             onClick={() => setZoom(z => Math.min(MAX_ZOOM, +(z + ZOOM_STEP).toFixed(2)))}
                             disabled={zoom >= MAX_ZOOM}
                             aria-label="Zoom in"
-                            className="rounded-lg p-2 text-slate-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+                            className="rounded-lg p-2 text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg disabled:cursor-not-allowed disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                         >
                             <ZoomIn size={18} />
                         </button>
@@ -169,9 +169,9 @@ const TemplatePreviewModal = ({ templates, activeIndex, onClose, onSelectTemplat
                     <button
                         type="button"
                         onClick={() => onUseTemplate(template.id)}
-                        className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-5 py-2 text-sm font-semibold text-white transition hover:scale-105"
+                        className="rounded-xl bg-accent px-5 py-2 text-sm font-semibold text-accent-fg shadow-ds-sm transition-colors hover:bg-accent-hover"
                     >
-                        Use This Template
+                        Use this template
                     </button>
                 </div>
             </div>

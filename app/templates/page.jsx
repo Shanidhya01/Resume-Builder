@@ -1,48 +1,55 @@
 'use client';
 
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
-import { motion } from 'framer-motion';
-import { HiSparkles } from 'react-icons/hi';
-import { IoMdCheckmarkCircle } from 'react-icons/io';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, Star, Check, Eye, Sparkles, ShieldCheck } from 'lucide-react';
 import templates from '@/config/templates';
 import { setTemplate } from '@/store/slices/resumeSlice';
 import TemplatePreviewModal from '@/components/Resume/TemplatePreviewModal';
+import { useFavoriteTemplates } from '@/hooks/useFavoriteTemplates';
+import Button from '@/components/UI/Button';
+import Badge from '@/components/UI/Badge';
+import EmptyState from '@/components/UI/EmptyState';
 
-const AtsBadge = memo(function AtsBadge({ score }) {
-    const tone = score >= 90 ? 'text-green-300 border-green-500/30 bg-green-500/10' : score >= 75 ? 'text-yellow-300 border-yellow-500/30 bg-yellow-500/10' : 'text-orange-300 border-orange-500/30 bg-orange-500/10';
-    return (
-        <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold ${tone}`}>
-            <IoMdCheckmarkCircle className="h-3.5 w-3.5" />
-            {score}% ATS
-        </span>
-    );
-});
+const CATEGORIES = [
+    { id: 'all', label: 'All templates' },
+    { id: 'featured', label: 'Featured' },
+    { id: 'favorites', label: 'Favorites' },
+    { id: 'single-column', label: 'Single column' },
+    { id: 'two-column', label: 'Two column' },
+    { id: 'sidebar', label: 'Sidebar' },
+];
 
-// Memoized so opening the preview modal (which only changes `previewIndex`
-// state in the parent) doesn't re-render all six cards — only the card whose
-// `isSelected`/`onPreview` props actually changed re-renders.
-const TemplateCard = memo(function TemplateCard({ template, index, isSelected, onPreview, onUse }) {
+const FEATURED_MIN_ATS = 92;
+
+function atsTone(score) {
+    if (score >= 90) return 'success';
+    if (score >= 75) return 'warning';
+    return 'danger';
+}
+
+const TemplateCard = memo(function TemplateCard({ template, isSelected, isFavorite, onPreview, onUse, onToggleFavorite }) {
     return (
         <motion.div
-            whileHover={{ scale: 1.02 }}
-            className={`relative flex flex-col bg-white/5 backdrop-blur-lg border rounded-3xl overflow-hidden shadow-2xl transition-all duration-300 ${
-                isSelected ? 'border-purple-400 ring-2 ring-purple-400/50' : 'border-white/10 hover:shadow-purple-500/30'
+            layout
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.97 }}
+            transition={{ duration: 0.25 }}
+            whileHover={{ y: -4 }}
+            className={`group relative flex flex-col overflow-hidden rounded-2xl border bg-surface shadow-ds-sm transition-shadow duration-300 hover:shadow-ds-lg ${
+                isSelected ? 'border-accent ring-2 ring-accent/40' : 'border-line'
             }`}
         >
-            {isSelected && (
-                <span className="absolute top-3 right-3 z-10 rounded-full bg-purple-500 px-3 py-1 text-xs font-bold text-white shadow-lg">
-                    Selected
-                </span>
-            )}
-
+            {/* Thumbnail */}
             <button
                 type="button"
-                onClick={() => onPreview(index)}
+                onClick={onPreview}
                 aria-label={`Preview ${template.name} template`}
-                className="relative w-full h-56 overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
+                className="relative aspect-[210/240] w-full overflow-hidden bg-surface-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
                 <Image
                     src={template.thumbnail}
@@ -50,47 +57,59 @@ const TemplateCard = memo(function TemplateCard({ template, index, isSelected, o
                     fill
                     loading="lazy"
                     sizes="(max-width: 768px) 100vw, 33vw"
-                    className="object-cover transition-transform duration-500 hover:scale-105"
+                    className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                <span className="absolute inset-x-0 bottom-3 mx-auto flex w-max items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-zinc-900 opacity-0 shadow-lg backdrop-blur transition-all duration-300 group-hover:opacity-100">
+                    <Eye className="h-3.5 w-3.5" /> Quick preview
+                </span>
             </button>
 
-            <div className="flex flex-1 flex-col p-6 text-left">
-                <div className="mb-2 flex items-center justify-between gap-2">
-                    <h3 className="text-xl font-semibold text-white">{template.name}</h3>
-                    <AtsBadge score={template.atsScore} />
+            {/* Badges over thumbnail */}
+            <div className="pointer-events-none absolute left-3 top-3 flex flex-col gap-1.5">
+                {isSelected && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2.5 py-1 text-xs font-bold text-accent-fg shadow-md">
+                        <Check className="h-3 w-3" /> Selected
+                    </span>
+                )}
+                {template.atsScore >= FEATURED_MIN_ATS && (
+                    <Badge tone="accent" size="sm" className="shadow-sm">
+                        <Sparkles className="h-3 w-3" /> Featured
+                    </Badge>
+                )}
+            </div>
+
+            <button
+                type="button"
+                onClick={onToggleFavorite}
+                aria-label={isFavorite ? `Remove ${template.name} from favorites` : `Add ${template.name} to favorites`}
+                aria-pressed={isFavorite}
+                className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full border border-line bg-surface/90 text-fg-muted shadow-sm backdrop-blur transition-colors hover:text-amber-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            >
+                <Star className={`h-4 w-4 ${isFavorite ? 'fill-amber-400 text-amber-400' : ''}`} />
+            </button>
+
+            {/* Body */}
+            <div className="flex flex-1 flex-col p-5 text-left">
+                <div className="mb-1.5 flex items-center justify-between gap-2">
+                    <h3 className="text-base font-semibold text-fg">{template.name}</h3>
+                    <Badge tone={atsTone(template.atsScore)} size="sm">
+                        <ShieldCheck className="h-3 w-3" /> {template.atsScore}% ATS
+                    </Badge>
                 </div>
+                <p className="mb-4 text-sm leading-relaxed text-fg-muted">{template.description}</p>
 
-                <p className="mb-4 text-sm text-slate-300">{template.description}</p>
-
-                <div className="mb-5 flex flex-wrap gap-2">
+                <div className="mb-5 flex flex-wrap gap-1.5">
                     {template.recommendedRoles.slice(0, 3).map(role => (
-                        <span
-                            key={role}
-                            className="bg-white/10 border border-white/10 text-slate-300 text-xs px-2.5 py-1 rounded-full"
-                        >
+                        <span key={role} className="rounded-full border border-line bg-surface-2 px-2.5 py-0.5 text-xs text-fg-muted">
                             {role}
                         </span>
                     ))}
                 </div>
 
-                <div className="mt-auto flex gap-3">
-                    <button
-                        type="button"
-                        onClick={() => onPreview(index)}
-                        aria-label={`Open full preview for ${template.name}`}
-                        className="flex-1 rounded-xl border border-white/20 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
-                    >
-                        Preview
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => onUse(template.id)}
-                        aria-label={`Use ${template.name} template`}
-                        className="flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 py-2.5 text-sm font-semibold text-white transition hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
-                    >
-                        Use Template
-                    </button>
+                <div className="mt-auto flex gap-2.5">
+                    <Button variant="outline" size="md" fullWidth onClick={onPreview}>Preview</Button>
+                    <Button variant="primary" size="md" fullWidth onClick={onUse}>Use template</Button>
                 </div>
             </div>
         </motion.div>
@@ -101,9 +120,13 @@ export default function TemplatesPage() {
     const dispatch = useDispatch();
     const router = useRouter();
     const selectedTemplate = useSelector(state => state.resume.selectedTemplate);
-    const [previewIndex, setPreviewIndex] = useState(null);
+    const { toggle: toggleFavorite, isFavorite } = useFavoriteTemplates();
 
-    const useTemplate = useCallback(
+    const [previewIndex, setPreviewIndex] = useState(null);
+    const [query, setQuery] = useState('');
+    const [category, setCategory] = useState('all');
+
+    const applyTemplate = useCallback(
         templateId => {
             dispatch(setTemplate(templateId));
             router.push('/editor');
@@ -111,51 +134,114 @@ export default function TemplatesPage() {
         [dispatch, router],
     );
 
+    const filtered = useMemo(() => {
+        const q = query.trim().toLowerCase();
+        return templates.filter(t => {
+            const matchesQuery =
+                !q ||
+                t.name.toLowerCase().includes(q) ||
+                t.description.toLowerCase().includes(q) ||
+                t.recommendedRoles.some(r => r.toLowerCase().includes(q));
+            const matchesCategory =
+                category === 'all' ||
+                (category === 'featured' && t.atsScore >= FEATURED_MIN_ATS) ||
+                (category === 'favorites' && isFavorite(t.id)) ||
+                t.layoutType === category;
+            return matchesQuery && matchesCategory;
+        });
+    }, [query, category, isFavorite]);
+
+    // Map filtered items back to their original index for the preview modal.
+    const openPreview = useCallback(id => {
+        setPreviewIndex(templates.findIndex(t => t.id === id));
+    }, []);
+
     return (
-        <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-            {/* Background animation */}
-            <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-                <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-                <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-                <div className="absolute top-40 left-40 w-80 h-80 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
-            </div>
+        <div className="relative overflow-hidden">
+            <div className="bg-grid pointer-events-none absolute inset-0 opacity-40" aria-hidden="true" />
+            <div
+                className="pointer-events-none absolute left-1/2 top-0 h-96 w-[40rem] -translate-x-1/2 rounded-full opacity-20 blur-3xl"
+                style={{ background: 'radial-gradient(circle, rgb(var(--accent)) 0%, transparent 70%)' }}
+                aria-hidden="true"
+            />
 
-            {/* Content */}
-            <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-20 text-center">
-                {/* Badge */}
-                <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full text-sm font-medium text-white/90">
-                    <HiSparkles className="w-4 h-4 text-yellow-400" />
-                    <span>Choose Your Perfect Template</span>
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            <div className="relative z-10 mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+                {/* Header */}
+                <div className="mx-auto mb-10 max-w-2xl text-center">
+                    <Badge tone="accent" size="md" className="mb-5">
+                        <Sparkles className="h-3.5 w-3.5" /> Template gallery
+                    </Badge>
+                    <motion.h1
+                        initial={{ opacity: 0, y: -12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                        className="text-4xl font-extrabold tracking-tight text-fg sm:text-5xl"
+                    >
+                        Pick your resume template
+                    </motion.h1>
+                    <p className="mt-4 text-lg text-fg-muted">
+                        Distinct layouts — each with its own structure, typography, and section arrangement.
+                        All 100% free and customizable.
+                    </p>
                 </div>
 
-                {/* Title */}
-                <motion.h1
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
-                    className="text-4xl sm:text-5xl font-extrabold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent"
-                >
-                    Pick Your Resume Template
-                </motion.h1>
-                <p className="text-slate-300 max-w-2xl mx-auto mb-12 sm:mb-16">
-                    Six distinct layouts — each with its own structure, typography, and section arrangement — all
-                    100% free and customizable.
-                </p>
-
-                {/* Template Grid */}
-                <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                    {templates.map((template, index) => (
-                        <TemplateCard
-                            key={template.id}
-                            template={template}
-                            index={index}
-                            isSelected={template.id === selectedTemplate}
-                            onPreview={setPreviewIndex}
-                            onUse={useTemplate}
+                {/* Controls */}
+                <div className="mb-8 flex flex-col gap-4">
+                    <div className="relative mx-auto w-full max-w-md">
+                        <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
+                        <input
+                            type="search"
+                            value={query}
+                            onChange={e => setQuery(e.target.value)}
+                            placeholder="Search templates or roles…"
+                            aria-label="Search templates"
+                            className="h-11 w-full rounded-xl border border-line bg-surface pl-10 pr-4 text-sm text-fg outline-none transition-colors placeholder:text-fg-subtle focus:border-accent focus:ring-2 focus:ring-accent/30"
                         />
-                    ))}
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                        {CATEGORIES.map(cat => (
+                            <button
+                                key={cat.id}
+                                onClick={() => setCategory(cat.id)}
+                                className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${
+                                    category === cat.id
+                                        ? 'border-accent bg-accent text-accent-fg'
+                                        : 'border-line bg-surface text-fg-muted hover:bg-surface-2 hover:text-fg'
+                                }`}
+                            >
+                                {cat.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
+
+                {/* Grid */}
+                {filtered.length > 0 ? (
+                    <motion.div layout className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                        <AnimatePresence mode="popLayout">
+                            {filtered.map(template => (
+                                <TemplateCard
+                                    key={template.id}
+                                    template={template}
+                                    isSelected={template.id === selectedTemplate}
+                                    isFavorite={isFavorite(template.id)}
+                                    onPreview={() => openPreview(template.id)}
+                                    onUse={() => applyTemplate(template.id)}
+                                    onToggleFavorite={() => toggleFavorite(template.id)}
+                                />
+                            ))}
+                        </AnimatePresence>
+                    </motion.div>
+                ) : (
+                    <EmptyState
+                        icon={Search}
+                        title="No templates found"
+                        description="Try a different search term or category."
+                        actionLabel="Clear filters"
+                        onAction={() => { setQuery(''); setCategory('all'); }}
+                    />
+                )}
             </div>
 
             {previewIndex !== null && (
@@ -164,12 +250,9 @@ export default function TemplatesPage() {
                     activeIndex={previewIndex}
                     onClose={() => setPreviewIndex(null)}
                     onSelectTemplate={setPreviewIndex}
-                    onUseTemplate={useTemplate}
+                    onUseTemplate={applyTemplate}
                 />
             )}
-
-            {/* Bottom gradient */}
-            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-900 to-transparent" aria-hidden="true"></div>
         </div>
     );
 }

@@ -2,9 +2,30 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { User, ShieldCheck, TriangleAlert, LogOut, MailWarning } from 'lucide-react';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { deleteAllResumesForUser } from '@/lib/resumes';
+import Card from '@/components/UI/Card';
+import Button from '@/components/UI/Button';
+import Alert from '@/components/UI/Alert';
+import Avatar from '@/components/UI/Avatar';
+import Badge from '@/components/UI/Badge';
+import Modal from '@/components/UI/Modal';
+import Tabs from '@/components/UI/Tabs';
+
+const fieldClass =
+    'block h-11 w-full rounded-xl border border-line bg-surface-2 px-3.5 text-sm text-fg outline-none transition-colors placeholder:text-fg-subtle focus:border-accent focus:ring-2 focus:ring-accent/30 disabled:opacity-60';
+
+function Field({ label, ...props }) {
+    return (
+        <div>
+            <label className="mb-1.5 block text-sm font-medium text-fg">{label}</label>
+            <input className={fieldClass} {...props} />
+        </div>
+    );
+}
 
 const AccountContent = () => {
     const {
@@ -20,6 +41,8 @@ const AccountContent = () => {
     } = useAuth();
     const router = useRouter();
     const isPasswordUser = user.providerData.some(p => p.providerId === 'password');
+
+    const [tab, setTab] = useState('profile');
 
     const [displayName, setDisplayName] = useState(user.displayName || '');
     const [photoURL, setPhotoURL] = useState(user.photoURL || '');
@@ -129,177 +152,200 @@ const AccountContent = () => {
         router.push('/');
     };
 
+    const tabs = [
+        { value: 'profile', label: 'Profile', icon: User },
+        { value: 'security', label: 'Security', icon: ShieldCheck },
+        { value: 'danger', label: 'Danger zone', icon: TriangleAlert },
+    ];
+
     return (
-        <div className="mx-auto mt-10 max-w-2xl px-4 pb-16 md:mt-12">
-            <div className="mb-8 flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-white md:text-3xl">Account</h1>
-                <button
-                    onClick={onLogout}
-                    className="rounded-lg border border-gray-600 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-white/5"
-                >
-                    Logout
-                </button>
+        <div className="mx-auto mt-10 max-w-3xl px-4 pb-20 md:mt-12">
+            {/* Header */}
+            <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <Avatar src={user.photoURL} name={user.displayName} email={user.email} size="lg" />
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight text-fg md:text-3xl">
+                            {user.displayName || 'Your account'}
+                        </h1>
+                        <div className="mt-1 flex items-center gap-2 text-sm text-fg-muted">
+                            {user.email}
+                            {user.emailVerified ? (
+                                <Badge tone="success" size="sm">Verified</Badge>
+                            ) : (
+                                <Badge tone="warning" size="sm">Unverified</Badge>
+                            )}
+                        </div>
+                    </div>
+                </div>
+                <Button variant="outline" size="md" leftIcon={<LogOut className="h-4 w-4" />} onClick={onLogout}>
+                    Log out
+                </Button>
             </div>
 
             {!user.emailVerified && (
-                <div className="mb-6 flex items-center justify-between rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-200">
-                    <span>Your email isn&apos;t verified yet.</span>
-                    <div className="flex items-center gap-4">
-                        <button onClick={onRefreshStatus} disabled={refreshingStatus} className="font-semibold underline disabled:opacity-60">
-                            {refreshingStatus ? 'Checking...' : 'Refresh status'}
+                <Alert tone="warning" title="Verify your email" className="mb-6">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                        <span>Confirm your address to secure your account.</span>
+                        <button onClick={onRefreshStatus} disabled={refreshingStatus} className="font-semibold text-fg underline disabled:opacity-60">
+                            {refreshingStatus ? 'Checking…' : 'Refresh status'}
                         </button>
-                        <button onClick={onSendVerification} className="font-semibold underline">
+                        <button onClick={onSendVerification} className="font-semibold text-fg underline">
                             {verificationSent ? 'Sent!' : 'Resend email'}
                         </button>
                     </div>
-                </div>
+                </Alert>
             )}
 
-            <div className="card mb-6">
-                <h2 className="mb-4 text-lg font-semibold text-white">Profile</h2>
-                {profileMsg && <p className="mb-3 text-sm text-green-400">{profileMsg}</p>}
-                {profileError && <p className="mb-3 text-sm text-red-400">{profileError}</p>}
-                <form onSubmit={onSaveProfile} className="flex flex-col gap-4">
-                    <div>
-                        <label className="mb-1 block text-sm text-gray-300">Email</label>
-                        <input
-                            disabled
-                            value={user.email}
-                            className="w-full rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-gray-400"
-                        />
-                    </div>
-                    <div>
-                        <label className="mb-1 block text-sm text-gray-300">Display Name</label>
-                        <input
-                            value={displayName}
-                            onChange={e => setDisplayName(e.target.value)}
-                            className="w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-white outline-none focus:border-primary-400"
-                        />
-                    </div>
-                    <div>
-                        <label className="mb-1 block text-sm text-gray-300">Profile Picture URL</label>
-                        <div className="flex items-center gap-4">
-                            {photoURL ? (
-                                /* User-supplied URL on an arbitrary host — next/Image would throw
-                                   for any domain not whitelisted in next.config, so a plain img
-                                   is the only safe option here. */
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={photoURL} alt="Profile" className="h-14 w-14 rounded-full object-cover" />
-                            ) : (
-                                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-700 text-lg font-semibold text-gray-300">
-                                    {(displayName || user.email || '?').charAt(0).toUpperCase()}
+            <Tabs tabs={tabs} value={tab} onChange={setTab} className="mb-6" />
+
+            <motion.div
+                key={tab}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25 }}
+            >
+                {tab === 'profile' && (
+                    <Card title="Profile" subtitle="Update how you appear across HireReady.">
+                        {profileMsg && <Alert tone="success" className="mb-4">{profileMsg}</Alert>}
+                        {profileError && <Alert tone="danger" className="mb-4">{profileError}</Alert>}
+                        <form onSubmit={onSaveProfile} className="flex flex-col gap-4">
+                            <Field label="Email" disabled value={user.email} />
+                            <Field
+                                label="Display name"
+                                value={displayName}
+                                onChange={e => setDisplayName(e.target.value)}
+                                placeholder="Your name"
+                            />
+                            <div>
+                                <label className="mb-1.5 block text-sm font-medium text-fg">Profile picture URL</label>
+                                <div className="flex items-center gap-4">
+                                    <Avatar src={photoURL} name={displayName} email={user.email} size="lg" />
+                                    <input
+                                        value={photoURL}
+                                        onChange={e => setPhotoURL(e.target.value)}
+                                        className={fieldClass}
+                                        placeholder="https://…"
+                                    />
                                 </div>
-                            )}
-                            <input
-                                value={photoURL}
-                                onChange={e => setPhotoURL(e.target.value)}
-                                className="w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-white outline-none focus:border-primary-400"
-                                placeholder="https://..."
-                            />
-                        </div>
-                    </div>
-                    <button type="submit" disabled={savingProfile} className="btn-filled w-full justify-center disabled:opacity-60">
-                        {savingProfile ? 'Saving...' : 'Save Profile'}
-                    </button>
-                </form>
-            </div>
+                            </div>
+                            <div className="pt-1">
+                                <Button type="submit" loading={savingProfile}>
+                                    {savingProfile ? 'Saving…' : 'Save profile'}
+                                </Button>
+                            </div>
+                        </form>
+                    </Card>
+                )}
 
-            {isPasswordUser ? (
-                <div className="card mb-6">
-                    <h2 className="mb-4 text-lg font-semibold text-white">Change Password</h2>
-                    {passwordMsg && <p className="mb-3 text-sm text-green-400">{passwordMsg}</p>}
-                    {passwordError && <p className="mb-3 text-sm text-red-400">{passwordError}</p>}
-                    <form onSubmit={onChangePassword} className="flex flex-col gap-4">
-                        <div>
-                            <label className="mb-1 block text-sm text-gray-300">Current Password</label>
-                            <input
-                                type="password"
-                                value={currentPassword}
-                                onChange={e => setCurrentPassword(e.target.value)}
-                                className="w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-white outline-none focus:border-primary-400"
-                            />
-                        </div>
-                        <div>
-                            <label className="mb-1 block text-sm text-gray-300">New Password</label>
-                            <input
-                                type="password"
-                                value={newPassword}
-                                onChange={e => setNewPassword(e.target.value)}
-                                className="w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-white outline-none focus:border-primary-400"
-                            />
-                        </div>
-                        <button type="submit" disabled={savingPassword} className="btn-filled w-full justify-center disabled:opacity-60">
-                            {savingPassword ? 'Updating...' : 'Update Password'}
-                        </button>
-                    </form>
-                </div>
-            ) : (
-                <div className="card mb-6">
-                    <h2 className="mb-2 text-lg font-semibold text-white">Sign-in Method</h2>
-                    <p className="text-sm text-slate-400">
-                        You&apos;re signed in with Google. Password management isn&apos;t available for this account.
-                    </p>
-                </div>
-            )}
+                {tab === 'security' && (
+                    isPasswordUser ? (
+                        <Card title="Change password" subtitle="Choose a strong, unique password.">
+                            {passwordMsg && <Alert tone="success" className="mb-4">{passwordMsg}</Alert>}
+                            {passwordError && <Alert tone="danger" className="mb-4">{passwordError}</Alert>}
+                            <form onSubmit={onChangePassword} className="flex flex-col gap-4">
+                                <Field
+                                    label="Current password"
+                                    type="password"
+                                    autoComplete="current-password"
+                                    value={currentPassword}
+                                    onChange={e => setCurrentPassword(e.target.value)}
+                                />
+                                <Field
+                                    label="New password"
+                                    type="password"
+                                    autoComplete="new-password"
+                                    value={newPassword}
+                                    onChange={e => setNewPassword(e.target.value)}
+                                />
+                                <div className="pt-1">
+                                    <Button type="submit" loading={savingPassword}>
+                                        {savingPassword ? 'Updating…' : 'Update password'}
+                                    </Button>
+                                </div>
+                            </form>
+                        </Card>
+                    ) : (
+                        <Card title="Sign-in method">
+                            <div className="flex items-start gap-3">
+                                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-line bg-surface-2 text-accent">
+                                    <ShieldCheck className="h-5 w-5" />
+                                </span>
+                                <p className="text-sm text-fg-muted">
+                                    You&apos;re signed in with Google. Password management isn&apos;t
+                                    available for this account.
+                                </p>
+                            </div>
+                        </Card>
+                    )
+                )}
 
-            <div className="card border-red-500/30">
-                <h2 className="mb-2 text-lg font-semibold text-red-300">Danger Zone</h2>
-                <p className="mb-4 text-sm text-slate-400">
-                    Deleting your account permanently removes all your resumes. This cannot be undone.
+                {tab === 'danger' && (
+                    <Card className="border-red-500/30">
+                        <div className="flex items-start gap-3">
+                            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-red-500/30 bg-red-500/10 text-red-500">
+                                <TriangleAlert className="h-5 w-5" />
+                            </span>
+                            <div>
+                                <h2 className="text-base font-semibold text-fg">Delete account</h2>
+                                <p className="mt-1 text-sm text-fg-muted">
+                                    Deleting your account permanently removes all your resumes. This
+                                    cannot be undone.
+                                </p>
+                                <Button variant="danger" size="md" className="mt-4" onClick={() => setShowDeleteModal(true)}>
+                                    Delete account
+                                </Button>
+                            </div>
+                        </div>
+                    </Card>
+                )}
+            </motion.div>
+
+            <Modal
+                open={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                title="Delete account"
+                description="This permanently removes your account and all resumes."
+                size="sm"
+                footer={
+                    <>
+                        <Button variant="ghost" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
+                        <Button
+                            variant="danger"
+                            loading={deleting}
+                            disabled={deleteConfirmText !== 'DELETE' || (isPasswordUser && !deletePassword)}
+                            onClick={onDeleteAccount}
+                        >
+                            {deleting ? 'Deleting…' : 'Delete account'}
+                        </Button>
+                    </>
+                }
+            >
+                {deleteError && <Alert tone="danger" className="mb-4">{deleteError}</Alert>}
+                <p className="mb-4 flex items-center gap-2 text-sm text-fg-muted">
+                    <MailWarning className="h-4 w-4 shrink-0 text-red-500" />
+                    Type <span className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-red-500">DELETE</span> to confirm.
                 </p>
-                <button
-                    onClick={() => setShowDeleteModal(true)}
-                    className="rounded-lg border border-red-500/40 px-4 py-2 text-sm font-semibold text-red-300 hover:bg-red-500/10"
-                >
-                    Delete Account
-                </button>
-            </div>
-
-            {showDeleteModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-                    <div className="w-full max-w-sm rounded-xl border border-red-500/30 bg-slate-900 p-6 shadow-2xl">
-                        <h3 className="mb-2 text-lg font-semibold text-white">Delete Account</h3>
-                        <p className="mb-4 text-sm text-slate-400">
-                            Type <span className="font-mono text-red-300">DELETE</span> and enter your password to confirm.
-                        </p>
-                        {deleteError && <p className="mb-3 text-sm text-red-400">{deleteError}</p>}
-                        <input
-                            value={deleteConfirmText}
-                            onChange={e => setDeleteConfirmText(e.target.value)}
-                            placeholder="Type DELETE"
-                            className="mb-3 w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-white outline-none focus:border-red-400"
-                        />
-                        {isPasswordUser ? (
-                            <input
-                                type="password"
-                                value={deletePassword}
-                                onChange={e => setDeletePassword(e.target.value)}
-                                placeholder="Password"
-                                className="mb-6 w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-white outline-none focus:border-red-400"
-                            />
-                        ) : (
-                            <p className="mb-6 text-xs text-slate-400">
-                                You&apos;ll be asked to confirm with Google when you click Delete Account.
-                            </p>
-                        )}
-                        <div className="flex justify-end gap-3">
-                            <button
-                                onClick={() => setShowDeleteModal(false)}
-                                className="rounded-lg px-4 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={onDeleteAccount}
-                                disabled={deleteConfirmText !== 'DELETE' || (isPasswordUser && !deletePassword) || deleting}
-                                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50"
-                            >
-                                {deleting ? 'Deleting...' : 'Delete Account'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+                <input
+                    value={deleteConfirmText}
+                    onChange={e => setDeleteConfirmText(e.target.value)}
+                    placeholder="Type DELETE"
+                    className={`${fieldClass} mb-3`}
+                />
+                {isPasswordUser ? (
+                    <input
+                        type="password"
+                        value={deletePassword}
+                        onChange={e => setDeletePassword(e.target.value)}
+                        placeholder="Password"
+                        className={fieldClass}
+                    />
+                ) : (
+                    <p className="text-xs text-fg-subtle">
+                        You&apos;ll be asked to confirm with Google when you click Delete account.
+                    </p>
+                )}
+            </Modal>
         </div>
     );
 };
