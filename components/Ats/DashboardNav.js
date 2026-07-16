@@ -15,8 +15,7 @@ const TABS = [
     { href: '/dashboard/keywords', label: 'Keywords' },
     { href: '/dashboard/recruiter', label: 'Recruiter Preview' },
     { href: '/dashboard/comparison', label: 'Comparison' },
-    { href: '/improvements', label: 'Improvement Center' },
-    { href: '/dashboard/settings', label: 'Settings' },
+    { href: '/improvements', label: 'Improvements' },
 ];
 
 const DashboardNav = () => {

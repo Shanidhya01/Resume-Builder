@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Plus, Upload, Sparkles } from 'lucide-react';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
@@ -21,6 +21,7 @@ import { DEFAULT_TEMPLATE_ID } from '@/config/templates';
 const DashboardContent = () => {
     const { user } = useAuth();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [resumes, setResumes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -56,7 +57,7 @@ const DashboardContent = () => {
         setReloadKey(k => k + 1);
     }, []);
 
-    const handleCreate = async () => {
+    const handleCreate = useCallback(async () => {
         setCreating(true);
         try {
             const id = await createResume(user.uid, 'Untitled Resume', DEFAULT_TEMPLATE_ID);
@@ -65,7 +66,18 @@ const DashboardContent = () => {
             setError('Could not create a new resume.');
             setCreating(false);
         }
-    };
+    }, [user.uid, router]);
+
+    // Seamless entry point: /dashboard?create=true provisions a Firestore resume
+    // and redirects straight into the editor. We replace the query param out of
+    // history first so the back button doesn't re-trigger a second creation.
+    const autoCreateHandled = useRef(false);
+    useEffect(() => {
+        if (searchParams.get('create') !== 'true' || autoCreateHandled.current) return;
+        autoCreateHandled.current = true;
+        router.replace('/dashboard');
+        handleCreate();
+    }, [searchParams, router, handleCreate]);
 
     const handleDuplicate = async id => {
         try {
@@ -206,7 +218,9 @@ const DashboardContent = () => {
 
 const DashboardPage = () => (
     <ProtectedRoute>
-        <DashboardContent />
+        <Suspense fallback={null}>
+            <DashboardContent />
+        </Suspense>
     </ProtectedRoute>
 );
 

@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-    FileText, LayoutDashboard, LayoutTemplate, BarChart3, Sparkles, Settings,
+    FileText, FilePlus2, LayoutDashboard, LayoutTemplate, Settings,
     User, LogOut, Github, Search, Menu, X, ChevronDown,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -18,10 +18,8 @@ import CommandPalette, { openCommandPalette } from '@/components/UI/CommandPalet
 
 const AUTHED_LINKS = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/editor', label: 'Editor', icon: FileText },
+    { href: '/dashboard?create=true', label: 'New Resume', icon: FilePlus2 },
     { href: '/templates', label: 'Templates', icon: LayoutTemplate },
-    { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
-    { href: '/improvements', label: 'Improvements', icon: Sparkles },
 ];
 
 const GUEST_LINKS = [

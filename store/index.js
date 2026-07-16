@@ -2,23 +2,9 @@ import { configureStore } from '@reduxjs/toolkit';
 import resumeSlice from './slices/resumeSlice';
 import aiSlice from './slices/aiSlice';
 import atsSlice, { incrementResumeEdits } from './slices/atsSlice';
-import { DEFAULT_TEMPLATE_ID, isValidTemplateId } from '@/config/templates';
 
 const STORAGE_KEY = 'reduxState';
 const STORAGE_VERSION = 2;
-
-const defaultResumeShape = {
-    contact: {},
-    summary: {},
-    education: [],
-    experience: [],
-    projects: [],
-    skills: {},
-    certificates: [],
-    languages: [],
-    selectedTemplate: DEFAULT_TEMPLATE_ID,
-    saved: false,
-};
 
 const defaultAtsShape = {
     analysis: null,
@@ -38,28 +24,6 @@ const defaultAtsShape = {
 
 const isPlainObject = value => typeof value === 'object' && value !== null && !Array.isArray(value);
 
-// Validates the persisted shape so a corrupted/older localStorage payload
-// can never crash the app on load — unknown or malformed keys fall back to defaults.
-const sanitizeResumeState = raw => {
-    if (!isPlainObject(raw)) return defaultResumeShape;
-
-    const sanitized = { ...defaultResumeShape };
-    for (const key of Object.keys(defaultResumeShape)) {
-        const value = raw[key];
-        const expectedIsArray = Array.isArray(defaultResumeShape[key]);
-        if (expectedIsArray && Array.isArray(value)) {
-            sanitized[key] = value;
-        } else if (key === 'saved' && typeof value === 'boolean') {
-            sanitized[key] = value;
-        } else if (key === 'selectedTemplate' && isValidTemplateId(value)) {
-            sanitized[key] = value;
-        } else if (!expectedIsArray && key !== 'saved' && key !== 'selectedTemplate' && isPlainObject(value)) {
-            sanitized[key] = value;
-        }
-    }
-    return sanitized;
-};
-
 const loadState = () => {
     if (typeof window === 'undefined') return undefined;
 
@@ -68,13 +32,14 @@ const loadState = () => {
         if (!serialized) return undefined;
 
         const parsed = JSON.parse(serialized);
-        if (!isPlainObject(parsed)) return { resume: defaultResumeShape };
+        if (!isPlainObject(parsed)) return undefined;
 
-        // Sanitizing (rather than discarding) on a version bump lets older
-        // payloads pick up new fields' defaults without losing existing resume data.
-        const preloaded = { resume: sanitizeResumeState(parsed.resume) };
-        // Merge onto the slice's own defaults (not replace) — only the lightweight,
-        // user-authored bits are persisted; analysis/loading state is recomputed fresh.
+        // Resume content is NOT preloaded from localStorage anymore: Firestore is the
+        // single source of truth and the editor hydrates the slice from getResume().
+        // Only analytics/ATS state (history, counters, suggestion status) is restored.
+        // Merge onto the slice's own defaults (not replace) — analysis/loading state
+        // is recomputed fresh.
+        const preloaded = {};
         const atsRaw = isPlainObject(parsed.ats) ? parsed.ats : {};
         preloaded.ats = {
             ...defaultAtsShape,
@@ -137,7 +102,6 @@ const saveState = debounce(() => {
         const atsState = store.getState().ats;
         const payload = {
             version: STORAGE_VERSION,
-            resume: store.getState().resume,
             ats: {
                 suggestionStatus: atsState.suggestionStatus,
                 history: atsState.history,

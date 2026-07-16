@@ -2,6 +2,7 @@
 
 import ResumeFields from '@/config/ResumeFields';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import {
     User,
     FileText,
@@ -27,11 +28,13 @@ const TAB_ICONS = {
 
 /**
  * Section navigation for the editor. Horizontally-scrollable on mobile,
- * wrapped pill group on larger screens. Links preserve the existing
- * `/editor/?tab=` routing behaviour.
+ * wrapped pill group on larger screens. Links stay within the current
+ * Firestore-backed resume (`/editor/[resumeId]?tab=`).
  */
 const Tabs = ({ activeTab }) => {
     const tabs = Object.keys(ResumeFields);
+    const { resumeId } = useParams();
+    const basePath = resumeId ? `/editor/${resumeId}` : '/editor';
 
     return (
         <nav aria-label="Resume sections" className="w-full">
@@ -42,7 +45,7 @@ const Tabs = ({ activeTab }) => {
                     return (
                         <Link
                             key={tab}
-                            href={`/editor/?tab=${tab}`}
+                            href={`${basePath}?tab=${tab}`}
                             aria-current={active ? 'page' : undefined}
                             className={`inline-flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-medium capitalize transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                                 active

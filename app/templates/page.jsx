@@ -8,6 +8,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Star, Check, Eye, Sparkles, ShieldCheck } from 'lucide-react';
 import templates from '@/config/templates';
 import { setTemplate } from '@/store/slices/resumeSlice';
+import { createResume } from '@/lib/resumes';
+import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/context/ToastContext';
 import TemplatePreviewModal from '@/components/Resume/TemplatePreviewModal';
 import { useFavoriteTemplates } from '@/hooks/useFavoriteTemplates';
 import Button from '@/components/UI/Button';
@@ -31,7 +34,7 @@ function atsTone(score) {
     return 'danger';
 }
 
-const TemplateCard = memo(function TemplateCard({ template, isSelected, isFavorite, onPreview, onUse, onToggleFavorite }) {
+const TemplateCard = memo(function TemplateCard({ template, isSelected, isFavorite, isCreating, onPreview, onUse, onToggleFavorite }) {
     return (
         <motion.div
             layout
@@ -108,8 +111,10 @@ const TemplateCard = memo(function TemplateCard({ template, isSelected, isFavori
                 </div>
 
                 <div className="mt-auto flex gap-2.5">
-                    <Button variant="outline" size="md" fullWidth onClick={onPreview}>Preview</Button>
-                    <Button variant="primary" size="md" fullWidth onClick={onUse}>Use template</Button>
+                    <Button variant="outline" size="md" fullWidth onClick={onPreview} disabled={isCreating}>Preview</Button>
+                    <Button variant="primary" size="md" fullWidth onClick={onUse} loading={isCreating} disabled={isCreating}>
+                        {isCreating ? 'Creating…' : 'Use template'}
+                    </Button>
                 </div>
             </div>
         </motion.div>
@@ -119,19 +124,38 @@ const TemplateCard = memo(function TemplateCard({ template, isSelected, isFavori
 export default function TemplatesPage() {
     const dispatch = useDispatch();
     const router = useRouter();
+    const { user } = useAuth();
+    const { error: toastError } = useToast();
     const selectedTemplate = useSelector(state => state.resume.selectedTemplate);
     const { toggle: toggleFavorite, isFavorite } = useFavoriteTemplates();
 
     const [previewIndex, setPreviewIndex] = useState(null);
     const [query, setQuery] = useState('');
     const [category, setCategory] = useState('all');
+    const [creatingTemplateId, setCreatingTemplateId] = useState(null);
 
+    // "Use template" always creates a Firestore-backed resume seeded with the
+    // chosen template, then opens the production editor. Guests are sent to
+    // sign up first so their resume can be persisted to their account.
     const applyTemplate = useCallback(
-        templateId => {
+        async templateId => {
             dispatch(setTemplate(templateId));
-            router.push('/editor');
+
+            if (!user) {
+                router.push('/register');
+                return;
+            }
+
+            setCreatingTemplateId(templateId);
+            try {
+                const id = await createResume(user.uid, 'Untitled Resume', templateId);
+                router.push(`/editor/${id}`);
+            } catch {
+                setCreatingTemplateId(null);
+                toastError('Could not create a resume from this template. Please try again.');
+            }
         },
-        [dispatch, router],
+        [dispatch, router, user, toastError],
     );
 
     const filtered = useMemo(() => {
@@ -226,6 +250,7 @@ export default function TemplatesPage() {
                                     template={template}
                                     isSelected={template.id === selectedTemplate}
                                     isFavorite={isFavorite(template.id)}
+                                    isCreating={creatingTemplateId === template.id}
                                     onPreview={() => openPreview(template.id)}
                                     onUse={() => applyTemplate(template.id)}
                                     onToggleFavorite={() => toggleFavorite(template.id)}

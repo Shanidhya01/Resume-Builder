@@ -64,7 +64,7 @@ function Palette({ authed, onClose }) {
         const nav = authed
             ? [
                   { id: 'dashboard', label: 'Go to Dashboard', icon: LayoutDashboard, run: () => router.push('/dashboard'), group: 'Navigate' },
-                  { id: 'editor', label: 'Open Editor', icon: FileText, run: () => router.push('/editor'), group: 'Navigate' },
+                  { id: 'new-resume', label: 'New Resume', icon: FileText, run: () => router.push('/dashboard?create=true'), group: 'Actions' },
                   { id: 'templates', label: 'Browse Templates', icon: LayoutTemplate, run: () => router.push('/templates'), group: 'Navigate' },
                   { id: 'analytics', label: 'View Analytics', icon: BarChart3, run: () => router.push('/dashboard/analytics'), group: 'Navigate' },
                   { id: 'improvements', label: 'Improvement Center', icon: Sparkles, run: () => router.push('/improvements'), group: 'Navigate' },
