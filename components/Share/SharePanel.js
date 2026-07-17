@@ -5,6 +5,7 @@ import { FaShareAlt, FaCopy, FaChartBar } from 'react-icons/fa';
 import dynamic from 'next/dynamic';
 import { useToast } from '@/context/ToastContext';
 import { publishResume, unpublishResume, regenerateSlug, setCustomSlug } from '@/lib/publicResumes';
+import { buildPublicSlugPath } from '@/lib/publicSlug';
 import { withFirestoreRetry } from '@/lib/firestoreErrors';
 
 const ShareDialog = dynamic(() => import('./ShareDialog'), { ssr: false });
@@ -22,7 +23,9 @@ const SharePanel = ({ resume, uid, onUpdate }) => {
     const [shareOpen, setShareOpen] = useState(false);
     const [analyticsOpen, setAnalyticsOpen] = useState(false);
 
-    const publicUrl = resume.isPublic && resume.slug ? `${siteOrigin()}/r/${resume.slug}` : null;
+    const publicUrl = resume.isPublic && resume.slug
+        ? `${siteOrigin()}/r/${buildPublicSlugPath(resume, resume.slug)}`
+        : null;
 
     // Each mutation retries once on a transient connectivity error before it
     // surfaces. onUpdate runs only after the Firestore write resolves, so a

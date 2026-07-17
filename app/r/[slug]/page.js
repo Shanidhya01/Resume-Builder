@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import { resolvePublicResumeBySlug } from '@/lib/publicResumes.server';
+import { buildPublicSlugPath } from '@/lib/publicSlug';
 import PublicResumeView from '@/components/Resume/PublicResumeView';
 import PublicResumeActions from '@/components/Resume/PublicResumeActions';
 import ViewTracker from '@/components/Resume/ViewTracker';
@@ -57,7 +58,10 @@ export async function generateMetadata({ params }) {
     const description = (
         resume.summary?.summary?.trim() || `View ${name}'s professional resume, built with HireReady.`
     ).slice(0, 160);
-    const url = `${SITE_URL}/r/${slug}`;
+    // Canonical always points at the SEO-friendly form, even when this
+    // request came in on a bare legacy link — the real slug (source of
+    // truth) is unchanged, only the human-readable prefix is added.
+    const url = `${SITE_URL}/r/${buildPublicSlugPath(resume, resume.slug)}`;
 
     return {
         title: `${title} | HireReady`,
@@ -108,7 +112,7 @@ export default async function PublicResumePage({ params }) {
     if (!resume) notFound();
 
     const name = resume.contact?.name || resume.name || 'Resume';
-    const url = `${SITE_URL}/r/${slug}`;
+    const url = `${SITE_URL}/r/${buildPublicSlugPath(resume, resume.slug)}`;
 
     const jsonLd = {
         '@context': 'https://schema.org',
@@ -131,10 +135,10 @@ export default async function PublicResumePage({ params }) {
                 aria-hidden="true"
             />
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-            <ViewTracker slug={slug} />
+            <ViewTracker slug={resume.slug} />
             <div className="relative">
                 <PublicResumeView resume={resume} />
-                <PublicResumeActions resume={resume} slug={slug} publicUrl={url} />
+                <PublicResumeActions resume={resume} slug={resume.slug} publicUrl={url} />
                 <p className="mt-8 text-center text-xs text-fg-subtle print:hidden">
                     Built with <span className="font-semibold text-accent">HireReady</span>
                 </p>
