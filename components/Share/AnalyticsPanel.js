@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { FaEye, FaDownload, FaShareAlt, FaUsers, FaClock } from 'react-icons/fa';
 import { FaXmark } from 'react-icons/fa6';
 import { getPublicAnalytics } from '@/lib/publicResumes';
@@ -42,7 +43,9 @@ const AnalyticsPanel = ({ resumeId, uid, onClose }) => {
         };
     }, [resumeId, uid]);
 
-    return (
+    // Portal to <body> so the resume card's hover `transform` can't re-anchor
+    // this fixed-position modal (see ShareDialog for the full explanation).
+    return createPortal(
         <div
             className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm"
             onMouseDown={e => {
@@ -97,7 +100,8 @@ const AnalyticsPanel = ({ resumeId, uid, onClose }) => {
                     </>
                 )}
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 };
 

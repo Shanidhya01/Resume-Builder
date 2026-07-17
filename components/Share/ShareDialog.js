@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import dynamic from 'next/dynamic';
 import {
     FaCopy, FaExternalLinkAlt, FaLinkedin, FaEnvelope, FaShareAlt, FaToggleOn, FaToggleOff, FaSync, FaCheck,
@@ -8,6 +9,7 @@ import {
 import { FaXmark, FaXTwitter } from 'react-icons/fa6';
 import { useToast } from '@/context/ToastContext';
 import { validateCustomSlug } from '@/lib/publicResumes';
+import { friendlyFirestoreError } from '@/lib/firestoreErrors';
 import { ChartSkeleton } from '@/components/Ats/Skeleton';
 import useModalA11y from '@/hooks/useModalA11y';
 
@@ -65,7 +67,7 @@ const ShareDialog = ({ resumeName = 'Resume', publicUrl, owner, onClose }) => {
             }
             setSlugInput(result.slug);
         } catch (err) {
-            showToast(err.message || 'Could not set custom URL.', { tone: 'error' });
+            showToast(friendlyFirestoreError(err), { tone: 'error' });
         } finally {
             setSlugBusy(false);
         }
@@ -79,7 +81,7 @@ const ShareDialog = ({ resumeName = 'Resume', publicUrl, owner, onClose }) => {
             setSlugInput(slug);
             showToast('Generated a new share link.', { tone: 'success' });
         } catch (err) {
-            showToast(err.message || 'Could not regenerate the link.', { tone: 'error' });
+            showToast(friendlyFirestoreError(err), { tone: 'error' });
         } finally {
             setSlugBusy(false);
         }
@@ -98,13 +100,17 @@ const ShareDialog = ({ resumeName = 'Resume', publicUrl, owner, onClose }) => {
                 showToast('Sharing enabled!', { tone: 'success' });
             }
         } catch (err) {
-            showToast(err.message || 'Could not update sharing status.', { tone: 'error' });
+            showToast(friendlyFirestoreError(err), { tone: 'error' });
         } finally {
             setSlugBusy(false);
         }
     };
 
-    return (
+    // Portal to <body>: the dialog is mounted inside a resume card that uses a
+    // hover `transform`, and a transformed ancestor makes `position: fixed`
+    // resolve against the card instead of the viewport — causing the modal to
+    // snap around (flicker) and dodge clicks. Rendering on <body> avoids that.
+    return createPortal(
         <div
             className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm"
             onMouseDown={e => {
@@ -252,7 +258,8 @@ const ShareDialog = ({ resumeName = 'Resume', publicUrl, owner, onClose }) => {
                     </div>
                 )}
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 };
 

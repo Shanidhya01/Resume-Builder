@@ -6,7 +6,9 @@ const nextConfig = {
     // resolves its fake worker with a runtime require() and mammoth ships CJS —
     // keeping both external lets Node load them natively instead of webpack
     // trying (and failing) to statically bundle them.
-    serverExternalPackages: ['pdfjs-dist', 'mammoth'],
+    // firebase-admin pulls in native/gRPC Node modules that must be loaded by
+    // Node at runtime, not statically bundled by webpack.
+    serverExternalPackages: ['pdfjs-dist', 'mammoth', 'firebase-admin'],
     webpack: config => {
         config.resolve.alias.canvas = false;
         return config;

@@ -8,6 +8,7 @@ import useAtsAnalysis from '@/hooks/useAtsAnalysis';
 import Card from '@/components/Ats/Card';
 import Badge from '@/components/Ats/Badge';
 import DashboardNav from '@/components/Ats/DashboardNav';
+import ResumeBoundary from '@/components/Ats/ResumeBoundary';
 import { ChartSkeleton } from '@/components/Ats/Skeleton';
 import { extractKeywords } from '@/lib/ats/keywords';
 import { resumeToText } from '@/lib/ats/textUtils';
@@ -89,7 +90,9 @@ function KeywordsContent() {
 
 const KeywordsPage = () => (
     <ProtectedRoute>
-        <KeywordsContent />
+        <ResumeBoundary>
+            <KeywordsContent />
+        </ResumeBoundary>
     </ProtectedRoute>
 );
 

@@ -7,6 +7,7 @@ import { Plus, Upload, Sparkles } from 'lucide-react';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import { listResumesForUser, createResume, duplicateResume, deleteResume, renameResume } from '@/lib/resumes';
+import { withFirestoreRetry, friendlyFirestoreError, logDev } from '@/lib/firestoreErrors';
 import ResumeCard from '@/components/Dashboard/ResumeCard';
 import DashboardStats from '@/components/Dashboard/DashboardStats';
 import QuickActions from '@/components/Dashboard/QuickActions';
@@ -34,14 +35,14 @@ const DashboardContent = () => {
 
     useEffect(() => {
         let cancelled = false;
-        listResumesForUser(user.uid)
+        withFirestoreRetry(() => listResumesForUser(user.uid))
             .then(list => {
                 if (cancelled) return;
                 setResumes(list);
                 setError('');
             })
-            .catch(() => {
-                if (!cancelled) setError('Could not load your resumes.');
+            .catch(err => {
+                if (!cancelled) setError(friendlyFirestoreError(err));
             })
             .finally(() => {
                 if (!cancelled) setLoading(false);
@@ -59,11 +60,15 @@ const DashboardContent = () => {
 
     const handleCreate = useCallback(async () => {
         setCreating(true);
+        setError('');
         try {
-            const id = await createResume(user.uid, 'Untitled Resume', DEFAULT_TEMPLATE_ID);
+            const id = await withFirestoreRetry(() => createResume(user.uid, 'Untitled Resume', DEFAULT_TEMPLATE_ID));
             router.push(`/editor/${id}`);
         } catch (err) {
-            setError('Could not create a new resume.');
+            // Surface a friendly message so a failed write can't hide behind a
+            // stuck "Creating…" button; log details in development only.
+            logDev('Create resume failed:', err);
+            setError(friendlyFirestoreError(err));
             setCreating(false);
         }
     }, [user.uid, router]);
@@ -81,19 +86,19 @@ const DashboardContent = () => {
 
     const handleDuplicate = async id => {
         try {
-            await duplicateResume(id, user.uid);
+            await withFirestoreRetry(() => duplicateResume(id, user.uid));
             fetchResumes();
         } catch (err) {
-            setError('Could not duplicate resume.');
+            setError(friendlyFirestoreError(err));
         }
     };
 
     const handleRename = async (id, name) => {
         try {
-            await renameResume(id, name, user.uid);
+            await withFirestoreRetry(() => renameResume(id, name, user.uid));
             setResumes(prev => prev.map(r => (r.id === id ? { ...r, name } : r)));
         } catch (err) {
-            setError('Could not rename resume.');
+            setError(friendlyFirestoreError(err));
         }
     };
 
@@ -101,10 +106,10 @@ const DashboardContent = () => {
         const id = pendingDeleteId;
         setPendingDeleteId(null);
         try {
-            await deleteResume(id, user.uid);
+            await withFirestoreRetry(() => deleteResume(id, user.uid));
             setResumes(prev => prev.filter(r => r.id !== id));
         } catch (err) {
-            setError('Could not delete resume.');
+            setError(friendlyFirestoreError(err));
         }
     };
 

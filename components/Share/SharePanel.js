@@ -5,6 +5,7 @@ import { FaShareAlt, FaCopy, FaChartBar } from 'react-icons/fa';
 import dynamic from 'next/dynamic';
 import { useToast } from '@/context/ToastContext';
 import { publishResume, unpublishResume, regenerateSlug, setCustomSlug } from '@/lib/publicResumes';
+import { withFirestoreRetry } from '@/lib/firestoreErrors';
 
 const ShareDialog = dynamic(() => import('./ShareDialog'), { ssr: false });
 const AnalyticsPanel = dynamic(() => import('./AnalyticsPanel'), { ssr: false });
@@ -23,25 +24,28 @@ const SharePanel = ({ resume, uid, onUpdate }) => {
 
     const publicUrl = resume.isPublic && resume.slug ? `${siteOrigin()}/r/${resume.slug}` : null;
 
+    // Each mutation retries once on a transient connectivity error before it
+    // surfaces. onUpdate runs only after the Firestore write resolves, so a
+    // failure leaves the dashboard's Public/Private state untouched (consistent).
     const handlePublish = async () => {
-        const slug = await publishResume(resume.id, uid);
+        const slug = await withFirestoreRetry(() => publishResume(resume.id, uid));
         onUpdate(resume.id, { isPublic: true, slug });
         return slug;
     };
 
     const handleUnpublish = async () => {
-        await unpublishResume(resume.id, uid);
+        await withFirestoreRetry(() => unpublishResume(resume.id, uid));
         onUpdate(resume.id, { isPublic: false });
     };
 
     const handleRegenerateSlug = async () => {
-        const slug = await regenerateSlug(resume.id, uid);
+        const slug = await withFirestoreRetry(() => regenerateSlug(resume.id, uid));
         onUpdate(resume.id, { slug, customSlug: null, isPublic: true });
         return slug;
     };
 
     const handleSetCustomSlug = async desired => {
-        const result = await setCustomSlug(resume.id, uid, desired);
+        const result = await withFirestoreRetry(() => setCustomSlug(resume.id, uid, desired));
         onUpdate(resume.id, { slug: result.slug, customSlug: result.isCustom ? result.slug : null, isPublic: true });
         return result;
     };

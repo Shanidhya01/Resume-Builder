@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { rateLimitPublic, resolveSlugFromBody } from '@/lib/publicRequest';
-import { recordDownload } from '@/lib/publicResumes';
+import { recordDownload } from '@/lib/publicResumes.server';
+
+export const runtime = 'nodejs';
 
 export async function POST(request) {
     const limited = rateLimitPublic(request, 'download');

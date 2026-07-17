@@ -3,53 +3,48 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /resumes/{resumeId} {
-      // Owner: full read (get + list), update, delete.
+      // Owner: full read (get + list), create, update, delete.
       allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.ownerId;
       allow create: if request.auth != null && request.auth.uid == request.resource.data.ownerId;
 
-      // Public sharing (Phase 6): a published resume can be fetched by its
-      // exact document id, but never listed/queried — so the only way to
-      // reach one is through its slug mapping in /publicSlugs, not by
-      // enumerating this collection.
+      // Public sharing: anonymous visitors may READ a published resume by its
+      // exact document id, but never list/query the collection — the only way
+      // to reach one is its slug mapping in /publicSlugs. This is defense in
+      // depth: the primary public read path (/r/[slug]) now runs server-side
+      // through the Admin SDK. There is deliberately NO public `update` — every
+      // analytics counter (view/download/share) is written by trusted server
+      // code via the Admin SDK, so anonymous clients can never modify a resume.
       allow get: if resource.data.isPublic == true;
-
-      // Public sharing (Phase 6): anonymous visitors may bump analytics
-      // counters on a published resume, but only those fields — content,
-      // ownerId, isPublic, slug and customSlug remain owner-only.
-      allow update: if resource.data.isPublic == true &&
-        request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['viewCount', 'downloadCount', 'shareCount', 'lastViewed', 'updatedPublicAt']);
 
       match /versions/{versionId} {
         allow read, write: if request.auth != null &&
           request.auth.uid == get(/databases/$(database)/documents/resumes/$(resumeId)).data.ownerId;
       }
 
-      // Unique-visitor tracking (Phase 6): one marker doc per hashed
-      // visitor id. Owner reads them (via a count() query) for analytics;
-      // anonymous visitors may only write their own marker, and only while
-      // the parent resume is published.
+      // Unique-visitor markers. Owner reads them (via a count() query) for
+      // analytics; writes are performed exclusively by the Admin SDK (server),
+      // which bypasses these rules — hence no anonymous `write` rule here.
       match /visitors/{visitorId} {
         allow read: if request.auth != null &&
           request.auth.uid == get(/databases/$(database)/documents/resumes/$(resumeId)).data.ownerId;
-        allow write: if get(/databases/$(database)/documents/resumes/$(resumeId)).data.isPublic == true;
       }
     }
 
-    // Phase 6: slug -> resumeId lookup. Public `get` only (no `list`), so
-    // slugs can never be enumerated — only resolved one at a time by
-    // someone who already has the exact link. `create` requires the caller
-    // to be the resume's owner, and Firestore's create semantics (fails if
-    // the doc already exists) make slug claiming first-come-first-served.
+    // slug -> resumeId lookup. `get` only (never `list`), so slugs can't be
+    // enumerated. Restricted to signed-in users because the only client-side
+    // reader is the owner's slug-availability check during publish; anonymous
+    // public resolution happens server-side via the Admin SDK. `create` requires
+    // the caller to own the target resume, and Firestore's create semantics
+    // (fails if the doc exists) make slug claiming first-come-first-served.
     match /publicSlugs/{slug} {
-      allow get: if true;
+      allow get: if request.auth != null;
       allow create: if request.auth != null && request.auth.uid == request.resource.data.ownerId;
       allow delete: if request.auth != null && request.auth.uid == resource.data.ownerId;
     }
 
-    // Phase 7: import history log. One doc per import attempt, strictly
-    // owner-scoped. Entries are immutable once written (no update) — the
-    // owner can only read and delete them.
+    // Import history log. One doc per import attempt, strictly owner-scoped.
+    // Entries are immutable once written (no update) — the owner can only read
+    // and delete them.
     match /importHistory/{entryId} {
       allow read, delete: if request.auth != null && request.auth.uid == resource.data.ownerId;
       allow create: if request.auth != null && request.auth.uid == request.resource.data.ownerId;

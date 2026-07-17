@@ -9,6 +9,7 @@ import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import Button from '@/components/UI/Button';
 import { useAuth } from '@/context/AuthContext';
 import { getResume } from '@/lib/resumes';
+import { withFirestoreRetry, friendlyFirestoreError } from '@/lib/firestoreErrors';
 import { loadResume } from '@/store/slices/resumeSlice';
 import useAutoSave from '@/hooks/useAutoSave';
 import useUndoRedo from '@/hooks/useUndoRedo';
@@ -67,38 +68,44 @@ const EditorContent = () => {
     const { user } = useAuth();
     const resume = useSelector(state => state.resume);
 
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
     const [historyOpen, setHistoryOpen] = useState(false);
+    // Tracks which resume Redux has actually been hydrated from Firestore.
+    // Autosave stays disabled until this matches the current resumeId, so a
+    // pre-load / stale-navigation Redux state can never be written over the doc.
+    const [hydratedId, setHydratedId] = useState(null);
+    // Errors are tagged with the resumeId they belong to, so navigating to a
+    // different resume clears a stale error without a synchronous effect reset.
+    const [errorState, setErrorState] = useState(null);
 
     const requestedTab = searchParams?.get('tab');
     const tab = requestedTab && ResumeFields[requestedTab] ? requestedTab : DEFAULT_TAB;
 
-    // Data loads in the effect via promise callbacks (no sync setState in the
-    // effect body); bumping reloadKey re-runs it for retry / post-restore refresh.
+    // Bumping reloadKey re-runs the load for retry / post-restore refresh.
     const [reloadKey, setReloadKey] = useState(0);
+
+    // Derived, so switching resumeId instantly reflects the new resume's state
+    // without any in-effect setState (which React flags as cascading renders).
+    const error = errorState?.id === resumeId ? errorState.message : '';
+    const loading = !error && hydratedId !== resumeId;
 
     useEffect(() => {
         let cancelled = false;
-        getResume(resumeId)
+        withFirestoreRetry(() => getResume(resumeId))
             .then(data => {
                 if (cancelled) return;
                 if (!data) {
-                    setError('Resume not found.');
+                    setErrorState({ id: resumeId, message: 'Resume not found. It may have been deleted.' });
                     return;
                 }
                 if (data.ownerId !== user.uid) {
-                    setError('You do not have access to this resume.');
+                    setErrorState({ id: resumeId, message: 'You do not have access to this resume.' });
                     return;
                 }
                 dispatch(loadResume(data));
-                setError('');
+                setHydratedId(resumeId);
             })
-            .catch(() => {
-                if (!cancelled) setError('Could not load this resume.');
-            })
-            .finally(() => {
-                if (!cancelled) setLoading(false);
+            .catch(err => {
+                if (!cancelled) setErrorState({ id: resumeId, message: friendlyFirestoreError(err) });
             });
         return () => {
             cancelled = true;
@@ -106,12 +113,13 @@ const EditorContent = () => {
     }, [resumeId, user.uid, dispatch, reloadKey]);
 
     const loadFromFirestore = useCallback(() => {
-        setLoading(true);
-        setError('');
+        setErrorState(null);
         setReloadKey(k => k + 1);
     }, []);
 
-    const { status: saveStatus, retry } = useAutoSave(resumeId, resume, user.uid);
+    // Only autosave once Firestore has finished hydrating Redux for THIS resume.
+    const autoSaveEnabled = hydratedId === resumeId && !error;
+    const { status: saveStatus, retry } = useAutoSave(resumeId, resume, user.uid, autoSaveEnabled);
     const { undo, redo, canUndo, canRedo } = useUndoRedo(resume);
     const { info } = useToast();
 

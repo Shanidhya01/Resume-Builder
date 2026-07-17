@@ -13,6 +13,7 @@ import ProgressRing from '@/components/Ats/ProgressRing';
 import Badge from '@/components/Ats/Badge';
 import Card from '@/components/Ats/Card';
 import DashboardNav from '@/components/Ats/DashboardNav';
+import ResumeBoundary from '@/components/Ats/ResumeBoundary';
 import { ChartSkeleton } from '@/components/Ats/Skeleton';
 import { setJobDescription, setJdAnalysis, jdInsightsStart, jdInsightsSuccess, jdInsightsError, snapshotPrevious } from '@/store/slices/atsSlice';
 import { analyzeKeywords } from '@/lib/ats/keywords';
@@ -363,7 +364,9 @@ function AnalyticsContent() {
 
 const AnalyticsPage = () => (
     <ProtectedRoute>
-        <AnalyticsContent />
+        <ResumeBoundary>
+            <AnalyticsContent />
+        </ResumeBoundary>
     </ProtectedRoute>
 );
 

@@ -18,6 +18,7 @@
     "change-case": "^5.4.4",
     "docx": "^9.7.1",
     "firebase": "^12.16.0",
+    "firebase-admin": "^14.1.0",
     "framer-motion": "^12.23.24",
     "geist": "^1.7.2",
     "lucide-react": "^0.546.0",
@@ -37,6 +38,7 @@
     "react-redux": "^9.1.1",
     "recharts": "^3.9.2",
     "sass": "^1.74.1",
+    "server-only": "^0.0.1",
     "tailwind-merge": "^2.2.2"
   },
   "devDependencies": {

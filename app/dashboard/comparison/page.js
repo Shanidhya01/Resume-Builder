@@ -7,6 +7,7 @@ import useAtsAnalysis from '@/hooks/useAtsAnalysis';
 import Card from '@/components/Ats/Card';
 import Badge from '@/components/Ats/Badge';
 import DashboardNav from '@/components/Ats/DashboardNav';
+import ResumeBoundary from '@/components/Ats/ResumeBoundary';
 import EmptyState from '@/components/UI/EmptyState';
 import Button from '@/components/UI/Button';
 import { snapshotPrevious } from '@/store/slices/atsSlice';
@@ -150,7 +151,9 @@ function ComparisonContent() {
 
 const ComparisonPage = () => (
     <ProtectedRoute>
-        <ComparisonContent />
+        <ResumeBoundary>
+            <ComparisonContent />
+        </ResumeBoundary>
     </ProtectedRoute>
 );
 

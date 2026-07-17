@@ -7,6 +7,7 @@ import useAtsAnalysis from '@/hooks/useAtsAnalysis';
 import Badge from '@/components/Ats/Badge';
 import Card from '@/components/Ats/Card';
 import DashboardNav from '@/components/Ats/DashboardNav';
+import ResumeBoundary from '@/components/Ats/ResumeBoundary';
 import { setSuggestionStatus } from '@/store/slices/atsSlice';
 import { FaCheck, FaTimes, FaCheckDouble, FaUndo } from 'react-icons/fa';
 
@@ -117,7 +118,9 @@ function ImprovementsContent() {
 
 const ImprovementsPage = () => (
     <ProtectedRoute>
-        <ImprovementsContent />
+        <ResumeBoundary>
+            <ImprovementsContent />
+        </ResumeBoundary>
     </ProtectedRoute>
 );
 

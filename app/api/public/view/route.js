@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { rateLimitPublic, resolveSlugFromBody, hashVisitor } from '@/lib/publicRequest';
-import { recordView } from '@/lib/publicResumes';
+import { recordView } from '@/lib/publicResumes.server';
+
+export const runtime = 'nodejs';
 
 export async function POST(request) {
     const limited = rateLimitPublic(request, 'view');

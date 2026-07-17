@@ -6,6 +6,7 @@ import Card from '@/components/Ats/Card';
 import ProgressBar from '@/components/Ats/ProgressBar';
 import Badge from '@/components/Ats/Badge';
 import DashboardNav from '@/components/Ats/DashboardNav';
+import ResumeBoundary from '@/components/Ats/ResumeBoundary';
 
 function RecruiterContent() {
     const analysis = useAtsAnalysis();
@@ -96,7 +97,9 @@ function RecruiterContent() {
 
 const RecruiterPage = () => (
     <ProtectedRoute>
-        <RecruiterContent />
+        <ResumeBoundary>
+            <RecruiterContent />
+        </ResumeBoundary>
     </ProtectedRoute>
 );
 

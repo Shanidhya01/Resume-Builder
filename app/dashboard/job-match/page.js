@@ -8,6 +8,7 @@ import Card from '@/components/Ats/Card';
 import Badge from '@/components/Ats/Badge';
 import ProgressBar from '@/components/Ats/ProgressBar';
 import DashboardNav from '@/components/Ats/DashboardNav';
+import ResumeBoundary from '@/components/Ats/ResumeBoundary';
 import ErrorState from '@/components/Ats/ErrorState';
 import { CardSkeleton } from '@/components/Ats/Skeleton';
 import Button from '@/components/UI/Button';
@@ -130,7 +131,9 @@ function JobMatchContent() {
 
 const JobMatchPage = () => (
     <ProtectedRoute>
-        <JobMatchContent />
+        <ResumeBoundary>
+            <JobMatchContent />
+        </ResumeBoundary>
     </ProtectedRoute>
 );
 
