@@ -60,12 +60,16 @@ const QRCodeBlock = ({ url, fileName = 'resume-qr' }) => {
     }
 
     return (
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col items-center gap-3 rounded-2xl border border-line bg-gradient-to-b from-surface-2/60 to-surface p-4">
             {!dataUrl ? (
                 <div className="h-[180px] w-[180px] animate-pulse rounded-lg bg-surface-2" role="status" aria-label="Generating QR code" />
             ) : (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={dataUrl} alt="QR code linking to the public resume" className="h-[180px] w-[180px] rounded-lg bg-white p-2" />
+                <img
+                    src={dataUrl}
+                    alt="QR code linking to the public resume"
+                    className="h-[180px] w-[180px] rounded-lg bg-white p-2 shadow-ds-sm ring-1 ring-line"
+                />
             )}
             <div className="flex gap-2">
                 <button

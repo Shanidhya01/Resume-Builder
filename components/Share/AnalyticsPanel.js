@@ -14,9 +14,11 @@ const formatTimestamp = ts => {
 };
 
 const StatTile = ({ icon: Icon, label, value }) => (
-    <div className="flex flex-col items-center gap-1 rounded-xl border border-line bg-surface-2 p-4 text-center">
-        <Icon className="h-4 w-4 text-accent" aria-hidden="true" />
-        <span className="text-2xl font-black text-fg">{value}</span>
+    <div className="flex flex-col items-center gap-1 rounded-xl border border-line bg-gradient-to-b from-surface-2/80 to-surface-2/40 p-4 text-center shadow-ds-sm transition-transform hover:-translate-y-0.5">
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10 text-accent">
+            <Icon className="h-4 w-4" aria-hidden="true" />
+        </span>
+        <span className="mt-1 text-2xl font-black text-fg">{value}</span>
         <span className="text-xs text-fg-muted">{label}</span>
     </div>
 );

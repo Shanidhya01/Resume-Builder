@@ -7,7 +7,6 @@ import useAI from '@/hooks/useAI';
 import Card from '@/components/Ats/Card';
 import Badge from '@/components/Ats/Badge';
 import ProgressBar from '@/components/Ats/ProgressBar';
-import DashboardNav from '@/components/Ats/DashboardNav';
 import ResumeBoundary from '@/components/Ats/ResumeBoundary';
 import ErrorState from '@/components/Ats/ErrorState';
 import { CardSkeleton } from '@/components/Ats/Skeleton';
@@ -43,8 +42,6 @@ function JobMatchContent() {
                 <h1 className="text-2xl font-bold text-fg md:text-3xl">Job Description Analyzer</h1>
                 <p className="text-sm text-fg-muted">Paste a job description to see how well your resume matches, powered by AI.</p>
             </div>
-
-            <DashboardNav />
 
             <Card title="Job Description" className="mb-8">
                 <label htmlFor="job-description" className="sr-only">Job description</label>

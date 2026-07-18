@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { Wand2, RotateCcw, Save } from 'lucide-react';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import Button from '@/components/UI/Button';
-import DashboardNav from '@/components/Ats/DashboardNav';
 import FileDropzone from '@/components/ImportExport/FileDropzone';
 import ImportReview from '@/components/ImportExport/ImportReview';
 import DuplicateResolver from '@/components/ImportExport/DuplicateResolver';
@@ -269,8 +268,6 @@ const ImportContent = () => {
                     Files are processed in memory and never stored.
                 </p>
             </div>
-
-            <DashboardNav />
 
             <nav aria-label="Import progress" className="mb-6 flex items-center gap-2 text-xs font-semibold">
                 {Object.entries(STEP_LABELS).map(([key, label], index) => (

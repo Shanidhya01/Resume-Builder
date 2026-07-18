@@ -7,7 +7,6 @@ import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import useAtsAnalysis from '@/hooks/useAtsAnalysis';
 import Card from '@/components/Ats/Card';
 import Badge from '@/components/Ats/Badge';
-import DashboardNav from '@/components/Ats/DashboardNav';
 import ResumeBoundary from '@/components/Ats/ResumeBoundary';
 import { ChartSkeleton } from '@/components/Ats/Skeleton';
 import { extractKeywords } from '@/lib/ats/keywords';
@@ -43,8 +42,6 @@ function KeywordsContent() {
                 <h1 className="text-2xl font-bold text-fg md:text-3xl">Keyword Dashboard</h1>
                 <p className="text-sm text-fg-muted">Everything the ATS engine sees when it scans your resume for keywords.</p>
             </div>
-
-            <DashboardNav />
 
             <Card title="Top Resume Keywords" className="mb-8">
                 <KeywordDistributionChart keywords={keywordCounts} />

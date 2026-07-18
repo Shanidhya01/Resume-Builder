@@ -11,13 +11,39 @@ import { withFirestoreRetry, friendlyFirestoreError, logDev } from '@/lib/firest
 import ResumeCard from '@/components/Dashboard/ResumeCard';
 import DashboardStats from '@/components/Dashboard/DashboardStats';
 import QuickActions from '@/components/Dashboard/QuickActions';
+import SearchFilterSortBar from '@/components/Dashboard/SearchFilterSortBar';
+import RecentActivity from '@/components/Dashboard/RecentActivity';
+import AnalyticsSummary from '@/components/Dashboard/AnalyticsSummary';
 import { SkeletonGrid } from '@/components/UI/Skeleton';
 import EmptyState from '@/components/UI/EmptyState';
 import ErrorMessage from '@/components/UI/ErrorMessage';
 import ConfirmModal from '@/components/UI/ConfirmModal';
 import Button from '@/components/UI/Button';
-import DashboardNav from '@/components/Ats/DashboardNav';
 import { DEFAULT_TEMPLATE_ID } from '@/config/templates';
+
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
+const filterAndSortResumes = (resumes, search, filter, sort) => {
+    const q = search.trim().toLowerCase();
+    let list = resumes;
+
+    if (q) list = list.filter(r => r.name?.toLowerCase().includes(q));
+
+    if (filter === 'published') list = list.filter(r => r.isPublic);
+    else if (filter === 'private') list = list.filter(r => !r.isPublic);
+    else if (filter === 'recent') {
+        const cutoff = Date.now() - SEVEN_DAYS_MS;
+        list = list.filter(r => (r.updatedAt?.toMillis?.() ?? 0) >= cutoff);
+    }
+
+    const sorted = [...list];
+    if (sort === 'newest') sorted.sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
+    else if (sort === 'oldest') sorted.sort((a, b) => (a.createdAt?.toMillis?.() ?? 0) - (b.createdAt?.toMillis?.() ?? 0));
+    else if (sort === 'views') sorted.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
+    else sorted.sort((a, b) => (b.updatedAt?.toMillis?.() ?? 0) - (a.updatedAt?.toMillis?.() ?? 0)); // 'updated' default
+
+    return sorted;
+};
 
 const DashboardContent = () => {
     const { user } = useAuth();
@@ -27,7 +53,12 @@ const DashboardContent = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [creating, setCreating] = useState(false);
+    const [aiGenerating, setAiGenerating] = useState(false);
     const [pendingDeleteId, setPendingDeleteId] = useState(null);
+
+    const [search, setSearch] = useState('');
+    const [filter, setFilter] = useState('all');
+    const [sort, setSort] = useState('updated');
 
     // Data loads in the effect via promise callbacks (no sync setState in the
     // effect body); bumping reloadKey re-runs it for retry / post-duplicate refresh.
@@ -70,6 +101,22 @@ const DashboardContent = () => {
             logDev('Create resume failed:', err);
             setError(friendlyFirestoreError(err));
             setCreating(false);
+        }
+    }, [user.uid, router]);
+
+    // Reuses the exact same createResume() call as "New Resume" — only the
+    // post-create redirect differs (?ai=1 tells the editor to default its
+    // already-existing AI Assistant panel to open).
+    const handleAiGenerate = useCallback(async () => {
+        setAiGenerating(true);
+        setError('');
+        try {
+            const id = await withFirestoreRetry(() => createResume(user.uid, 'Untitled Resume', DEFAULT_TEMPLATE_ID));
+            router.push(`/editor/${id}?ai=1`);
+        } catch (err) {
+            logDev('AI-generate resume failed:', err);
+            setError(friendlyFirestoreError(err));
+            setAiGenerating(false);
         }
     }, [user.uid, router]);
 
@@ -117,8 +164,12 @@ const DashboardContent = () => {
         setResumes(prev => prev.map(r => (r.id === id ? { ...r, ...patch } : r)));
     }, []);
 
+    const visibleResumes = useMemo(() => filterAndSortResumes(resumes, search, filter, sort), [resumes, search, filter, sort]);
     const recentResumes = useMemo(() => resumes.slice(0, 3), [resumes]);
+    const isFiltering = search.trim() !== '' || filter !== 'all';
     const firstName = user.displayName ? user.displayName.split(' ')[0] : null;
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
     return (
         <div className="mx-auto mt-8 max-w-screen-xl px-4 pb-16 md:mt-10">
@@ -126,15 +177,17 @@ const DashboardContent = () => {
             <section className="relative mb-8 overflow-hidden rounded-3xl border border-line bg-surface p-6 shadow-ds-sm md:p-8">
                 <div className="pointer-events-none absolute inset-0 bg-grid opacity-[0.4] [mask-image:radial-gradient(ellipse_at_top_right,black,transparent_70%)]" aria-hidden="true" />
                 <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-accent/20 blur-3xl" aria-hidden="true" />
+                <div className="pointer-events-none absolute -left-16 bottom-0 h-48 w-48 rounded-full bg-indigo-500/10 blur-3xl" aria-hidden="true" />
                 <div className="relative flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
                     <div>
                         <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-2 px-2.5 py-1 text-xs font-medium text-fg-muted">
                             <Sparkles className="h-3 w-3 text-accent" /> Your workspace
                         </span>
                         <h1 className="mt-3 text-2xl font-bold tracking-tight text-fg md:text-3xl">
-                            Welcome back{firstName ? `, ${firstName}` : ''}
+                            {greeting}{firstName ? `, ${firstName}` : ''} 👋
                         </h1>
-                        <p className="mt-1 text-sm text-fg-muted">
+                        <p className="mt-1 text-sm text-fg-muted">Let&apos;s build your next opportunity.</p>
+                        <p className="mt-2 text-xs text-fg-subtle">
                             {resumes.length} resume{resumes.length !== 1 ? 's' : ''} &middot; {user.email}
                         </p>
                     </div>
@@ -149,18 +202,22 @@ const DashboardContent = () => {
                 </div>
             </section>
 
-            <DashboardNav />
-
             {error && <ErrorMessage message={error} onRetry={fetchResumes} />}
 
             {loading ? (
                 <SkeletonGrid />
             ) : resumes.length === 0 ? (
                 <EmptyState
+                    icon={Sparkles}
                     title="No resumes yet"
                     description="Create your first resume, or import an existing one to get started."
                     actionLabel="Create New Resume"
                     onAction={handleCreate}
+                    secondaryAction={
+                        <Button as={Link} href="/dashboard/import" variant="outline" size="md" leftIcon={<Upload className="h-4 w-4" />}>
+                            Import instead
+                        </Button>
+                    }
                 />
             ) : (
                 <>
@@ -168,10 +225,27 @@ const DashboardContent = () => {
 
                     <div className="mb-8">
                         <h2 className="mb-3 text-sm font-semibold text-fg-muted">Quick Actions</h2>
-                        <QuickActions />
+                        <QuickActions onAiGenerate={handleAiGenerate} aiGenerating={aiGenerating} />
                     </div>
 
-                    {recentResumes.length > 0 && (
+                    <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+                        <div className="lg:col-span-2">
+                            <RecentActivity resumes={resumes} />
+                        </div>
+                        <AnalyticsSummary resumes={resumes} />
+                    </div>
+
+                    <SearchFilterSortBar
+                        search={search}
+                        onSearchChange={setSearch}
+                        filter={filter}
+                        onFilterChange={setFilter}
+                        sort={sort}
+                        onSortChange={setSort}
+                        resultCount={visibleResumes.length}
+                    />
+
+                    {!isFiltering && recentResumes.length > 0 && (
                         <div className="mb-6">
                             <h2 className="mb-3 text-sm font-semibold text-fg-muted">Recently Edited</h2>
                             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -190,20 +264,28 @@ const DashboardContent = () => {
                         </div>
                     )}
 
-                    <h2 className="mb-3 text-sm font-semibold text-fg-muted">All Resumes</h2>
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        {resumes.map(resume => (
-                            <ResumeCard
-                                key={resume.id}
-                                resume={resume}
-                                uid={user.uid}
-                                onDuplicate={handleDuplicate}
-                                onRename={handleRename}
-                                onDelete={setPendingDeleteId}
-                                onShareUpdate={handleShareUpdate}
-                            />
-                        ))}
-                    </div>
+                    <h2 className="mb-3 text-sm font-semibold text-fg-muted">{isFiltering ? 'Results' : 'All Resumes'}</h2>
+                    {visibleResumes.length === 0 ? (
+                        <EmptyState
+                            icon={Sparkles}
+                            title="No matching resumes"
+                            description="Try a different search term or clear the filters."
+                        />
+                    ) : (
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                            {visibleResumes.map(resume => (
+                                <ResumeCard
+                                    key={resume.id}
+                                    resume={resume}
+                                    uid={user.uid}
+                                    onDuplicate={handleDuplicate}
+                                    onRename={handleRename}
+                                    onDelete={setPendingDeleteId}
+                                    onShareUpdate={handleShareUpdate}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </>
             )}
 

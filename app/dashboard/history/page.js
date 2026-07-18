@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FaTrash, FaFilePdf, FaFileWord, FaFileAlt, FaHistory } from 'react-icons/fa';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
-import DashboardNav from '@/components/Ats/DashboardNav';
 import Badge from '@/components/Ats/Badge';
 import ErrorMessage from '@/components/UI/ErrorMessage';
 import EmptyState from '@/components/UI/EmptyState';
@@ -88,8 +87,6 @@ const HistoryContent = () => {
                 <h1 className="text-2xl font-bold text-fg md:text-3xl">Import History</h1>
                 <p className="mt-1 text-sm text-fg-muted">Every resume import and backup restore, with parse results and confidence.</p>
             </div>
-
-            <DashboardNav />
 
             {error && <ErrorMessage message={error} onRetry={retryFetch} />}
 

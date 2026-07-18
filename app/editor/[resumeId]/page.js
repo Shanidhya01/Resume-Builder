@@ -40,7 +40,9 @@ const EditorContent = () => {
 
     const [historyOpen, setHistoryOpen] = useState(false);
     const [previewMode, setPreviewMode] = useState(false); // mobile edit/preview toggle
-    const [aiOpen, setAiOpen] = useState(false);
+    // Dashboard's "AI Generate" quick action links here with ?ai=1 so the AI
+    // Assistant panel opens pre-expanded instead of collapsed by default.
+    const [aiOpen, setAiOpen] = useState(() => searchParams?.get('ai') === '1');
     const [downloadInfo, setDownloadInfo] = useState({ url: null, filename: null });
     // Metadata that lives on the Firestore doc but not in the Redux content
     // slice (name, public-share state) — captured alongside `loadResume` so

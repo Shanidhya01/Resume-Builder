@@ -12,7 +12,6 @@ import ProgressBar from '@/components/Ats/ProgressBar';
 import ProgressRing from '@/components/Ats/ProgressRing';
 import Badge from '@/components/Ats/Badge';
 import Card from '@/components/Ats/Card';
-import DashboardNav from '@/components/Ats/DashboardNav';
 import ResumeBoundary from '@/components/Ats/ResumeBoundary';
 import { ChartSkeleton } from '@/components/Ats/Skeleton';
 import { setJobDescription, setJdAnalysis, jdInsightsStart, jdInsightsSuccess, jdInsightsError, snapshotPrevious } from '@/store/slices/atsSlice';
@@ -115,8 +114,6 @@ function AnalyticsContent() {
                     Open Improvement Center
                 </Button>
             </div>
-
-            <DashboardNav />
 
             {/* Top stat cards */}
             <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">

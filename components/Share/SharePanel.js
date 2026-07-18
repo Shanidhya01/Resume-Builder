@@ -7,6 +7,7 @@ import { useToast } from '@/context/ToastContext';
 import { publishResume, unpublishResume, regenerateSlug, setCustomSlug } from '@/lib/publicResumes';
 import { buildPublicSlugPath } from '@/lib/publicSlug';
 import { withFirestoreRetry } from '@/lib/firestoreErrors';
+import { getTemplateById } from '@/config/templates';
 
 const ShareDialog = dynamic(() => import('./ShareDialog'), { ssr: false });
 const AnalyticsPanel = dynamic(() => import('./AnalyticsPanel'), { ssr: false });
@@ -67,10 +68,13 @@ const SharePanel = ({ resume, uid, onUpdate }) => {
         <>
             <div className="flex items-center gap-1.5">
                 <span
-                    className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                        resume.isPublic ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-surface-2 text-fg-muted'
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                        resume.isPublic
+                            ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                            : 'bg-surface-2 text-fg-muted'
                     }`}
                 >
+                    <span className={`h-1.5 w-1.5 rounded-full ${resume.isPublic ? 'bg-emerald-500' : 'bg-fg-subtle'}`} />
                     {resume.isPublic ? 'Public' : 'Private'}
                 </span>
 
@@ -80,7 +84,7 @@ const SharePanel = ({ resume, uid, onUpdate }) => {
                         onClick={handleQuickCopy}
                         title="Copy public link"
                         aria-label="Copy public link"
-                        className="rounded-lg border border-line p-1.5 text-fg-muted transition-colors hover:bg-accent/10 hover:text-fg"
+                        className="rounded-lg border border-line p-1.5 text-fg-muted transition-colors hover:border-accent/40 hover:bg-accent/10 hover:text-accent"
                     >
                         <FaCopy className="h-3 w-3" />
                     </button>
@@ -91,7 +95,7 @@ const SharePanel = ({ resume, uid, onUpdate }) => {
                     onClick={() => setShareOpen(true)}
                     title="Share resume"
                     aria-label="Share resume"
-                    className="rounded-lg border border-line p-1.5 text-fg-muted transition-colors hover:bg-accent/10 hover:text-fg"
+                    className="rounded-lg border border-line p-1.5 text-fg-muted transition-colors hover:border-accent/40 hover:bg-accent/10 hover:text-accent"
                 >
                     <FaShareAlt className="h-3 w-3" />
                 </button>
@@ -102,7 +106,7 @@ const SharePanel = ({ resume, uid, onUpdate }) => {
                         onClick={() => setAnalyticsOpen(true)}
                         title="View analytics"
                         aria-label="View sharing analytics"
-                        className="rounded-lg border border-line p-1.5 text-fg-muted transition-colors hover:bg-accent/10 hover:text-fg"
+                        className="rounded-lg border border-line p-1.5 text-fg-muted transition-colors hover:border-accent/40 hover:bg-accent/10 hover:text-accent"
                     >
                         <FaChartBar className="h-3 w-3" />
                     </button>
@@ -113,16 +117,24 @@ const SharePanel = ({ resume, uid, onUpdate }) => {
                 <ShareDialog
                     resumeName={resume.name}
                     publicUrl={publicUrl}
+                    resumeId={resume.id}
+                    uid={uid}
+                    template={getTemplateById(resume.selectedTemplate)}
                     owner={{
                         isPublic: !!resume.isPublic,
                         slug: resume.slug || null,
                         customSlug: resume.customSlug || null,
+                        updatedPublicAt: resume.updatedPublicAt || null,
                         onPublish: handlePublish,
                         onUnpublish: handleUnpublish,
                         onRegenerateSlug: handleRegenerateSlug,
                         onSetCustomSlug: handleSetCustomSlug,
                     }}
                     onClose={() => setShareOpen(false)}
+                    onOpenAnalytics={() => {
+                        setShareOpen(false);
+                        setAnalyticsOpen(true);
+                    }}
                 />
             )}
 

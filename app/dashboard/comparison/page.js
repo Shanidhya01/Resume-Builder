@@ -6,7 +6,6 @@ import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import useAtsAnalysis from '@/hooks/useAtsAnalysis';
 import Card from '@/components/Ats/Card';
 import Badge from '@/components/Ats/Badge';
-import DashboardNav from '@/components/Ats/DashboardNav';
 import ResumeBoundary from '@/components/Ats/ResumeBoundary';
 import EmptyState from '@/components/UI/EmptyState';
 import Button from '@/components/UI/Button';
@@ -62,8 +61,6 @@ function ComparisonContent() {
                 </div>
                 <Button onClick={handleSnapshot}>Save current as baseline</Button>
             </div>
-
-            <DashboardNav />
 
             {!comparison ? (
                 <EmptyState

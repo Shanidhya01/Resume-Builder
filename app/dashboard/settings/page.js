@@ -4,7 +4,6 @@ import { useTheme } from 'next-themes';
 import { FiMonitor, FiMoon, FiRotateCcw, FiSun } from 'react-icons/fi';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import { useMounted } from '@/hooks/useMounted';
-import DashboardNav from '@/components/Ats/DashboardNav';
 import Card from '@/components/UI/Card';
 import Button from '@/components/UI/Button';
 import { usePreferences } from '@/context/ThemeProvider';
@@ -96,8 +95,6 @@ const SettingsContent = () => {
                 <h1 className="text-2xl font-bold text-fg md:text-3xl">Settings</h1>
                 <p className="mt-1 text-sm text-fg-muted">Personalize the look, feel, and defaults of your workspace.</p>
             </div>
-
-            <DashboardNav />
 
             <div className="grid gap-6 lg:grid-cols-2">
                 {/* Appearance */}

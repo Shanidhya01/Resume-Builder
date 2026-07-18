@@ -5,7 +5,6 @@ import useAtsAnalysis from '@/hooks/useAtsAnalysis';
 import Card from '@/components/Ats/Card';
 import ProgressBar from '@/components/Ats/ProgressBar';
 import Badge from '@/components/Ats/Badge';
-import DashboardNav from '@/components/Ats/DashboardNav';
 import ResumeBoundary from '@/components/Ats/ResumeBoundary';
 
 function RecruiterContent() {
@@ -23,8 +22,6 @@ function RecruiterContent() {
                 <h1 className="text-2xl font-bold text-fg md:text-3xl">Recruiter Preview</h1>
                 <p className="text-sm text-fg-muted">A simulation of how a recruiter skims your resume in the first few seconds.</p>
             </div>
-
-            <DashboardNav />
 
             <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
                 <Card className="flex flex-col items-center justify-center">

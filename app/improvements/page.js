@@ -6,7 +6,7 @@ import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import useAtsAnalysis from '@/hooks/useAtsAnalysis';
 import Badge from '@/components/Ats/Badge';
 import Card from '@/components/Ats/Card';
-import DashboardNav from '@/components/Ats/DashboardNav';
+import DashboardSidebar from '@/components/Dashboard/DashboardSidebar';
 import ResumeBoundary from '@/components/Ats/ResumeBoundary';
 import { setSuggestionStatus } from '@/store/slices/atsSlice';
 import { FaCheck, FaTimes, FaCheckDouble, FaUndo } from 'react-icons/fa';
@@ -76,8 +76,6 @@ function ImprovementsContent() {
                 <p className="text-sm text-fg-muted">{total} suggestion(s) generated from your latest ATS analysis · {completedCount} completed</p>
             </div>
 
-            <DashboardNav />
-
             <div className="mb-6 flex flex-wrap gap-2" role="group" aria-label="Filter suggestions by priority">
                 {['all', ...PRIORITY_ORDER].map(p => (
                     <button
@@ -118,9 +116,14 @@ function ImprovementsContent() {
 
 const ImprovementsPage = () => (
     <ProtectedRoute>
-        <ResumeBoundary>
-            <ImprovementsContent />
-        </ResumeBoundary>
+        <div className="flex">
+            <DashboardSidebar />
+            <div className="min-w-0 flex-1">
+                <ResumeBoundary>
+                    <ImprovementsContent />
+                </ResumeBoundary>
+            </div>
+        </div>
     </ProtectedRoute>
 );
 

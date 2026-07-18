@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { FileText, FileType2, FileCode2, FileJson, Hash, DownloadCloud, UploadCloud } from 'lucide-react';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import Button from '@/components/UI/Button';
-import DashboardNav from '@/components/Ats/DashboardNav';
 import Card from '@/components/Ats/Card';
 import Badge from '@/components/Ats/Badge';
 import ErrorMessage from '@/components/UI/ErrorMessage';
@@ -189,8 +188,6 @@ const ExportContent = () => {
                     Download your resume in any format, or back up and restore everything. Files are generated on demand — nothing is stored.
                 </p>
             </div>
-
-            <DashboardNav />
 
             {error && <ErrorMessage message={error} onRetry={retryFetch} />}
 
