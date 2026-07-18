@@ -16,7 +16,7 @@ import {
 } from '@/components/Auth/AuthUI';
 
 const RegisterPage = () => {
-    const { signUp, updateUserProfile, signInWithGoogle, user, loading: authLoading } = useAuth();
+    const { signUp, updateUserProfile, signInWithGoogle, googleRedirectError, user, loading: authLoading } = useAuth();
     const router = useRouter();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -34,8 +34,10 @@ const RegisterPage = () => {
         setError('');
         setGoogleLoading(true);
         try {
-            await signInWithGoogle();
-            router.push('/dashboard');
+            const signedInUser = await signInWithGoogle();
+            // `null` means a signInWithRedirect fallback was triggered instead
+            // (the browser is already navigating away) — nothing left to do here.
+            if (signedInUser) router.push('/dashboard');
         } catch (err) {
             setError(err.message?.replace('Firebase: ', '') || 'Could not sign in with Google.');
         } finally {
@@ -79,7 +81,7 @@ const RegisterPage = () => {
                 subtitle="Start building a standout resume in minutes."
             />
 
-            <AuthError>{error}</AuthError>
+            <AuthError>{error || googleRedirectError}</AuthError>
 
             <form onSubmit={onSubmit} className="flex flex-col gap-4">
                 <AuthField

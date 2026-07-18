@@ -18,15 +18,25 @@ import {
     EmailAuthProvider,
     GoogleAuthProvider,
     signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult,
     reauthenticateWithPopup,
 } from 'firebase/auth';
 import { auth } from '@/config/firebase';
 
 const AuthContext = createContext(undefined);
 
+// Error codes where the popup genuinely never opened (blocked by the browser,
+// or unsupported in the current environment e.g. an in-app webview) — a
+// signInWithRedirect retry sidesteps the popup entirely. Deliberately excludes
+// codes like `auth/popup-closed-by-user`, where the user intentionally
+// dismissed it and a surprise full-page redirect would be unwelcome.
+const POPUP_FALLBACK_CODES = new Set(['auth/popup-blocked', 'auth/operation-not-supported-in-this-environment']);
+
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [googleRedirectError, setGoogleRedirectError] = useState('');
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, currentUser => {
@@ -34,6 +44,15 @@ export const AuthProvider = ({ children }) => {
             setLoading(false);
         });
         return unsubscribe;
+    }, []);
+
+    // Completes a signInWithRedirect started on a previous page load (the
+    // browser navigates away and back, so there's no promise to await at the
+    // call site — this is the only place the result/error can be observed).
+    useEffect(() => {
+        getRedirectResult(auth).catch(err => {
+            setGoogleRedirectError(err.message?.replace('Firebase: ', '') || 'Could not sign in with Google.');
+        });
     }, []);
 
     const signUp = useCallback(async (email, password) => {
@@ -48,10 +67,22 @@ export const AuthProvider = ({ children }) => {
         return credential.user;
     }, []);
 
+    // Returns the signed-in user, or `null` if a redirect fallback was
+    // triggered instead (the browser is navigating away — there's nothing
+    // more for the caller to do; `getRedirectResult` above and the normal
+    // `onAuthStateChanged` listener pick up the session on return).
     const signInWithGoogle = useCallback(async () => {
         const provider = new GoogleAuthProvider();
-        const credential = await signInWithPopup(auth, provider);
-        return credential.user;
+        try {
+            const credential = await signInWithPopup(auth, provider);
+            return credential.user;
+        } catch (err) {
+            if (POPUP_FALLBACK_CODES.has(err.code)) {
+                await signInWithRedirect(auth, provider);
+                return null;
+            }
+            throw err;
+        }
     }, []);
 
     const logOut = useCallback(() => signOut(auth), []);
@@ -110,6 +141,7 @@ export const AuthProvider = ({ children }) => {
     const value = {
         user,
         loading,
+        googleRedirectError,
         signUp,
         logIn,
         signInWithGoogle,

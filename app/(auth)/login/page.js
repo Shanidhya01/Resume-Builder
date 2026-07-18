@@ -16,7 +16,7 @@ import {
 } from '@/components/Auth/AuthUI';
 
 const LoginPage = () => {
-    const { logIn, signInWithGoogle, user, loading: authLoading } = useAuth();
+    const { logIn, signInWithGoogle, googleRedirectError, user, loading: authLoading } = useAuth();
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -66,7 +66,7 @@ const LoginPage = () => {
         <AuthShell>
             <AuthHeading title="Welcome back" subtitle="Log in to continue building your resume." />
 
-            <AuthError>{error}</AuthError>
+            <AuthError>{error || googleRedirectError}</AuthError>
 
             <form onSubmit={onSubmit} className="flex flex-col gap-4">
                 <AuthField
