@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
-import { Undo2, Redo2, History } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ChevronDown, Sparkles } from 'lucide-react';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import Button from '@/components/UI/Button';
 import { useAuth } from '@/context/AuthContext';
@@ -14,10 +15,13 @@ import { loadResume } from '@/store/slices/resumeSlice';
 import useAutoSave from '@/hooks/useAutoSave';
 import useUndoRedo from '@/hooks/useUndoRedo';
 import { useToast } from '@/context/ToastContext';
-import Editor from '@/components/Editor';
+import TopBar from '@/components/Editor/TopBar';
+import WorkspaceLayout from '@/components/Editor/WorkspaceLayout';
+import SectionSidebar from '@/components/Editor/SectionSidebar';
+import SectionCanvas from '@/components/Editor/SectionCanvas';
+import MobileBottomNav from '@/components/Editor/MobileBottomNav';
 import Preview from '@/components/Resume/PreviewClient';
-import Tabs from '@/components/Tabs';
-import TemplateSwitcher from '@/components/Resume/TemplateSwitcher';
+import TemplateCarousel from '@/components/Resume/TemplateCarousel';
 import ResumeFields from '@/config/ResumeFields';
 import ErrorMessage from '@/components/UI/ErrorMessage';
 
@@ -25,40 +29,6 @@ const VersionHistoryDrawer = dynamic(() => import('@/components/Editor/VersionHi
 const AIAssistantPanel = dynamic(() => import('@/components/AIAssistant/AIAssistantPanel'), { ssr: false });
 
 const DEFAULT_TAB = 'contact';
-
-const SaveStatusPill = ({ status, onRetry }) => {
-    const config = {
-        idle: { label: 'Auto-save enabled', color: 'bg-fg-muted' },
-        saving: { label: 'Saving...', color: 'bg-yellow-500 animate-pulse' },
-        saved: { label: 'Saved', color: 'bg-green-500' },
-        error: { label: 'Save failed', color: 'bg-red-500' },
-    }[status] || { label: 'Idle', color: 'bg-fg-muted' };
-
-    return (
-        <div className="flex items-center gap-2 text-sm text-fg-muted">
-            <div className={`h-2 w-2 rounded-full transition-colors duration-300 ${config.color}`}></div>
-            <span>{config.label}</span>
-            {status === 'error' && (
-                <button onClick={onRetry} className="text-xs font-semibold text-accent underline">
-                    Retry
-                </button>
-            )}
-        </div>
-    );
-};
-
-const ToolbarButton = ({ onClick, disabled, title, ariaLabel, children }) => (
-    <button
-        type="button"
-        onClick={onClick}
-        disabled={disabled}
-        title={title}
-        aria-label={ariaLabel}
-        className="flex h-8 w-8 items-center justify-center rounded-lg border border-line text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-    >
-        {children}
-    </button>
-);
 
 const EditorContent = () => {
     const { resumeId } = useParams();
@@ -69,6 +39,14 @@ const EditorContent = () => {
     const resume = useSelector(state => state.resume);
 
     const [historyOpen, setHistoryOpen] = useState(false);
+    const [previewMode, setPreviewMode] = useState(false); // mobile edit/preview toggle
+    const [aiOpen, setAiOpen] = useState(false);
+    const [downloadInfo, setDownloadInfo] = useState({ url: null, filename: null });
+    // Metadata that lives on the Firestore doc but not in the Redux content
+    // slice (name, public-share state) — captured alongside `loadResume` so
+    // the TopBar can display/share it without touching the resume reducer.
+    const [resumeMeta, setResumeMeta] = useState(null);
+
     // Tracks which resume Redux has actually been hydrated from Firestore.
     // Autosave stays disabled until this matches the current resumeId, so a
     // pre-load / stale-navigation Redux state can never be written over the doc.
@@ -102,6 +80,14 @@ const EditorContent = () => {
                     return;
                 }
                 dispatch(loadResume(data));
+                setResumeMeta({
+                    id: resumeId,
+                    name: data.name,
+                    isPublic: data.isPublic,
+                    slug: data.slug,
+                    customSlug: data.customSlug,
+                    ownerId: data.ownerId,
+                });
                 setHydratedId(resumeId);
             })
             .catch(err => {
@@ -122,6 +108,12 @@ const EditorContent = () => {
     const { status: saveStatus, retry } = useAutoSave(resumeId, resume, user.uid, autoSaveEnabled);
     const { undo, redo, canUndo, canRedo } = useUndoRedo(resume);
     const { info } = useToast();
+
+    const handleResumeMetaUpdate = useCallback((id, patch) => {
+        setResumeMeta(prev => (prev ? { ...prev, ...patch } : prev));
+    }, []);
+
+    const handlePreviewReady = useCallback(info => setDownloadInfo(info), []);
 
     // Keyboard shortcuts (Feature 2). Undo/redo only fire when focus is NOT in a
     // text field, so native in-field text undo keeps working while typing.
@@ -172,53 +164,80 @@ const EditorContent = () => {
         );
     }
 
-    return (
-        <div className="mx-auto mt-6 flex max-w-screen-xl 2xl:max-w-screen-2xl flex-col-reverse gap-6 px-4 pb-10 md:flex-row md:mt-10 2xl:mt-14 2xl:gap-10">
-            {/* Live preview — sticky on desktop so it stays in view while editing (split screen). */}
-            <div className="flex-1 md:sticky md:top-24 md:self-start">
-                <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-sm">
-                    <Preview />
+    const previewPane = <Preview onReady={handlePreviewReady} />;
+
+    const formPane = (
+        <div className="flex h-full flex-col gap-5 pb-24 md:pb-4">
+            <div className="rounded-2xl border border-line bg-surface p-3 shadow-ds-sm md:p-4">
+                <h2 className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-fg-subtle">Template</h2>
+                <TemplateCarousel />
+            </div>
+
+            <div className="flex flex-1 flex-col gap-5 md:flex-row">
+                <div className="shrink-0 rounded-2xl border border-line bg-surface p-2 shadow-ds-sm md:w-52 md:p-3">
+                    <SectionSidebar activeTab={tab} />
+                </div>
+
+                <div className="flex-1 rounded-2xl border border-line bg-surface p-4 shadow-ds-sm md:p-6">
+                    <SectionCanvas tab={tab} />
                 </div>
             </div>
 
-            <div className="flex flex-1 flex-col gap-4">
-                {/* Sticky toolbar */}
-                <div className="sticky top-20 z-20 flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface/95 p-3 shadow-sm backdrop-blur">
-                    <SaveStatusPill status={saveStatus} onRetry={retry} />
-                    <div className="flex items-center gap-2">
-                        <ToolbarButton onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)" ariaLabel="Undo">
-                            <Undo2 className="h-4 w-4" />
-                        </ToolbarButton>
-                        <ToolbarButton onClick={redo} disabled={!canRedo} title="Redo (Ctrl+Shift+Z)" ariaLabel="Redo">
-                            <Redo2 className="h-4 w-4" />
-                        </ToolbarButton>
-                        <button
-                            onClick={() => setHistoryOpen(true)}
-                            className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            <div className="rounded-2xl border border-line bg-surface shadow-ds-sm">
+                <button
+                    type="button"
+                    onClick={() => setAiOpen(o => !o)}
+                    aria-expanded={aiOpen}
+                    className="flex w-full items-center justify-between gap-2 rounded-2xl px-4 py-3.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent md:px-6"
+                >
+                    <span className="flex items-center gap-2 text-sm font-semibold text-fg md:text-base">
+                        <Sparkles className="h-4 w-4 text-accent" /> AI Assistant
+                    </span>
+                    <ChevronDown className={`h-4 w-4 text-fg-muted transition-transform ${aiOpen ? 'rotate-180' : ''}`} />
+                </button>
+                <AnimatePresence initial={false}>
+                    {aiOpen && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2, ease: 'easeOut' }}
+                            className="overflow-hidden"
                         >
-                            <History className="h-3.5 w-3.5" /> <span className="hidden sm:inline">History</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div className="rounded-2xl border border-line bg-surface p-4 shadow-sm md:p-6">
-                    <h2 className="mb-3 text-sm font-semibold text-fg md:text-base">Template</h2>
-                    <TemplateSwitcher />
-                </div>
-
-                <div className="rounded-2xl border border-line bg-surface p-4 shadow-sm md:p-6">
-                    <Tabs activeTab={tab} />
-                </div>
-
-                <div className="flex-grow rounded-2xl border border-line bg-surface p-4 shadow-sm md:p-6">
-                    <Editor tab={tab} />
-                </div>
-
-                <div className="rounded-2xl border border-line bg-surface p-4 shadow-sm md:p-6">
-                    <h2 className="mb-3 text-sm font-semibold text-fg md:text-base">AI Assistant</h2>
-                    <AIAssistantPanel />
-                </div>
+                            <div className="px-4 pb-5 md:px-6">
+                                <AIAssistantPanel />
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
+        </div>
+    );
+
+    return (
+        <div className="flex min-h-screen flex-col">
+            <TopBar
+                resumeName={resumeMeta?.name}
+                resumeMeta={resumeMeta}
+                uid={user.uid}
+                onResumeMetaUpdate={handleResumeMetaUpdate}
+                saveStatus={saveStatus}
+                onRetrySave={retry}
+                undo={undo}
+                redo={redo}
+                canUndo={canUndo}
+                canRedo={canRedo}
+                onHistoryClick={() => setHistoryOpen(true)}
+                previewMode={previewMode}
+                onTogglePreviewMode={() => setPreviewMode(p => !p)}
+                download={downloadInfo}
+            />
+
+            <div className="mx-auto flex w-full max-w-screen-2xl flex-1 flex-col gap-0 px-4 py-4 md:min-h-[calc(100vh-8.5rem)] md:px-6">
+                <WorkspaceLayout left={formPane} right={previewPane} previewMode={previewMode} />
+            </div>
+
+            <MobileBottomNav activeTab={tab} />
 
             {historyOpen && (
                 <VersionHistoryDrawer resumeId={resumeId} onClose={() => setHistoryOpen(false)} onRestored={loadFromFirestore} />
